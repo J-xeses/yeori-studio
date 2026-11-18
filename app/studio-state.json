@@ -13574,7 +13574,7 @@
     "shadowColor": "#000000",
     "bold": true,
     "textY": 70,
-    "ratio": "16:9",
+    "ratio": "9:16",
     "bgImageUrl": "",
     "posterLayers": []
   },
@@ -13633,7 +13633,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-18T10:58:28.565Z",
+  "savedAt": "2026-11-18T12:28:13.163Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [

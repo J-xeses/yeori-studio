@@ -1998,6 +1998,56 @@ app.get('/api/checkup-filmstrip', (req, res) => {
   }
 })
 
+// ── GET /api/checkup-bgm-preview — 체크업 탭 "BGM 미리듣기"(2026-11-18, 성준님 요청: "컷 장면
+// 전개와 잘 맞는 곡인지, 부분 음량 조절 연출 검토 등 체크할 수 있는 마지막 단계") ──
+// 실제 최종조립(reelFinalize.js)이 쓰는 것과 같은 우선순위: ①이 에피소드로 이미 한 번이라도
+// G5를 돌렸으면 그때 쓴 곡을 그대로(가장 정확 — "재합성 때도 같은 곡 유지" 규칙과 동일,
+// finalDir/{code}_finalize.json) ②아니면 selectBgm 단일곡 추천(allowGenerate:false — 유료
+// ElevenLabs 생성은 여기서 절대 안 함, [[feedback_confirm_before_costly_generation]]).
+// selectMultiSectionBgm(2구간 크로스페이드)은 호출할 때마다 ffmpeg로 새 remix 파일을 만들어내는
+// 비용이 있어 미리듣기엔 안 씀 — "지금 선곡 기준으로 판단"이면 충분하고, 정확한 2구간 결합은
+// 실제 최종본에서만 들어도 된다. _bgm.gainSegments(구간별 수동 음량, reelFinalize.js가 이미
+// 읽고 있었지만 지금까지 UI가 없었음)도 같이 돌려줘 CheckupTab이 바로 편집할 수 있게 한다.
+app.get('/api/checkup-bgm-preview', async (req, res) => {
+  const { epNum } = req.query
+  if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
+  try {
+    const { epId, ep } = findEpisodeByNumOrThrow(epNum)
+    const code = resolveEpisodeCode(ep.episode, epId)
+    const cuts = resolveEpisodeCuts(ep, code)
+    const durSec = cuts.reduce((sum, c) => sum + (Number(c.duration) || 6), 0)
+    const ov = loadReelOverrides(code)
+    const gainSegments = Array.isArray(ov._bgm?.gainSegments) ? ov._bgm.gainSegments : []
+
+    let bgmAbs = null, title = '', reason = '', tags = [], source = 'none'
+    try {
+      const prev = JSON.parse(fs.readFileSync(path.join(mp.finalDir(epNum), `${code}_finalize.json`), 'utf-8'))
+      const name = prev.bgmFile || (String(prev.bgm || '').match(/^BGM:\s*(.+?)\s*\(/) || [])[1]
+      if (name) {
+        const root = mp.bgmFile('')
+        const hit = path.isAbsolute(name) ? name : fs.readdirSync(root, { recursive: true }).map((f) => path.join(root, f)).find((f) => path.basename(f) === path.basename(name))
+        if (hit && fs.existsSync(hit)) { bgmAbs = hit; title = path.basename(hit); reason = '이전 최종본과 같은 곡(재합성 시 유지됨)'; source = 'prev-finalize' }
+      }
+    } catch { /* 이전 최종본 없음 — 아래 추천으로 */ }
+    if (!bgmAbs) {
+      const { selectBgm } = await import('./lib/bgmSelect.js')
+      const sel = await selectBgm({ code, cuts, durSec, allowGenerate: false, onLog: () => {} })
+      tags = sel.tags || []
+      reason = sel.reason || ''
+      if (sel.source !== 'none' && sel.file) {
+        const f = mp.bgmFile(sel.file)
+        if (fs.existsSync(f)) { bgmAbs = f; title = sel.title; source = sel.source }
+      }
+    }
+    res.json({
+      ok: true, source, title, reason, tags, gainSegments, durSec,
+      url: bgmAbs ? `http://localhost:3001${mp.toMediaUrl(bgmAbs)}` : null,
+    })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
 // ── POST /api/confirm-image — G2 승인 이미지를 표준명(cut_NN.jpg)으로 저장 ──
 app.post('/api/confirm-image', (req, res) => {
   const { ep, cutNo, imageUrl, instaContent, instaNum } = req.body

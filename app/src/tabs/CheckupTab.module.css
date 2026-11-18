@@ -21,7 +21,13 @@
    만 줄이고 — 그만큼 mainRow 쪽 flex 비중도 같이 줄여서, 줄어든 여백만큼이 정확히
    타임라인으로 넘어가게 한다(영상 자체 픽셀 높이는 변하지 않음, 실측: 패딩18→10·갭8→4로
    20px 절약 + flex 8:3→13:6 로 그 20px를 그대로 타임라인에 이전). */
-.mainRow { display: flex; flex: 13; min-height: 0; }
+/* 2026-11-18 재조정(성준님 제보 — "화면비율 100%에서 타임라인 자막 바가 안 보임", 그림1/2
+   첨부) — CheckupTimeline 내부 콘텐츠(눈금자22+클립58+파형42+자막32=154px) + 툴바 + 비트
+   요약바를 전부 더하면 실제로 약 265px가 필요한데, 이전 비율(13:6)로는 min-height:208px
+   밖에 못 받아 stripOuter(overflow-y:hidden)의 맨 아래 줄(자막 트랙)이 조용히 잘려 보이지
+   않았다 — 에러 없이 그냥 안 보이는 버그라 실측 전엔 알아채기 어려웠음. 비율을 거의 반반으로
+   낮추고(9:10) min-height도 실측값+여유로 올려서, 기본 화면에서 자막 바까지 항상 보이게 한다. */
+.mainRow { display: flex; flex: 9; min-height: 0; }
 /* 2026-10-23 재배치 — 원래 "추후반영" 플레이스홀더였던 자리에 켄번스·비주얼 효과 패널을
    채움(성준님: "나머지 효과는 메인화면 좌측 빈 영역에"). 내용 길이가 가변적이라 중앙정렬
    대신 상단 고정 + 세로 스크롤로 바꿈. */
@@ -67,6 +73,19 @@
 }
 .captionShadow { text-shadow: 0 2px 5px rgba(0,0,0,0.95), 0 0 3px rgba(0,0,0,0.9); }
 
+/* 엔딩 카드(2026-11-18) — 자막 띠(captionBand)와 별개 레이어. 세로 위치는 인라인 top(%)으로
+   받고(reelOverrides._style.endCard.y, VideoTab의 ecCenterY와 같은 기준), 폰트크기는 captionBand
+   바깥(.videoWrapper, container-type:size)을 기준으로 cqh 계산 — reelFinalize가 자막용 띠가
+   아니라 프레임 전체 높이(vH) 기준으로 엔딩 카드 크기를 재는 것과 같은 기준. */
+.endCardBand {
+  position: absolute; left: 0; right: 0; transform: translateY(-50%);
+  display: flex; justify-content: center; pointer-events: none;
+}
+.endCardOverlay {
+  max-width: 86%; text-align: center; white-space: pre-wrap; line-height: 1.35;
+  font-weight: 800; pointer-events: none;
+}
+
 /* 네이티브 video controls 대신 화면 아래로 분리한 커스텀 컨트롤바(2026-09-13, 사용자 지적:
    자막이 들어가면 네이티브 컨트롤바와 겹칠 수 있어 아예 프레임 밖으로 분리) */
 .customControls {
@@ -85,15 +104,51 @@
    카드 UI는 여기 안에서 다 할 수 있는 기능과 중복이라 삭제(2026-09-13, 사용자 지적) —
    이제 이 컴포넌트 하나만 상시 표시. 상단 행보다 비중을 더 줘서 아래로 내려 배치. */
 .timelineEditorWrap {
-  flex: 6; min-height: 208px; border-top: 1px solid var(--border);
+  flex: 10; min-height: 280px; border-top: 1px solid var(--border);
   padding: 10px 16px; box-sizing: border-box; overflow: hidden;
   display: flex; flex-direction: column;
 }
 /* CheckupTimeline 자체가 height:100%짜리 컴포넌트라, 아래 비트 바를 같이 넣으려면
    얘를 flex:1(남는 공간)로 감싸고 바는 그 아래 고정 높이로 둬야 한다(2026-10-10). */
 .timelineEditorInner { flex: 1; min-height: 0; }
-.nowPlaying { font-size: 12px; font-weight: 700; color: var(--accent-light); }
 .playerEmpty { font-size: 13px; color: var(--text-3); text-align: center; max-width: 360px; }
+
+/* BGM 미리듣기(2026-11-18) — "재생 중: CUT N" 텍스트 배지가 있던 자리를 대신 차지한다. */
+.bgmBar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; width: 100%; font-size: 11.5px; }
+.bgmToggle {
+  background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text-2);
+  font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; cursor: pointer; white-space: nowrap;
+}
+.bgmToggle:hover:not(:disabled) { background: rgba(255,255,255,0.12); }
+.bgmToggle:disabled { opacity: .4; cursor: default; }
+.bgmOnBtn { background: var(--accent); border-color: var(--accent); color: #fff; }
+.bgmTitle { color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
+.bgmEmpty { color: var(--text-3); }
+.bgmVol { width: 70px; accent-color: var(--accent); }
+.bgmGainToggle {
+  background: transparent; border: 1px solid var(--border); color: var(--text-3);
+  font-size: 10.5px; padding: 3px 8px; border-radius: 6px; cursor: pointer; margin-left: auto; white-space: nowrap;
+}
+.bgmGainToggle:hover { background: rgba(255,255,255,0.08); }
+.gainPanel {
+  display: flex; flex-direction: column; gap: 5px; width: 100%; padding: 8px; margin-top: 4px;
+  background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box;
+}
+.gainRow { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-2); }
+.gainInput {
+  width: 52px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text);
+  border-radius: 4px; padding: 2px 5px; font-size: 11px;
+}
+.gainRemoveBtn {
+  background: transparent; border: none; color: var(--text-3); cursor: pointer; font-size: 12px;
+  margin-left: 4px; padding: 0 4px;
+}
+.gainRemoveBtn:hover { color: #f87171; }
+.gainAddBtn {
+  align-self: flex-start; background: rgba(255,255,255,0.05); border: 1px dashed var(--border); color: var(--text-2);
+  font-size: 10.5px; padding: 4px 9px; border-radius: 6px; cursor: pointer;
+}
+.gainAddBtn:hover { background: rgba(255,255,255,0.1); }
 
 /* 2026-10-10 — 체크업 타임라인 바로 밑 비트 요약 바(성준님 설계): 읽기 전용, 심플 단색,
    컷 경계는 선으로만, 시그 컷은 굵은 시작 경계선. 범례는 전체에서 한 번만. */

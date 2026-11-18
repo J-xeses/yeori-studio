@@ -150,6 +150,34 @@ export default function CheckupTab() {
   const [muted, setMuted] = useState(false)
   const videoRef = useRef(null)
   const pendingSeekRef = useRef(null) // src 교체 후 loadedmetadata에서 적용할 목표 초
+  // BGM 미리듣기(2026-11-18, 성준님 요청: "컷 장면 전개와 잘 맞는 곡인지, 부분 음량 조절 연출
+  // 검토 등 체크할 수 있는 마지막 단계") — /api/checkup-bgm-preview가 실제 최종조립과 같은
+  // 우선순위(이전 최종본 곡 유지 → 라이브러리 추천, 유료 생성은 절대 안 함)로 고른 곡을 받아
+  // 별도 <audio>로 재생. 컷을 넘나들어도 하나의 트랙이 쭉 흐르는 실제 최종본 느낌을 재현하려고
+  // absoluteElapsed(지금까지 재생된 컷들의 실제 길이 합)를 그 트랙 길이로 나눈 나머지로 맞춘다.
+  const bgmRef = useRef(null)
+  const [bgmInfo, setBgmInfo] = useState(null)
+  const [bgmOn, setBgmOn] = useState(false)
+  const [bgmVol, setBgmVol] = useState(0.3)
+  const [gainSegments, setGainSegments] = useState([])
+  const [gainPanelOpen, setGainPanelOpen] = useState(false)
+  // 엔딩 카드(2026-11-18, 성준님 질문: "엔딩 카드 문구는 왜 누락이 되어 있는지?") — 체크업
+  // 탭은 cut_NN.mp4 각 파일을 그대로 이어 재생할 뿐이라, 대본 [엔딩 카드] 섹션(에피소드
+  // 전체 기준 "마지막 2초" 오버레이, reelFinalize.js의 실제 G5 조립 단계에서만 번인됨)을
+  // 전혀 몰랐다 — 누락이 아니라 이 미리보기 자체에 그 개념이 없었던 것. VideoTab이 이미 쓰는
+  // 같은 API(end-card-default)와 같은 오버라이드(_style.endCard)를 읽어, 마지막 컷의 마지막
+  // 2초 구간에 똑같이 겹쳐 그린다.
+  const [endCardDefault, setEndCardDefault] = useState([])
+  const [reelStyleOv, setReelStyleOv] = useState({})
+  useEffect(() => {
+    setEndCardDefault([])
+    setReelStyleOv({})
+    if (epNum == null) return
+    fetch(`${SERVER}/api/reel-finalize/end-card-default?epNum=${epNum}`)
+      .then(r => r.json()).then(d => setEndCardDefault(Array.isArray(d.lines) ? d.lines : [])).catch(() => {})
+    fetch(`${SERVER}/api/reel-finalize/overrides?epNum=${epNum}`)
+      .then(r => r.json()).then(d => setReelStyleOv(d.overrides?._style || {})).catch(() => {})
+  }, [epNum])
   // 2026-10-22 4차 보완 재재점검: pause()만으로는 "전체 이어보기" 체인(handleEnded가 다음
   // 컷으로 자동 전환) 때문에 편집 중에도 재생 바늘이 계속 돌았다 — 편집 중엔 자동 전환·
   // 재생 재개를 전부 막는 플래그.
@@ -238,6 +266,20 @@ export default function CheckupTab() {
     pendingSeekRef.current = null
   }, [epNum])
 
+  // BGM 미리듣기 정보 — 에피소드 바뀔 때마다 새로 조회, 끄고 시작(이전 에피소드 소리가
+  // 넘어오지 않게).
+  useEffect(() => {
+    setBgmOn(false)
+    setBgmInfo(null)
+    setGainSegments([])
+    if (epNum == null) return
+    fetch(`${SERVER}/api/checkup-bgm-preview?epNum=${epNum}`)
+      .then(r => r.json())
+      .then(d => { if (d.ok) { setBgmInfo(d); setGainSegments(d.gainSegments || []) } })
+      .catch(() => {})
+  }, [epNum])
+  useEffect(() => { if (bgmRef.current) bgmRef.current.volume = bgmVol }, [bgmVol])
+
   // 컷이 생성되는 대로 자동으로 반영되도록 백그라운드 폴링(2026-09-14, 사용자 확정 —
   // 컷타입마다 완료 시점이 서로 다른 G단계에 걸쳐있어 특정 이벤트에 훅을 거는 대신,
   // 다른 탭(스튜디오/메이킹)이 이미 쓰는 단순 폴링 방식을 그대로 적용). silent=true라
@@ -323,6 +365,76 @@ export default function CheckupTab() {
   const activeIdx = playable.findIndex(c => c.no === activeCutNo)
   const mismatchCount = cuts.filter(c => c.lengthMismatch).length
   const cutsByNo = useMemo(() => Object.fromEntries(cuts.map(c => [c.no, c])), [cuts])
+
+  // BGM 미리듣기 — "지금까지 재생된 컷들의 실제 길이 합 + 현재 컷 안 위치"(절대 재생 초).
+  // 실제 최종본은 BGM 한 트랙이 전체 영상 길이만큼 루프되므로, 컷을 건너뛰어도 그 길이에
+  // 맞는 지점으로 이어지게 하려고 둠(playable 순서 = 실제 이어보기 순서와 동일).
+  const absoluteElapsed = useMemo(() => {
+    let acc = 0
+    for (const c of playable) {
+      if (c.no === activeCutNo) return acc + elapsedInActive
+      acc += Number(c.actualDurationSec ?? c.duration) || 0
+    }
+    return elapsedInActive
+  }, [playable, activeCutNo, elapsedInActive])
+
+  useEffect(() => {
+    const a = bgmRef.current
+    if (!a || !bgmOn) return
+    if (isPlaying) a.play().catch(() => {})
+    else a.pause()
+  }, [isPlaying, bgmOn])
+
+  useEffect(() => {
+    const a = bgmRef.current
+    if (!a || !bgmOn || !a.duration) return
+    const target = absoluteElapsed % a.duration
+    if (Math.abs(a.currentTime - target) > 0.4) a.currentTime = target
+  }, [absoluteElapsed, bgmOn])
+
+  const toggleBgm = () => {
+    setBgmOn(v => {
+      const next = !v
+      const a = bgmRef.current
+      if (a) {
+        if (next) {
+          a.currentTime = absoluteElapsed % (a.duration || 1)
+          if (isPlaying) a.play().catch(() => {})
+        } else a.pause()
+      }
+      return next
+    })
+  }
+
+  // 구간별 음량(reelOverrides _bgm.gainSegments) — reelFinalize.js가 이미 읽고 있었지만
+  // 지금까지 UI가 없어 수동 JSON 편집으로만 넣을 수 있었다(2026-11-18 발견). CheckupTab에서
+  // 바로 추가/삭제하고 공용 오버라이드 저장 경로(/api/reel-finalize/override, cutNo='_bgm')로
+  // 저장 — VideoTab의 setReelStyle(cutNo='_style')과 같은 방식.
+  const saveGainSegments = useCallback((next) => {
+    setGainSegments(next)
+    fetch(`${SERVER}/api/reel-finalize/override`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ epNum, cutNo: '_bgm', patch: { gainSegments: next } }),
+    }).catch(() => {})
+  }, [epNum])
+  const addGainSegment = () => {
+    const start = Math.max(0, Math.round(absoluteElapsed))
+    saveGainSegments([...gainSegments, [start, start + 3, 0.5]])
+  }
+  const updateGainSegment = (i, idx, val) => {
+    const next = gainSegments.map((s, si) => si === i ? s.map((v, vi) => vi === idx ? val : v) : s)
+    saveGainSegments(next)
+  }
+  const removeGainSegment = (i) => saveGainSegments(gainSegments.filter((_, si) => si !== i))
+
+  // 엔딩 카드 — "마지막 컷의 마지막 2초"에만(reelFinalize.js CARD_DUR=2와 동일) 보여준다.
+  // VideoTab의 setReelStyle(cutNo='_style')이 저장한 endCard.text 오버라이드가 있으면 그걸,
+  // 없으면 대본 [엔딩 카드] 섹션 원본을 그대로 쓴다(VideoTab과 동일 우선순위).
+  const lastPlayableNo = playable.length ? playable[playable.length - 1].no : null
+  const endCardOv = reelStyleOv.endCard || {}
+  const endCardRaw = (endCardOv.text || '').trim() || endCardDefault.join('\n')
+  const showEndCard = activeCutNo != null && activeCutNo === lastPlayableNo &&
+    !!endCardRaw.trim() && duration > 0 && elapsedInActive >= duration - 2
 
   // forcePlay=true(기본) — "이 컷을 재생해줘" 의도(▶ 전체 이어보기, 컷 자동 연결, 사이드바
   // 컷 클릭)는 지금 멈춰 있어도 재생을 시작해야 맞다. 반면 타임라인을 그냥 클릭해 위치만
@@ -486,6 +598,25 @@ export default function CheckupTab() {
                       </div>
                     </div>
                   )}
+                  {/* 2026-11-18 추가(성준님 질문 — "엔딩 카드 문구는 왜 누락이 되어 있는지?") —
+                      대본 [엔딩 카드] 섹션은 에피소드 "마지막 2초" 오버레이로, reelFinalize.js의
+                      실제 G5 최종조립에서만 번인됐고 이 미리보기엔 그 개념 자체가 없었다(누락이
+                      아니라 애초에 모름). VideoTab과 같은 API·같은 오버라이드 우선순위로
+                      마지막 컷의 마지막 2초에 겹쳐 보여준다 — 실제 최종본과 똑같이, 나레이션
+                      자막과 동시에(서로 다른 위치) 보일 수 있다. */}
+                  {showEndCard && (
+                    <div className={s.endCardBand} style={{ top: `${(endCardOv.y != null ? endCardOv.y : 0.66) * 100}%` }}>
+                      <div className={s.endCardOverlay}
+                        style={{
+                          color: color || '#fff', fontFamily: font ? `"${font}",sans-serif` : undefined,
+                          fontSize: endCardOv.fontPx ? `${(endCardOv.fontPx / 720) * 100}cqh` : `${(22 / 720) * 100}cqh`,
+                          WebkitTextStroke: `${Math.max(1, (endCardOv.fontPx || 22) * 0.07)}px ${isLightColor(color || '#fff') ? 'rgba(0,0,0,0.9)' : 'rgba(255,255,255,0.9)'}`,
+                          paintOrder: 'stroke fill',
+                        }}>
+                        {endCardRaw}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               {playable.length > 0 && (
@@ -497,8 +628,50 @@ export default function CheckupTab() {
                   <button className={s.ctrlBtn} onClick={toggleMute} title={muted ? '음소거 해제' : '음소거'}>{muted ? '🔇' : '🔊'}</button>
                 </div>
               )}
-              {activeCutNo != null && <div className={s.nowPlaying}>재생 중: CUT {activeCutNo}</div>}
               {!playable.length && <div className={s.playerEmpty}>아직 완성된 컷이 없습니다 — 메이킹/영상 탭에서 컷을 만들면 여기 누적됩니다.</div>}
+              {/* 2026-11-18 추가(성준님 요청 — "컷 장면 전개와 잘 맞는 곡인지, 부분 음량 조절
+                  연출 검토 등.. 체크할 수 있는 마지막 단계") — /api/checkup-bgm-preview가 실제
+                  최종조립과 같은 우선순위로 고른 곡을 별도 재생. "재생 중: CUT N" 텍스트 배지는
+                  타임라인 자막 바를 가리는 자리라 삭제하고 그 자리에 배치했다. */}
+              {bgmInfo && playable.length > 0 && (
+                <div className={s.bgmBar}>
+                  {bgmInfo.url && <audio ref={bgmRef} src={bgmInfo.url} loop style={{ display: 'none' }} />}
+                  <button type="button" className={`${s.bgmToggle} ${bgmOn ? s.bgmOnBtn : ''}`} onClick={toggleBgm}
+                    disabled={!bgmInfo.url} title={bgmInfo.url ? `${bgmInfo.title} — ${bgmInfo.reason}` : bgmInfo.reason}>
+                    🎵 {bgmOn ? 'BGM 끄기' : 'BGM 미리듣기'}
+                  </button>
+                  {bgmInfo.url
+                    ? <span className={s.bgmTitle}>{bgmInfo.title}{bgmInfo.tags?.length ? ` · ${bgmInfo.tags.join('·')}` : ''}</span>
+                    : <span className={s.bgmEmpty}>{bgmInfo.reason || 'BGM 없음'}</span>}
+                  {bgmOn && <input type="range" className={s.bgmVol} min={0} max={1} step={0.05} value={bgmVol}
+                    onChange={e => setBgmVol(Number(e.target.value))} title="BGM 미리듣기 음량" />}
+                  <button type="button" className={s.bgmGainToggle} onClick={() => setGainPanelOpen(v => !v)}
+                    title="BGM 구간별 음량 조절 — 특정 구간만 줄이거나 키울 수 있습니다(실제 최종본에도 적용됨)">
+                    ⚙ 구간 음량{gainSegments.length ? ` (${gainSegments.length})` : ''}
+                  </button>
+                </div>
+              )}
+              {gainPanelOpen && bgmInfo && (
+                <div className={s.gainPanel}>
+                  {gainSegments.map((seg, i) => (
+                    <div key={i} className={s.gainRow}>
+                      <input type="number" className={s.gainInput} value={seg[0]} step={0.5} min={0}
+                        onChange={e => updateGainSegment(i, 0, Number(e.target.value))} title="시작(초)" />
+                      <span>~</span>
+                      <input type="number" className={s.gainInput} value={seg[1]} step={0.5} min={0}
+                        onChange={e => updateGainSegment(i, 1, Number(e.target.value))} title="끝(초)" />
+                      <span>s ·</span>
+                      <input type="number" className={s.gainInput} value={seg[2]} step={0.1} min={0} max={3}
+                        onChange={e => updateGainSegment(i, 2, Number(e.target.value))} title="음량 배수(1=기본)" />
+                      <span>배</span>
+                      <button type="button" className={s.gainRemoveBtn} onClick={() => removeGainSegment(i)} title="이 구간 삭제">✕</button>
+                    </div>
+                  ))}
+                  <button type="button" className={s.gainAddBtn} onClick={addGainSegment}>
+                    + 지금 위치({fmtTime(absoluteElapsed)})부터 3초 구간 추가
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 

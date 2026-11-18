@@ -26,7 +26,11 @@
 .spacer { flex: 1; }
 
 .stripOuter {
-  position: relative; overflow-x: auto; overflow-y: hidden; flex: 1; min-height: 0;
+  /* 2026-11-18 — overflow-y:hidden이었을 때, 바깥 레이아웃이 비좁으면(.stripInner는
+     min-height:154px 고정) 맨 아래 줄(자막 트랙)이 에러 없이 조용히 잘려 안 보였다
+     (CheckupTab.module.css의 .timelineEditorWrap 높이 확보가 1차 수정 — 이건 그래도
+     공간이 모자란 극단적인 경우를 위한 안전장치: 잘리는 대신 세로 스크롤이 생긴다). */
+  position: relative; overflow-x: auto; overflow-y: auto; flex: 1; min-height: 0;
   border-radius: 8px; border: 1px solid var(--border); background: var(--bg-panel);
 }
 .stripInner { position: relative; display: flex; flex-direction: column; min-height: 154px; }
