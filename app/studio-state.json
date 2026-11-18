@@ -12996,6 +12996,21 @@
               5.5,
               8
             ]
+          ],
+          "bubbleScenesSaved": [
+            {
+              "text": "안녕하세요~ 여리 친구 한지아에요!\n잘 부탁드립니다~^^",
+              "position": "top_left",
+              "bubble": "cloud",
+              "color": "lavender",
+              "start": 1,
+              "end": 3.5,
+              "font_size": 40,
+              "bubble_scale": 1,
+              "offset_x": 0,
+              "offset_y": -0.04,
+              "angle": 0
+            }
           ]
         },
         {
@@ -13421,6 +13436,21 @@
           5.5,
           8
         ]
+      ],
+      "bubbleScenesSaved": [
+        {
+          "text": "안녕하세요~ 여리 친구 한지아에요!\n잘 부탁드립니다~^^",
+          "position": "top_left",
+          "bubble": "cloud",
+          "color": "lavender",
+          "start": 1,
+          "end": 3.5,
+          "font_size": 40,
+          "bubble_scale": 1,
+          "offset_x": 0,
+          "offset_y": -0.04,
+          "angle": 0
+        }
       ]
     },
     {
@@ -13604,7 +13634,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-18T15:21:48.882Z",
+  "savedAt": "2026-11-18T15:55:13.840Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
@@ -13673,7 +13703,7 @@
       "cut-3": true,
       "cut-4": true
     },
-    "selectedCutId": "cut-1",
+    "selectedCutId": "cut-3",
     "subtitles": {}
   },
   "ttsTabState": {

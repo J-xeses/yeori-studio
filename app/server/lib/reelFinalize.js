@@ -366,6 +366,34 @@ export function hasVoiceNarration(cut) {
   return true
 }
 
+// 2026-11-19(성준님 — IG_R10 CUT3 "지아 첫 등장" 장식 말풍선 사례로 확인): "메이킹 탭
+// 손글씨·말풍선 오버레이가 있으면 자막은 항상 생략한다"는 가정이 전부는 아니었다 — 어떤
+// 컷은 말풍선이 곧 그 컷의 대사 그 자체(스타일만 다른 자막, 대체가 맞음)지만, 이 컷처럼
+// "대사 시작 전 짧게 들어가는 장식 인사말"일 수도 있다(이 경우 말풍선 노출 구간 1~3.5초와
+// 실제 대사 자막 구간 4~8초가 아예 안 겹침). 자동으로 "이게 어느 쪽이냐"를 알 방법은 없지만,
+// 오버레이 설정 파일(cut_NN_overlay_config.json)의 말풍선 노출 구간과 실제 자막 구간(사람이
+// 손으로 맞춘 captionSegTiming이 있을 때만 — 안전하게 알 수 있는 경우만)을 시간으로 비교해,
+// 전혀 안 겹치면 "장식용"으로 보고 자막도 같이 번인한다. 조금이라도 겹치거나 판단 재료가
+// 없으면(모션 자막 포함) 기존처럼 안전하게 자막을 생략한다 — 겹치는 걸 놓쳐서 글자 두 겹이
+// 보이는 쪽보다, 드물게 "장식 말풍선인데 자막이 또 생략됨" 쪽이 덜 나쁘다는 판단.
+// 모듈 최상위로 뽑아서 export 한 이유: pipelineHealth.js(모니터 탭)가 "오버레이가 자막을
+// 대체했는가"를 판정할 때 reelFinalize.js와 다른 로직을 쓰면, 실제로는 자막이 같이 나오는데
+// 모니터만 구식 기준으로 계속 경고를 띄우는 또 다른 "따로 노는 두 판정" 사고가 난다
+// (오늘 바로 그 사고가 한 번 났다 — 모니터가 이 함수 신설 전 기준 그대로 재경고함).
+export function overlaySuppressesCaption(vdir, cut, kind) {
+  if (kind !== 'overlay') return true   // 모션 자막(kind:'subtitle')은 그 자체가 자막이므로 항상 대체
+  if (!Array.isArray(cut.captionSegTiming) || !cut.captionSegTiming.length) return true   // 판단 재료 없음 → 안전하게 생략
+  let cfg
+  try { cfg = JSON.parse(fs.readFileSync(path.join(vdir, `cut_${String(cut.no).padStart(2, '0')}_overlay_config.json`), 'utf-8')) } catch { return true }
+  const scenes = Array.isArray(cfg?.scenes) ? cfg.scenes : []
+  const bubbleRanges = scenes
+    .map((s) => { const m = /^([\d.]+)s?\s*~\s*([\d.]+)s?$/.exec(String(s.time || '')); return m ? [Number(m[1]), Number(m[2])] : null })
+    .filter(Boolean)
+  if (!bubbleRanges.length) return true
+  const overlaps = (a, b) => a[0] < b[1] && b[0] < a[1]
+  return bubbleRanges.some((br) => cut.captionSegTiming.some((cr) => overlaps(br, cr)))
+}
+
 export function decideCut(cut) {
   const mc = cut.masterCode || {}
   const sp = String(mc.sp || '')
@@ -587,6 +615,14 @@ export async function finalizeReel(p) {
   // 훨씬 짧아 -stream_loop 가 실제로 한 바퀴 도는 일이 거의 없으므로, 루프 재시작 지점이
   // 오프셋이 아니라 트랙 처음으로 돌아가는 ffmpeg 동작은 지금 규모에선 영향이 없다.
   const bgmOffsetSec = Math.max(0, Number(loadOverrides(code)._bgm?.offsetSec) || 0)
+  // BGM 기본 음량 배수(2026-11-19, 성준님 제보 — "편집 메타 탭에서 BGM 볼륨을 1로 입력했는데
+  // 결국 최소 음량으로 최종 파일이 만들어졌다"): 그 입력창은 2026-11-16에 폐지된 CapCut
+  // 커터 경로 전용이라 이 범용 조립 경로엔 처음부터 연결된 적이 없었고, 여기는 줄곧 0.13
+  // (약 -17.7dB)으로 고정돼 있었다 — "최소 음량"이라는 체감이 정확했다. 이제 _bgm.baseVolume
+  // 오버라이드로 실제 조절 가능하게 한다(기본값 0.13 유지 — 설정 안 한 기존 에피소드는
+  // 그대로 동작). 체크업 탭의 "BGM 기본 음량" 입력이 바로 이 값을 저장한다.
+  const bgmBaseVolumeRaw = Number(loadOverrides(code)._bgm?.baseVolume)
+  const bgmBaseVolume = Number.isFinite(bgmBaseVolumeRaw) && bgmBaseVolumeRaw > 0 ? Math.min(3, bgmBaseVolumeRaw) : 0.13
   const vdir = mp.videoDir(epNum)
   const fdir = mp.finalDir(epNum)
   const mdir = mp.makingDir(epNum)
@@ -650,8 +686,13 @@ export async function finalizeReel(p) {
     }
     d.dropOwnAudio = !!d.nrFile
     if (picked.derived) {
-      if (d.caption) d.caption = null
-      log(`컷 ${cut.no}: 메이킹 탭 ${picked.derived === 'subtitle' ? '모션 자막' : '손글씨·말풍선'}본 사용(${path.basename(src)}) — 자막 번인 생략`)
+      const suppress = overlaySuppressesCaption(vdir, cut, picked.derived)
+      if (d.caption && suppress) {
+        d.caption = null
+        log(`컷 ${cut.no}: 메이킹 탭 ${picked.derived === 'subtitle' ? '모션 자막' : '손글씨·말풍선'}본 사용(${path.basename(src)}) — 자막 번인 생략`)
+      } else if (d.caption) {
+        log(`컷 ${cut.no}: 메이킹 탭 손글씨·말풍선본 사용(${path.basename(src)}) — 말풍선 노출 구간과 안 겹쳐 실제 대사 자막도 같이 번인`)
+      }
     }
     if (d.caption && makingManifest[String(cut.no)]?.selfText === true) {
       d.caption = null
@@ -972,9 +1013,10 @@ export async function finalizeReel(p) {
       .filter((s) => Array.isArray(s) && s.length >= 3 && Number.isFinite(s[0]) && Number.isFinite(s[1]) && Number.isFinite(s[2]))
       .map((s) => `,volume=${Number(s[2])}:enable='between(t,${Number(s[0])},${Number(s[1])})'`)
       .join('')
-    sfxFilters.push(`[${bi}:a]atrim=0:${(totalDur - bgmStart).toFixed(2)},adelay=${Math.round(bgmStart * 1000)}|${Math.round(bgmStart * 1000)},volume=0.13${segFilter},afade=t=in:st=${bgmStart.toFixed(2)}:d=1.2,afade=t=out:st=${fadeOut.toFixed(2)}:d=1.5[bgm]`)
+    sfxFilters.push(`[${bi}:a]atrim=0:${(totalDur - bgmStart).toFixed(2)},adelay=${Math.round(bgmStart * 1000)}|${Math.round(bgmStart * 1000)},volume=${bgmBaseVolume}${segFilter},afade=t=in:st=${bgmStart.toFixed(2)}:d=1.2,afade=t=out:st=${fadeOut.toFixed(2)}:d=1.5[bgm]`)
     bgmFilterOut = '[bgm]'
-    bgmNote = `BGM: ${path.basename(bgmAbs)} (-17dB, 루프)${bgmOffsetSec > 0 ? ` · 트랙 ${bgmOffsetSec.toFixed(1)}s 지점부터` : ''}${segFilter ? ` · 구간보정 ${bgmGainSegments.length}곳` : ''}`
+    const baseDb = (20 * Math.log10(bgmBaseVolume)).toFixed(1)
+    bgmNote = `BGM: ${path.basename(bgmAbs)} (${baseDb}dB, 루프)${bgmOffsetSec > 0 ? ` · 트랙 ${bgmOffsetSec.toFixed(1)}s 지점부터` : ''}${segFilter ? ` · 구간보정 ${bgmGainSegments.length}곳` : ''}`
     idx++
   } else if (wantsBgm) {
     bgmNote = 'BGM 필요(대본) 하나 _shared/bgm 에 트랙 없음 — CapCut 에서 추가'

@@ -69,7 +69,6 @@ export default function EditMetaTab() {
   const [hookIndices, setHookIndices] = useState([0])
   const [accRunning, setAccRunning] = useState(false)
   const [accStatus, setAccStatus]   = useState('')
-  const [cutterResult, setCutterResult] = useState(null)
   const [g5Approved, setG5Approved] = useState({})
 
   // 음성 타이밍 상태
@@ -133,41 +132,7 @@ export default function EditMetaTab() {
     loadSyncTiming()
   }
 
-  // CapCut 설정 (finishMode='cutter' 전용) — 에피소드별 프로젝트 + 켄번스 모드 + 공백·BGM(2026-09-11)
   const finishMode = resolveFinishMode(state.episode)
-  const [kbMode, setKbMode] = useState('random')
-  const [gapSec, setGapSec] = useState(0)
-  const [bgmFile, setBgmFile] = useState('')
-  const [bgmVolume, setBgmVolume] = useState(0.22)
-  const [bgmLibrary, setBgmLibrary] = useState([])
-  const [capcutCfg, setCapcutCfg] = useState(null)
-  const [tplInput, setTplInput] = useState('')
-  const loadCapcutCfg = async () => {
-    try {
-      const r = await fetch('http://localhost:3001/api/capcut-config')
-      const d = await r.json()
-      setCapcutCfg(d); setTplInput(d.templateProject || '')
-    } catch { /* 서버 꺼짐 */ }
-  }
-  const loadBgmLibrary = async () => {
-    try {
-      const r = await fetch('http://localhost:3001/api/bgm-library')
-      const d = await r.json()
-      setBgmLibrary(d.tracks || [])
-    } catch { /* 서버 꺼짐 */ }
-  }
-  useEffect(() => {
-    if (finishMode === 'cutter' && !capcutCfg) loadCapcutCfg()
-    if (finishMode === 'cutter' && !bgmLibrary.length) loadBgmLibrary()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [finishMode])
-  const saveTemplate = async () => {
-    await fetch('http://localhost:3001/api/capcut-config', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ templateProject: tplInput }),
-    })
-    loadCapcutCfg()
-  }
 
   // SRT 설정
   const [srtOffset, setSrtOffset] = useState(0)
@@ -510,7 +475,6 @@ export default function EditMetaTab() {
         const promo = await post('http://localhost:3001/api/promote-making-to-raw', { epNum })
         const skipNote = asm.skippedCuts?.length ? ` · 누락 컷 ${asm.skippedCuts.join(', ')}(아직 미제작)` : ''
         setAccStatus(`✅ 완료! 컷 ${asm.includedCuts?.length ?? '?'}개(총 ${Math.round(asm.duration || 0)}초) 이어붙여 완성.${skipNote}${promo.success ? ' 발행 탭에서 바로 패키징 가능.' : ''}`)
-        setCutterResult(null)
         // 파일이 있어서 조립에 포함됐다고 무조건 G5를 찍으면, 사람이 G4에서 한 번도 확인
         // 안 한 컷(예: BROLL "제작됨·검토 대기" 상태)까지 "제작완료"로 잘못 보였다
         // (2026-09-14, 사용자 지적: "메이킹 탭 G 배지를 봐라" — G4 없이 G5+제작완료만 찍혀있던
@@ -544,8 +508,14 @@ export default function EditMetaTab() {
       // 실제로 쓴 적이 거의 없었다는 판단 — finishMode='cutter'도 이제 'assemble'처럼
       // CapCut을 거치지 않고 바로 최종 영상 조립(reelFinalize)으로 끝낸다. send-to-cutter·
       // run-cutter.js·CapCut 연동 코드 자체는 지우지 않고 그대로 두되(혹시 필요해지면),
-      // 이 흐름에서만 더 이상 호출하지 않는다. kbMode/gapSec/bgmVolume(아래 UI, 원래
-      // CapCut 커터용 설정)은 이 경로에서 더는 쓰이지 않음 — 필요하면 다음에 UI도 정리.
+      // 이 흐름에서만 더 이상 호출하지 않는다.
+      // 2026-11-19(성준님 제보 — "BGM 입력하고 볼륨 1로 정했는데 탭 옮겼다 오면 초기화된다,
+      // 화가 난다"): 아래 켄번스·공백·BGM·볼륨·템플릿 UI(kbMode/gapSec/bgmFile/bgmVolume/
+      // capcutCfg 등)는 바로 위 설명대로 이 경로에서 이미 전혀 쓰이지 않는 죽은 설정이었다 —
+      // "초기화된다"가 아니라 애초에 어디에도 저장되지 않고 아무 효과도 없는 입력창이었던
+      // 것(탭을 벗어나면 로컬 state가 사라지는 건 당연한 동작, 그런데 그게 "진짜 설정인 것처럼"
+      // 보여서 문제). "필요하면 다음에 UI도 정리"라고 미뤄뒀던 게 이번 — 화면에서 통째로
+      // 치웠다(서버 쪽 CapCut 연동 코드는 위 설명대로 그대로 둠, 프런트 죽은 입력창만 제거).
       setAccStatus('④ 최종 영상 조립 중...')
       {
         const freshG = loadGPoints()[episodeCode] || {}
@@ -559,7 +529,6 @@ export default function EditMetaTab() {
         setAccStatus(fin.ok
           ? `✅ 완료! 최종 영상 조립 생성됨(CapCut 없이).${unapproved.length ? ` ⚠️ G4 미승인 컷 포함(제작완료 표시 안 함): ${unapproved.join(', ')}` : ''}`
           : `❌ 최종 영상 조립 실패: ${fin.error} — 메이킹 탭에서 "🎬 최종 영상 조립"으로 다시 시도하세요`)
-        setCutterResult(null)
       }
       setAccRunning(false)
     } catch (err) {
@@ -734,115 +703,12 @@ export default function EditMetaTab() {
           </div>
         </div>
 
-        {finishMode === 'cutter' && (
-          <div style={{marginTop:'10px',padding:'10px 12px',background:'rgba(167,139,250,0.06)',border:'1px solid rgba(167,139,250,0.2)',borderRadius:'8px'}}>
-            <div style={{display:'flex',alignItems:'center',gap:'10px',flexWrap:'wrap',fontSize:'11.5px'}}>
-              <span style={{fontWeight:700,color:'#c4b5fd'}}>CapCut</span>
-              <span style={{color:'#9490a8'}}>프로젝트: <b style={{color:'#e8e6f0'}}>yeori_{episodeCode || '?'}</b> (에피소드별 자동 생성)</span>
-              <label style={{color:'#9490a8'}}>켄번스
-                <select value={kbMode} onChange={e => setKbMode(e.target.value)}
-                  style={{marginLeft:'4px',background:'#1c1c22',color:'#e8e6f0',border:'1px solid rgba(255,255,255,0.12)',borderRadius:'4px',padding:'2px 4px',fontSize:'11px'}}>
-                  {['random','none','zoom_in','zoom_out','pan_left','pan_right','pan_up','pan_down'].map(v =>
-                    <option key={v} value={v}>{v}</option>)}
-                </select>
-              </label>
-              <label style={{color:'#9490a8'}} title="컷과 컷 사이에 타임라인 공백을 끼워 숨 쉴 틈을 준다 (0=바로 이어붙임)">공백(초)
-                <input type="number" min="0" max="3" step="0.1" value={gapSec}
-                  onChange={e => setGapSec(Math.max(0, parseFloat(e.target.value) || 0))}
-                  style={{marginLeft:'4px',width:'52px',background:'#1c1c22',color:'#e8e6f0',border:'1px solid rgba(255,255,255,0.12)',borderRadius:'4px',padding:'2px 4px',fontSize:'11px'}} />
-              </label>
-              <label style={{color:'#9490a8'}}>BGM
-                <select value={bgmFile} onChange={e => setBgmFile(e.target.value)}
-                  style={{marginLeft:'4px',background:'#1c1c22',color:'#e8e6f0',border:'1px solid rgba(255,255,255,0.12)',borderRadius:'4px',padding:'2px 4px',fontSize:'11px',maxWidth:'160px'}}>
-                  <option value="">— 없음(원곡 유지) —</option>
-                  {bgmLibrary.map(t => <option key={t.file} value={t.file}>{t.title || t.file}{t.mood ? ` (${t.mood})` : ''}</option>)}
-                </select>
-              </label>
-              {bgmFile && (
-                <label style={{color:'#9490a8'}} title="BGM 볼륨 (0~1, 기본 0.22)">볼륨
-                  <input type="number" min="0" max="1" step="0.02" value={bgmVolume}
-                    onChange={e => setBgmVolume(Math.min(1, Math.max(0, parseFloat(e.target.value) || 0)))}
-                    style={{marginLeft:'4px',width:'46px',background:'#1c1c22',color:'#e8e6f0',border:'1px solid rgba(255,255,255,0.12)',borderRadius:'4px',padding:'2px 4px',fontSize:'11px'}} />
-                </label>
-              )}
-            </div>
-            {!bgmLibrary.length && (
-              <div style={{marginTop:'6px',fontSize:'10.5px',color:'#6b7280'}}>
-                BGM 없음 — "트렌드 레이더" BGM 검색·다운로드 후 여기서 고를 수 있습니다.
-              </div>
-            )}
-            {capcutCfg && !capcutCfg.templateOk && (
-              <div style={{marginTop:'8px',fontSize:'11px',color:'#fca5a5'}}>
-                ⚠ 템플릿 프로젝트 미설정. CapCut에서 <b>클립 1개짜리 빈 프로젝트</b>를 만든 뒤 그 폴더명을 지정하세요.
-                <div style={{display:'flex',gap:'6px',marginTop:'6px',alignItems:'center'}}>
-                  <select value={tplInput} onChange={e => setTplInput(e.target.value)}
-                    style={{background:'#1c1c22',color:'#e8e6f0',border:'1px solid rgba(255,255,255,0.12)',borderRadius:'4px',padding:'3px 6px',fontSize:'11px',flex:1}}>
-                    <option value="">— 프로젝트 선택 —</option>
-                    {(capcutCfg.projects || []).map(p => <option key={p} value={p}>{p}</option>)}
-                  </select>
-                  <button onClick={saveTemplate} disabled={!tplInput}
-                    style={{fontSize:'11px',fontWeight:700,color:'#a78bfa',background:'rgba(167,139,250,0.12)',border:'1px solid rgba(167,139,250,0.3)',borderRadius:'4px',padding:'3px 10px',cursor:'pointer'}}>
-                    저장
-                  </button>
-                </div>
-                <div style={{fontSize:'10px',color:'#6b7280',marginTop:'4px'}}>탐색 폴더: {capcutCfg.draftRoot}</div>
-              </div>
-            )}
-            {capcutCfg && capcutCfg.templateOk && (
-              <div style={{marginTop:'6px',fontSize:'10.5px',color:'#6ee7b7'}}>✓ 템플릿: {capcutCfg.templateProject}</div>
-            )}
-          </div>
-        )}
         {accStatus && (
           <div style={{marginTop:'8px',fontSize:'12px',fontWeight:600,
             color: accStatus.startsWith('❌') ? '#f87171'
                  : accStatus.startsWith('⚠️') ? '#fbbf24'
                  : accStatus.startsWith('✅') ? '#4ade80' : '#fb923c'}}>
             {accStatus}
-          </div>
-        )}
-        {cutterResult && (
-          <div style={{marginTop:'12px',background:'rgba(0,0,0,0.2)',border:'1px solid rgba(74,222,128,0.25)',borderRadius:'8px',padding:'12px'}}>
-            <div style={{display:'flex',gap:'10px',marginBottom:'10px',flexWrap:'wrap'}}>
-              <div style={{flex:1,minWidth:'90px',background:'rgba(255,255,255,0.04)',borderRadius:'6px',padding:'8px 12px'}}>
-                <div style={{fontSize:'18px',fontWeight:700,color:'#4ade80'}}>{cutterResult.segCount}</div>
-                <div style={{fontSize:'10px',color:'#9490a8'}}>배치된 컷</div>
-              </div>
-              <div style={{flex:1,minWidth:'90px',background:'rgba(255,255,255,0.04)',borderRadius:'6px',padding:'8px 12px'}}>
-                <div style={{fontSize:'18px',fontWeight:700,color:'#4ade80'}}>{cutterResult.durationSec}초</div>
-                <div style={{fontSize:'10px',color:'#9490a8'}}>총 재생 시간</div>
-              </div>
-              <div style={{flex:1,minWidth:'90px',background:'rgba(255,255,255,0.04)',borderRadius:'6px',padding:'8px 12px'}}>
-                <div style={{fontSize:'18px',fontWeight:700,color:'#4ade80'}}>{cutterResult.projectName}</div>
-                <div style={{fontSize:'10px',color:'#9490a8'}}>CapCut 프로젝트</div>
-              </div>
-            </div>
-            {Array.isArray(cutterResult.cuts) && cutterResult.cuts.length > 0 && (
-              <table style={{width:'100%',fontSize:'11px',borderCollapse:'collapse'}}>
-                <thead>
-                  <tr style={{color:'#9490a8',textAlign:'left'}}>
-                    <th style={{padding:'4px 8px'}}>컷</th>
-                    <th style={{padding:'4px 8px'}}>구간</th>
-                    <th style={{padding:'4px 8px'}}>길이</th>
-                    <th style={{padding:'4px 8px'}}>파일</th>
-                    <th style={{padding:'4px 8px'}}>켄번스</th>
-                    <th style={{padding:'4px 8px'}}>G5</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {cutterResult.cuts.map(c => (
-                    <tr key={c.cutNo} style={{borderTop:'1px solid rgba(255,255,255,0.06)'}}>
-                      <td style={{padding:'4px 8px',color:'#e8e6f0'}}>{c.label}</td>
-                      <td style={{padding:'4px 8px',color:'#e8e6f0'}}>{c.startSec}s ~ {c.endSec}s</td>
-                      <td style={{padding:'4px 8px',color:'#e8e6f0'}}>{c.durationSec}초</td>
-                      <td style={{padding:'4px 8px',color:'#9490a8'}}>{c.file}</td>
-                      <td style={{padding:'4px 8px',color:'#fb923c'}}>{c.kenburns}</td>
-                      <td style={{padding:'4px 8px',color:'#4ade80',fontWeight:700}}>✓</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
           </div>
         )}
       </div>

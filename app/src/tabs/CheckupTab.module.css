@@ -134,6 +134,7 @@
 .bgmVol { width: 70px; accent-color: var(--accent); }
 .bgmVolMini { display: inline-flex; align-items: center; gap: 4px; color: var(--text-3); font-size: 11px; }
 .bgmVolSmall { width: 50px; accent-color: var(--accent); }
+.bgmVolNum { font-variant-numeric: tabular-nums; min-width: 28px; }
 .bgmPosRow { display: flex; align-items: center; gap: 8px; width: 100%; font-size: 11px; color: var(--text-2); margin-top: 2px; }
 .bgmPosLabel { white-space: nowrap; flex-shrink: 0; }
 .bgmPosSlider { flex: 1; accent-color: var(--accent); }

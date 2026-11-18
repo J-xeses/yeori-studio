@@ -16,7 +16,7 @@ import path from 'node:path'
 import { execFile } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import * as mp from './mediaPaths.js'
-import { hasVoiceNarration, checkFinalStale } from './reelFinalize.js'
+import { hasVoiceNarration, checkFinalStale, overlaySuppressesCaption } from './reelFinalize.js'
 
 const STATE_PATH = path.join(mp.MEDIA_ROOT, 'app', 'studio-state.json')
 const MAKING_TYPES = ['GRAPHIC', 'BROLL', 'CAPCUT']
@@ -224,7 +224,11 @@ async function checkFinalize({ code, cuts, gp, dirs, compose, staleFn }) {
     const sh = String(cut.masterCode?.sh || '')
     if (cut.cutType === 'GRAPHIC' && /SH_TE?XT/i.test(sh)) continue
     const picked = mp.pickCutSource(dirs.video, cut.no)
-    if (picked.derived) {
+    // 2026-11-19: reelFinalize.js와 같은 함수(overlaySuppressesCaption)로 판정 — 말풍선
+    // 노출 구간과 자막 구간이 안 겹쳐 실제로는 둘 다 번인되는 경우(예: 장식용 등장 인사말)엔
+    // 더 이상 경고하지 않는다. 실제로 대체되는 경우(겹치거나 판단 재료가 없을 때)만 warn —
+    // 그래도 "오버레이에 진짜 그 대사가 들어있는지"까지는 자동 확인 불가라 사람이 봐야 함.
+    if (picked.derived && overlaySuppressesCaption(dirs.video, cut, picked.derived)) {
       const kind = picked.derived === 'subtitle' ? '모션 자막' : '손글씨·말풍선'
       issues.push({ level: 'warn', msg: `컷 ${cut.no}: 메이킹 ${kind} 오버레이가 자막 대체(번인 생략) — 오버레이에 실제 대사("${cp.slice(0, 24)}${cp.length > 24 ? '…' : ''}") 들어있는지 화면으로 직접 확인(자동 검증 불가)` })
     }

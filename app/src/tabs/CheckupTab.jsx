@@ -158,7 +158,14 @@ export default function CheckupTab() {
   const bgmRef = useRef(null)
   const [bgmInfo, setBgmInfo] = useState(null)
   const [bgmOn, setBgmOn] = useState(false)
-  const [bgmVol, setBgmVol] = useState(0.3)
+  // 2026-11-19(성준님 제보 — "편집 메타 탭에서 BGM 볼륨을 1로 입력했는데 결국 최소 음량으로
+  // 최종 파일이 만들어졌다"): 그 입력창은 2026-11-16에 폐지된 CapCut 경로 전용이라 지금의
+  // 범용 최종조립엔 처음부터 연결된 적이 없었고(EditMetaTab.jsx에서 통째로 제거), 실제
+  // 최종본은 줄곧 reelFinalize.js에 하드코딩된 0.13(약 -17.7dB)을 썼다 — "최소 음량"이라는
+  // 체감이 정확했던 것. 예전의 bgmVol(미리듣기 전용, 저장 안 됨)을 "BGM 기본 음량"으로
+  // 대체 — 여기서 조절하는 값이 바로 reelFinalize의 _bgm.baseVolume 오버라이드로 저장되어
+  // 실제 최종본에도 그대로 적용된다(미리듣기=실제 결과물, 두 숫자가 더 이상 따로 안 놂).
+  const [bgmBaseVolume, setBgmBaseVolume] = useState(0.13)
   const [gainSegments, setGainSegments] = useState([])
   const [gainPanelOpen, setGainPanelOpen] = useState(false)
   // 2026-11-19(성준님 제안 — "슬라이더가 차라리 bgm 원곡 런닝타임을 보여주고 타임라인 재생과
@@ -189,6 +196,8 @@ export default function CheckupTab() {
       .then(r => r.json()).then(d => {
         setReelStyleOv(d.overrides?._style || {})
         setBgmOffsetSec(Math.max(0, Number(d.overrides?._bgm?.offsetSec) || 0))
+        const bv = Number(d.overrides?._bgm?.baseVolume)
+        setBgmBaseVolume(Number.isFinite(bv) && bv > 0 ? bv : 0.13)
       }).catch(() => {})
   }, [epNum])
   // 2026-10-22 4차 보완 재재점검: pause()만으로는 "전체 이어보기" 체인(handleEnded가 다음
@@ -298,7 +307,16 @@ export default function CheckupTab() {
       .then(d => { if (d.ok) { setBgmInfo(d); setGainSegments(d.gainSegments || []) } })
       .catch(() => {})
   }, [epNum])
-  useEffect(() => { if (bgmRef.current) bgmRef.current.volume = bgmVol }, [bgmVol])
+  // <audio>.volume 은 0~1만 허용(브라우저 상한) — bgmBaseVolume 이 1을 넘는 값으로 저장돼도
+  // 미리듣기에선 1로 잘려 들린다(실제 최종본은 ffmpeg volume 필터라 그 이상도 가능). 흔한
+  // 사용 범위(0~1)에선 미리듣기 음량이 실제 최종본 음량과 그대로 같다.
+  useEffect(() => { if (bgmRef.current) bgmRef.current.volume = Math.min(1, Math.max(0, bgmBaseVolume)) }, [bgmBaseVolume])
+  const saveBgmBaseVolume = useCallback((v) => {
+    fetch(`${SERVER}/api/reel-finalize/override`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ epNum, cutNo: '_bgm', patch: { baseVolume: Math.round(v * 1000) / 1000 } }),
+    }).catch(() => {})
+  }, [epNum])
 
   // 컷이 생성되는 대로 자동으로 반영되도록 백그라운드 폴링(2026-09-14, 사용자 확정 —
   // 컷타입마다 완료 시점이 서로 다른 G단계에 걸쳐있어 특정 이벤트에 훅을 거는 대신,
@@ -702,9 +720,14 @@ export default function CheckupTab() {
                     ? <span className={s.bgmTitle}>{bgmInfo.title}{bgmInfo.tags?.length ? ` · ${bgmInfo.tags.join('·')}` : ''}</span>
                     : <span className={s.bgmEmpty}>{bgmInfo.reason || 'BGM 없음'}</span>}
                   {bgmOn && (
-                    <span className={s.bgmVolMini} title="BGM 미리듣기 음량(저장 안 됨, 이 미리듣기에만 적용)">
-                      🔈<input type="range" className={s.bgmVolSmall} min={0} max={1} step={0.05} value={bgmVol}
-                        onChange={e => setBgmVol(Number(e.target.value))} />
+                    <span className={s.bgmVolMini}
+                      title="BGM 기본 음량 — 여기서 조절한 값이 실제 최종본에도 그대로 적용됩니다(기본 0.13 ≈ -17.7dB, 지금까지 고정값이었던 것을 조절 가능하게 함)">
+                      🔈
+                      <input type="range" className={s.bgmVolSmall} min={0} max={1} step={0.01} value={bgmBaseVolume}
+                        onChange={e => setBgmBaseVolume(Number(e.target.value))}
+                        onMouseUp={e => saveBgmBaseVolume(Number(e.target.value))}
+                        onTouchEnd={e => saveBgmBaseVolume(Number(e.target.value))} />
+                      <span className={s.bgmVolNum}>{bgmBaseVolume.toFixed(2)}</span>
                     </span>
                   )}
                   <button type="button" className={s.bgmGainToggle} onClick={() => setGainPanelOpen(v => !v)}
