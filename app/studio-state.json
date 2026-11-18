@@ -1,5 +1,5 @@
 {
-  "activeTab": "checkup",
+  "activeTab": "script",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -12843,7 +12843,7 @@
           "narration": "(나레이션) 한국에서 '밥 먹었어?'는 진짜 밥 질문이 아니에요.",
           "subtitle": "한국에서 '밥 먹었어?'는 진짜 밥 질문이 아니에요.",
           "imagePrompt": "MEDIUM CLOSE-UP — a young Korean woman in her early 20s, long wavy dark brown hair falling loosely, clear healthy skin, smooth even complexion with a soft natural finish, \nwearing a casual lounge t-shirt and soft home pants, barefoot, sitting slouched on a living room sofa in the evening, visibly tired, \nwarm indoor evening lighting, \nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text on phone screen, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine, Barefoot or socks only, no shoes worn (indoor home setting).",
-          "videoPrompt": "[0-4s] She sits slumped on her living room sofa, barefoot, scrolling her phone with a tired, puzzled look, mouth closed, not speaking on camera. Add an off-screen voice-over narration (V.O. — she does not speak on camera, no lip movement, no mouth movement): a drowsy, flat young woman's voice says in Korean: \"한국에서 '밥 먹었어?'는 진짜 밥 질문이 아니에요.\" No on-screen subtitle text or captions. Barefoot or socks only, no shoes worn (indoor home setting).",
+          "videoPrompt": "[0-4s] She sits slumped on her living room sofa, barefoot, scrolling her phone with a tired, blank expression. [4-8s] A notification pops up on her screen; she glances at it with a flat, puzzled look, mouth closed, not speaking. NO dialogue, NO lip movement — the Korean narration (\"한국에서 '밥 먹었어?'는 진짜 밥 질문이 아니에요.\") is added afterward as a separate voice-over in post-production, not generated here. No on-screen subtitle text or captions. Barefoot or socks only, no shoes worn (indoor home setting).",
           "voiceSource": "video",
           "duration": 8,
           "shotType": "CLOSEUP",
@@ -13283,7 +13283,7 @@
       "narration": "(나레이션) 한국에서 '밥 먹었어?'는 진짜 밥 질문이 아니에요.",
       "subtitle": "한국에서 '밥 먹었어?'는 진짜 밥 질문이 아니에요.",
       "imagePrompt": "MEDIUM CLOSE-UP — a young Korean woman in her early 20s, long wavy dark brown hair falling loosely, clear healthy skin, smooth even complexion with a soft natural finish, \nwearing a casual lounge t-shirt and soft home pants, barefoot, sitting slouched on a living room sofa in the evening, visibly tired, \nwarm indoor evening lighting, \nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text on phone screen, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine, Barefoot or socks only, no shoes worn (indoor home setting).",
-      "videoPrompt": "[0-4s] She sits slumped on her living room sofa, barefoot, scrolling her phone with a tired, puzzled look, mouth closed, not speaking on camera. Add an off-screen voice-over narration (V.O. — she does not speak on camera, no lip movement, no mouth movement): a drowsy, flat young woman's voice says in Korean: \"한국에서 '밥 먹었어?'는 진짜 밥 질문이 아니에요.\" No on-screen subtitle text or captions. Barefoot or socks only, no shoes worn (indoor home setting).",
+      "videoPrompt": "[0-4s] She sits slumped on her living room sofa, barefoot, scrolling her phone with a tired, blank expression. [4-8s] A notification pops up on her screen; she glances at it with a flat, puzzled look, mouth closed, not speaking. NO dialogue, NO lip movement — the Korean narration (\"한국에서 '밥 먹었어?'는 진짜 밥 질문이 아니에요.\") is added afterward as a separate voice-over in post-production, not generated here. No on-screen subtitle text or captions. Barefoot or socks only, no shoes worn (indoor home setting).",
       "voiceSource": "video",
       "duration": 8,
       "shotType": "CLOSEUP",
@@ -13582,7 +13582,8 @@
     "youtube": {
       "title": "",
       "description": "",
-      "tags": ""
+      "tags": "",
+      "titleEn": ""
     },
     "instagram": {
       "title": "",
@@ -13633,7 +13634,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-18T12:28:13.163Z",
+  "savedAt": "2026-11-18T13:25:38.829Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [

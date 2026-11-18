@@ -2225,7 +2225,7 @@
   "IG_R10": {
     "cut_1": {
       "g1": true,
-      "updatedAt": "2026-11-18T11:00:15.505Z",
+      "updatedAt": "2026-11-18T13:11:17.760Z",
       "g4": true,
       "g2Checklist": {
         "0": {
@@ -2273,7 +2273,7 @@
     },
     "cut_2": {
       "g1": true,
-      "updatedAt": "2026-11-18T11:00:15.506Z",
+      "updatedAt": "2026-11-18T13:11:17.762Z",
       "g2Checklist": {
         "0": {
           "filename": "cut_02_a.jpg",
@@ -2322,7 +2322,7 @@
     },
     "cut_3": {
       "g1": true,
-      "updatedAt": "2026-11-18T11:00:15.507Z",
+      "updatedAt": "2026-11-18T13:11:17.763Z",
       "g2Checklist": {
         "0": {
           "filename": "cut_03_a.jpg",
@@ -2370,7 +2370,7 @@
     },
     "cut_4": {
       "g1": true,
-      "updatedAt": "2026-11-18T11:00:15.507Z",
+      "updatedAt": "2026-11-18T13:11:17.763Z",
       "g2Checklist": {
         "0": {
           "filename": "cut_04_b.jpg",

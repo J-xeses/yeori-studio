@@ -220,8 +220,15 @@ export default function CheckupTab() {
   // 클립이 여러 개인 컷은 세그먼트 배열이므로 지금 재생 위치(elapsedInActive)가 속한 구간의
   // 텍스트를 골라 보여준다 — 재생 중 자동으로 자막이 전환됨(2026-09-13).
   const activeCutSegs = activeCut ? buildCaptionSegs(activeCut) : []
-  const captionText = activeCutSegs.find(seg => elapsedInActive >= seg.start && elapsedInActive < seg.end)?.text
-    ?? activeCutSegs[activeCutSegs.length - 1]?.text ?? ''
+  // 2026-11-18 버그수정(성준님 실측 지적 — "자막바는 타이밍대로 배치돼 있는데, 화면엔 컷
+  // 처음부터 등장한다"): 재생 위치가 어느 세그먼트 구간에도 안 걸칠 때(예: CUT3는 4초부터
+  // 자막이 시작하므로 0~4초는 의도적으로 빈 구간), 예전엔 "마지막 세그먼트 텍스트"로 폴백해서
+  // 그 텍스트가 컷 시작부터 쭉 떠 있는 것처럼 보였다(실측: CUT3 0:02 지점에 아직 안 나와야
+  // 할 "그럴 줄 알았어, 일단 먹어."가 이미 떠 있었음). 실제 최종본(reelFinalize.js, ffmpeg
+  // drawtext의 enable=between(t,start,end))은 구간 밖이면 아무 자막도 안 그리므로, 폴백을
+  // 없애 빈 구간엔 빈 문자열(자막 없음)로 맞춘다 — 타임라인 바가 보여주는 것과 실제 화면이
+  // 이제 똑같아진다.
+  const captionText = activeCutSegs.find(seg => elapsedInActive >= seg.start && elapsedInActive < seg.end)?.text ?? ''
 
   // 타임라인 자막 트랙(2026-10-14, 성준님 요청: "타임라인에 자막라인 추가" → "자막도 자르는
   // 기능") — 위 activeCutSegs와 같은 계산을 컷 전체에 대해 한 번에 해둔다.

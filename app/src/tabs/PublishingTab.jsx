@@ -678,6 +678,38 @@ function ThumbnailSection({ epNum }) {
     set({ bgImageUrl: url })
   }
 
+  // 2026-11-18(성준님 요청: "다른 도구에서 만든 최종이미지를 업로드하면, 결과물 패키징과
+  // 연동되면 좋겠다") — 기존엔 업로드한 이미지가 "배경"으로만 캔버스에 들어가서, 성준님이
+  // Photopea·Canva 등에서 이미 완성한 썸네일을 올려도 ③결과물 패키징에 반영되려면 매번
+  // "💾 thumb.jpg로 서버 저장"을 눌러야 했고, 그마저도 캔버스가 썸네일 비율(dims.w×h)에 맞춰
+  // 다시 그리면서 원본 해상도가 깨지고 남아있던 텍스트/꾸미기 레이어까지 그 위에 겹쳐 그려질
+  // 수 있었다(완성본엔 안 맞는 동작). 이미 로드된 bgImage를 "원본 그대로"(비율 강제·레이어
+  // 합성 없이, 원본 해상도 그대로) /api/save-thumbnail로 바로 저장 — 같은 엔드포인트가
+  // finalDir/thumb.jpg에 쓰므로 ③패키징이 즉시 그 파일을 집어간다(파일 하나를 공유하는 구조라
+  // 서버 변경 없이 바로 연동됨).
+  const [rawSaveStatus, setRawSaveStatus] = useState('')
+  const saveLoadedImageAsIs = async () => {
+    if (!bgImage || !epNum) return
+    setRawSaveStatus('저장 중...')
+    try {
+      const off = document.createElement('canvas')
+      off.width = bgImage.naturalWidth || bgImage.width
+      off.height = bgImage.naturalHeight || bgImage.height
+      off.getContext('2d').drawImage(bgImage, 0, 0, off.width, off.height)
+      const dataUrl = off.toDataURL('image/jpeg', 0.95)
+      const res = await fetch(`${SERVER}/api/save-thumbnail`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ epNum, dataUrl }),
+      })
+      const data = await res.json()
+      setRawSaveStatus(data.success
+        ? `✅ 원본 그대로(${off.width}×${off.height}) thumb.jpg 저장 — ③ 결과물 패키징에 바로 반영됩니다`
+        : `❌ ${data.error}`)
+    } catch (err) {
+      setRawSaveStatus(`❌ 오류: ${err.message}`)
+    }
+  }
+
   const saveThumbnail = async () => {
     const canvas = canvasRef.current; if (!canvas || !epNum) return
     setSaveStatus('저장 중...')
@@ -790,6 +822,19 @@ function ThumbnailSection({ epNum }) {
           </div>
           <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }}
             onChange={e => handleBgUpload(e.target.files[0])} />
+          {/* 2026-11-18 — 캔버스에서 꾸미기용 배경이 아니라, Photopea·Canva 등 다른 도구에서
+              이미 완성한 썸네일을 올린 경우를 위한 버튼. 비율 맞춤·텍스트 합성 없이 원본
+              그대로 thumb.jpg로 저장해 ③결과물 패키징에 바로 반영한다. */}
+          {bgImage && (
+            <>
+              <button type="button" className={s.downloadBtn}
+                style={{ marginTop: 8, background: 'rgba(5,150,105,0.15)', border: '1px solid rgba(5,150,105,0.4)', color: '#34d399' }}
+                onClick={saveLoadedImageAsIs}>
+                ✅ 외부에서 완성한 이미지 — 그대로 thumb.jpg로 저장
+              </button>
+              {rawSaveStatus && <div style={{ fontSize: 11.5, marginTop: 4, color: rawSaveStatus.startsWith('❌') ? '#f87171' : '#4ade80' }}>{rawSaveStatus}</div>}
+            </>
+          )}
         </div>
 
         <div className={s.panel}>
@@ -1223,12 +1268,24 @@ function buildScriptFromCuts(cuts) {
   }).join('\n\n')
 }
 
+// 2026-11-18(성준님 요청: "플랫폼별 자동문구 생성 기능에 각각 영어와 일본어 버전 문구 생성
+// 기능을 추가") — 기존 한국어 전용 생성(youtube/instagram/tiktok.title·description·tags)은
+// 그대로 두고, 체크한 언어만큼 같은 Claude 호출 안에 "_en"/"_ja" 접미사 블록을 추가로 요청해
+// titleEn/descriptionEn/tagsEn(·Ja) 필드로 저장한다 — 호출 1번으로 끝내 API 비용을 3배로
+// 늘리지 않음(한국어만 켜면 기존과 완전히 동일한 호출).
+const META_LANGS = [
+  { key: 'en', label: '영어', suffix: 'En', prompt: 'en', promptLabel: 'English(영어)' },
+  { key: 'ja', label: '일본어', suffix: 'Ja', prompt: 'ja', promptLabel: '日本語(일본어)' },
+]
+
 function MetaSection() {
   const { state, dispatch } = useApp()
   const { publishing, scriptRaw, episode, cuts, apiKeys, channelKeywords } = state
   const [generating, setGenerating] = useState(false)
   const [genError, setGenError] = useState('')
   const [kwInput, setKwInput] = useState('')
+  const [extraLangs, setExtraLangs] = useState({ en: false, ja: false })   // 한국어는 항상 생성
+  const [cardLang, setCardLang] = useState({ youtube: 'ko', instagram: 'ko', tiktok: 'ko' })   // 카드별 지금 보여줄 언어
   // 수집함(인스타 저장 컬렉션·유튜브 '벤치마킹 영상'·핀터레스트 보드)에서 뽑힌 키워드 후보 — 클릭하면 등록(2026-11-06)
   const [kwCands, setKwCands] = useState([])
   useEffect(() => {
@@ -1259,6 +1316,17 @@ function MetaSection() {
       const kwNote = keywords.length
         ? `\n\n검색 노출용 핵심 키워드(계정 공통): ${keywords.join(', ')}\n- 세 플랫폼 모두 description 안에 이 키워드들을 자연스러운 문장으로 2~3회 반복해서 녹여줘(나열식 금지, 억지스럽지 않게).\n- youtube.title 에는 가장 중요한 키워드 1개를 앞쪽에, youtube.description 첫 줄에도 키워드를 넣어줘(유튜브 검색은 제목·설명 첫 줄 비중이 큼).\n- 세 플랫폼 tags 에도 이 키워드를 포함해줘(유튜브는 쉼표 태그, 인스타·틱톡은 해시태그).`
         : ''
+      const activeLangs = META_LANGS.filter(l => extraLangs[l.key])
+      // 선택된 언어만큼 "_en"/"_ja" 접미사 블록을 같은 JSON 응답에 추가로 요청 — 단순 번역이
+      // 아니라 그 언어권 시청자에게 자연스러운 현지화 카피를 별도로 새로 쓰게 지시한다.
+      const langNote = activeLangs.length
+        ? `\n\n위 한국어 버전과 별개로, 아래 언어로도 각 플랫폼마다 완전히 새로 "현지화"된 카피를 만들어줘(한국어를 그대로 직역하지 말고, 그 언어권 시청자에게 자연스럽게 다시 써줘):\n${activeLangs.map(l => `- ${l.promptLabel}`).join('\n')}`
+        : ''
+      const langJsonFields = activeLangs.map(l =>
+        `  "youtube_${l.prompt}":   { "title": "...", "description": "...", "tags": "쉼표로 구분된 태그" },\n` +
+        `  "instagram_${l.prompt}": { "title": "...", "description": "...", "tags": "#해시태그 형식" },\n` +
+        `  "tiktok_${l.prompt}":    { "title": "...", "description": "...", "tags": "#해시태그 형식" }`
+      ).join(',\n')
       const data = await claudeMessages(apiKey, {
         model: 'claude-sonnet-4-6',
         // 1200 이었던 걸 3000으로 올림(2026-10-31) — 3플랫폼 제목/설명/태그를 전부 채우면
@@ -1266,20 +1334,22 @@ function MetaSection() {
         // 토큰이 끊겨서 "따옴표도 안 닫힌 채 중간에 잘린" 응답이 됨 — 그래서 매번 JSON
         // 파싱이 깨졌던 것(원인을 브라우저 콘솔로 실측 확인: text가 항상 정확히 1200자에서
         // 끊기고 마지막 글자가 단어 중간). escape 문제가 아니라 순수 길이 부족이었음.
-        max_tokens: 3000,
+        // 2026-11-18 — 영어/일본어 블록이 추가될 때마다(플랫폼 3개치) 그만큼 더 길어지므로
+        // 선택된 언어 수에 비례해 올림(한국어만이면 기존과 동일한 3000 그대로).
+        max_tokens: 3000 + activeLangs.length * 2500,
         messages: [{
           role: 'user',
           content: `아래는 유튜브 쇼츠/릴스용 영상 대본이다. 이 내용을 바탕으로 유튜브, 인스타그램, 틱톡 각 플랫폼에 맞는 제목/설명/태그를 만들어줘.
 
 제목: ${episode?.title || '(제목 없음)'}
 대본:
-${scriptText.slice(0, 3000)}${kwNote}
+${scriptText.slice(0, 3000)}${kwNote}${langNote}
 
 반드시 아래 JSON 형식으로만, 다른 설명 없이 응답해:
 {
   "youtube":   { "title": "...", "description": "...", "tags": "쉼표로 구분된 태그" },
   "instagram": { "title": "...", "description": "...", "tags": "#해시태그 형식" },
-  "tiktok":    { "title": "...", "description": "...", "tags": "#해시태그 형식" }
+  "tiktok":    { "title": "...", "description": "...", "tags": "#해시태그 형식" }${langJsonFields ? ',\n' + langJsonFields : ''}
 }`,
         }],
       }).then(r => r.json())
@@ -1291,7 +1361,16 @@ ${scriptText.slice(0, 3000)}${kwNote}
       try { parsed = JSON.parse(jsonMatch[0]) }
       catch { parsed = JSON.parse(sanitizeLooseJson(jsonMatch[0])) }   // 설명에 실제 개행이 섞여 깨진 경우 복구
       for (const platform of ['youtube', 'instagram', 'tiktok']) {
-        if (parsed[platform]) setPlatform(platform, parsed[platform])
+        const patch = { ...(parsed[platform] || {}) }
+        for (const l of activeLangs) {
+          const block = parsed[`${platform}_${l.prompt}`]
+          if (block) {
+            if (block.title != null) patch[`title${l.suffix}`] = block.title
+            if (block.description != null) patch[`description${l.suffix}`] = block.description
+            if (block.tags != null) patch[`tags${l.suffix}`] = block.tags
+          }
+        }
+        if (Object.keys(patch).length) setPlatform(platform, patch)
       }
     } catch (err) {
       setGenError('생성 오류: ' + err.message)
@@ -1343,6 +1422,19 @@ ${scriptText.slice(0, 3000)}${kwNote}
           </div>
         </div>
       </div>
+      {/* 2026-11-18 — 플랫폼별 자동 생성에 영어/일본어 현지화 버전도 같이 만들지 선택.
+          한국어는 항상 생성되므로 체크 안 하면 기존과 똑같이 동작한다. */}
+      <div style={{ display: 'flex', gap: 14, alignItems: 'center', marginBottom: 8, fontSize: 12.5, color: 'var(--text-2)' }}>
+        <span>생성할 언어:</span>
+        <span style={{ color: 'var(--text-3)' }}>✓ 한국어(기본)</span>
+        {META_LANGS.map(l => (
+          <label key={l.key} className={s.checkLabel} style={{ gap: 5 }}>
+            <input type="checkbox" checked={extraLangs[l.key]}
+              onChange={e => setExtraLangs(prev => ({ ...prev, [l.key]: e.target.checked }))} />
+            {l.label}
+          </label>
+        ))}
+      </div>
       <button className={s.genBtn} onClick={generate} disabled={generating}>
         {generating ? '⏳ 생성 중...' : '✨ AI 자동 생성 (대본 기반)'}
       </button>
@@ -1350,23 +1442,53 @@ ${scriptText.slice(0, 3000)}${kwNote}
 
       <div className={s.platformGrid}>
         {platforms.map(pf => {
-          const v = publishing?.[pf.key] || { title: '', description: '', tags: '' }
+          const raw = publishing?.[pf.key] || { title: '', description: '', tags: '' }
+          const lang = cardLang[pf.key] || 'ko'
+          const suffix = lang === 'ko' ? '' : lang === 'en' ? 'En' : 'Ja'
+          // 선택된 언어 필드가 보이고, 그 언어 필드로 수정 입력도 그대로 간다(title/titleEn/titleJa 등).
+          const v = {
+            title: raw[`title${suffix}`] || '',
+            description: raw[`description${suffix}`] || '',
+            tags: raw[`tags${suffix}`] || '',
+          }
+          const hasLang = (l) => {
+            const sfx = l === 'ko' ? '' : l === 'en' ? 'En' : 'Ja'
+            return !!(raw[`title${sfx}`] || raw[`description${sfx}`] || raw[`tags${sfx}`])
+          }
           return (
             <div key={pf.key} className={s.platformCard}>
-              <div className={s.platformTitle}>{pf.label}</div>
+              <div className={s.platformTitle} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>{pf.label}</span>
+                <div style={{ display: 'flex', gap: 3 }}>
+                  {[{ key: 'ko', label: 'KR' }, { key: 'en', label: 'EN' }, { key: 'ja', label: 'JA' }].map(lb => (
+                    <button key={lb.key} type="button"
+                      onClick={() => setCardLang(prev => ({ ...prev, [pf.key]: lb.key }))}
+                      title={hasLang(lb.key) ? '' : '아직 생성 안 됨 — 위 언어 체크 후 다시 생성하면 채워집니다'}
+                      style={{
+                        fontSize: 10.5, padding: '2px 7px', borderRadius: 5, cursor: 'pointer',
+                        border: '1px solid var(--border)',
+                        background: lang === lb.key ? 'var(--accent)' : 'transparent',
+                        color: lang === lb.key ? '#fff' : hasLang(lb.key) ? 'var(--text-2)' : 'var(--text-3)',
+                        opacity: lb.key !== 'ko' && !hasLang(lb.key) ? 0.5 : 1,
+                      }}>
+                      {lb.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div className={s.metaField}>
                 <label>제목</label>
-                <input value={v.title} onChange={e => setPlatform(pf.key, { title: e.target.value })} />
+                <input value={v.title} onChange={e => setPlatform(pf.key, { [`title${suffix}`]: e.target.value })} />
               </div>
               <div className={s.metaField}>
                 <label>설명</label>
-                <textarea value={v.description} onChange={e => setPlatform(pf.key, { description: e.target.value })} />
+                <textarea value={v.description} onChange={e => setPlatform(pf.key, { [`description${suffix}`]: e.target.value })} />
               </div>
               <div className={s.metaField}>
                 <label>태그</label>
-                <textarea style={{ minHeight: 44 }} value={v.tags} onChange={e => setPlatform(pf.key, { tags: e.target.value })} />
+                <textarea style={{ minHeight: 44 }} value={v.tags} onChange={e => setPlatform(pf.key, { [`tags${suffix}`]: e.target.value })} />
               </div>
-              {keywords.length > 0 && (v.title || v.description || v.tags) && (
+              {lang === 'ko' && keywords.length > 0 && (v.title || v.description || v.tags) && (
                 <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 6 }} title="제목+설명+태그에 키워드가 들어간 횟수 (0이면 빠진 것)">
                   {keywords.map(k => {
                     const n = countIn(`${v.title} ${v.description} ${v.tags}`, k)
