@@ -1,9 +1,9 @@
 {
-  "activeTab": "tts",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
-    "remainingChars": 88843
+    "remainingChars": 88814
   },
   "activeEpisodeId": "ep_1794927139043",
   "openTabIds": [
@@ -12941,7 +12941,8 @@
               5,
               8
             ]
-          ]
+          ],
+          "captionBurnedIntoBase": false
         },
         {
           "id": "cut-3",
@@ -12995,6 +12996,21 @@
               5.5,
               8
             ]
+          ],
+          "bubbleScenesSaved": [
+            {
+              "text": "저는 여리 친구 한지아 라고 해요!!  \n잘 부탁드립니다~ 꾸벅 ^^",
+              "position": "top_left",
+              "bubble": "cloud",
+              "color": "white",
+              "start": 0.5,
+              "end": 3.7,
+              "font_size": 40,
+              "bubble_scale": 0.9,
+              "offset_x": 0,
+              "offset_y": -0.05,
+              "angle": 0
+            }
           ]
         },
         {
@@ -13057,7 +13073,182 @@
         }
       ],
       "scriptRaw": "",
-      "createdAt": "2026-11-17T14:52:19.043Z"
+      "createdAt": "2026-11-17T14:52:19.043Z",
+      "tabState": {
+        "videoTabState": {
+          "videoClips": {
+            "cut-1": [
+              {
+                "url": "blob:http://localhost:5173/6012644c-f396-4f1b-83c9-f2941de2cc80",
+                "name": "Woman_looking_at_phone_a8d1cf0b_1080p.mp4",
+                "duration": 7.93,
+                "trimStart": 0,
+                "trimEnd": 7.93,
+                "useFullDuration": true,
+                "ratio": "9:16",
+                "staging": false,
+                "keepAudio": true,
+                "createdAt": 1794986379459,
+                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R10\\04_making\\raw\\cut_01_clip_1.mp4"
+              }
+            ],
+            "cut-3": [
+              {
+                "url": "blob:http://localhost:5173/646723ea-3199-485e-9b4c-59931ad54c49",
+                "name": "Untitled_Scene_11-18_07_34_41_20261118163706.mp4",
+                "duration": 7.93,
+                "trimStart": 0,
+                "trimEnd": 7.93,
+                "useFullDuration": true,
+                "ratio": "9:16",
+                "staging": false,
+                "keepAudio": true,
+                "createdAt": 1794987426504,
+                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R10\\04_making\\raw\\cut_03_clip_1.mp4"
+              }
+            ],
+            "cut-4": [
+              {
+                "url": "blob:http://localhost:5173/b5960113-560f-47e9-9246-5be83014b1f4",
+                "name": "Two_women_eating_lunch_c5f6a98d_1080p.mp4",
+                "duration": 7.93,
+                "trimStart": 0,
+                "trimEnd": 7.93,
+                "useFullDuration": true,
+                "ratio": "9:16",
+                "staging": false,
+                "keepAudio": true,
+                "createdAt": 1794934071526,
+                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R10\\04_making\\raw\\cut_04_clip_1.mp4"
+              }
+            ]
+          },
+          "g4Approved": {
+            "cut-1": true
+          },
+          "selectedCutId": "cut-2",
+          "subtitles": {}
+        },
+        "ttsTabState": {
+          "audioUrls": {},
+          "audioTexts": {},
+          "g3Confirmed": {
+            "cut-2": true
+          },
+          "focusCutId": null,
+          "voiceTabs": {
+            "cut-2": [
+              {
+                "id": "v1",
+                "label": "목소리 1",
+                "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+              }
+            ],
+            "cut-3": [
+              {
+                "id": "v1",
+                "label": "목소리 1",
+                "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+              }
+            ]
+          },
+          "tracks": {
+            "cut-2__v1": [
+              {
+                "id": "track_1794994126097_2nop",
+                "type": "dialogue",
+                "text": "아직… 왜?",
+                "speaker": null,
+                "url": null,
+                "voiceId": "",
+                "settings": {
+                  "speed": 0.95,
+                  "stability": 30,
+                  "similarity": 75
+                }
+              },
+              {
+                "id": "track_1794994126098_jzsg",
+                "type": "narration",
+                "text": "걱정된다는 뜻으로 하는 말이에요.",
+                "speaker": null,
+                "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R10/03_audio/tts-previews/cut_02_track_1794994126098_jzsg.mp3?t=1794994160683",
+                "voiceId": "",
+                "settings": {
+                  "speed": 0.85,
+                  "stability": 53,
+                  "similarity": 75
+                }
+              }
+            ],
+            "cut-3__v1": [
+              {
+                "id": "track_1794994933818_sf9r",
+                "type": "dialogue",
+                "text": "…진짜 왔어?",
+                "speaker": "여리",
+                "url": null,
+                "voiceId": "",
+                "settings": {
+                  "speed": 0.95,
+                  "stability": 30,
+                  "similarity": 75
+                }
+              },
+              {
+                "id": "track_1794994933818_c2xb",
+                "type": "dialogue",
+                "text": "그럴 줄 알았어. 일단 먹어.",
+                "speaker": "지아",
+                "url": null,
+                "voiceId": "",
+                "settings": {
+                  "speed": 0.95,
+                  "stability": 30,
+                  "similarity": 75
+                }
+              }
+            ]
+          },
+          "mergedUrls": {
+            "cut-2__v1": "blob:http://localhost:5173/1347e39d-9db1-4966-92c1-904ce3f653f4"
+          }
+        },
+        "voiceInsertState": {
+          "tracks": {}
+        },
+        "studioTabState": {
+          "imageRatio": {}
+        },
+        "thumbnail": {
+          "text": "",
+          "fontSize": 48,
+          "color": "#ffffff",
+          "shadowColor": "#000000",
+          "bold": true,
+          "textY": 70,
+          "ratio": "16:9",
+          "bgImageUrl": "",
+          "posterLayers": []
+        },
+        "publishing": {
+          "youtube": {
+            "title": "",
+            "description": "",
+            "tags": ""
+          },
+          "instagram": {
+            "title": "",
+            "description": "",
+            "tags": ""
+          },
+          "tiktok": {
+            "title": "",
+            "description": "",
+            "tags": ""
+          }
+        }
+      }
     }
   },
   "episode": {
@@ -13190,7 +13381,8 @@
           5,
           8
         ]
-      ]
+      ],
+      "captionBurnedIntoBase": false
     },
     {
       "id": "cut-3",
@@ -13244,6 +13436,21 @@
           5.5,
           8
         ]
+      ],
+      "bubbleScenesSaved": [
+        {
+          "text": "저는 여리 친구 한지아 라고 해요!!  \n잘 부탁드립니다~ 꾸벅 ^^",
+          "position": "top_left",
+          "bubble": "cloud",
+          "color": "white",
+          "start": 0.5,
+          "end": 3.7,
+          "font_size": 40,
+          "bubble_scale": 0.9,
+          "offset_x": 0,
+          "offset_y": -0.05,
+          "angle": 0
+        }
       ]
     },
     {
@@ -13426,7 +13633,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-18T09:24:45.821Z",
+  "savedAt": "2026-11-18T10:13:03.077Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
@@ -13473,21 +13680,58 @@
           "createdAt": 1794934071526,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R10\\04_making\\raw\\cut_04_clip_1.mp4"
         }
+      ],
+      "cut-2": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R10/05_video/cut_02.mp4?t=1794994988655",
+          "name": "cut_02.mp4",
+          "duration": 7.94,
+          "trimStart": 0,
+          "trimEnd": 7.94,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R10\\05_video\\cut_02.mp4",
+          "keepAudio": true,
+          "createdAt": 1794994467000
+        }
       ]
     },
     "g4Approved": {
       "cut-1": true
     },
-    "selectedCutId": "cut-2",
+    "selectedCutId": "cut-3",
     "subtitles": {}
   },
   "ttsTabState": {
     "audioUrls": {},
     "audioTexts": {},
-    "g3Confirmed": {},
+    "g3Confirmed": {
+      "cut-2": true
+    },
     "focusCutId": null,
     "voiceTabs": {
       "cut-2": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-3": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-4": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-1": [
         {
           "id": "v1",
           "label": "목소리 1",
@@ -13523,10 +13767,68 @@
             "similarity": 75
           }
         }
+      ],
+      "cut-3__v1": [
+        {
+          "id": "track_1794994933818_sf9r",
+          "type": "dialogue",
+          "text": "…진짜 왔어?",
+          "speaker": "여리",
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        },
+        {
+          "id": "track_1794994933818_c2xb",
+          "type": "dialogue",
+          "text": "그럴 줄 알았어. 일단 먹어.",
+          "speaker": "지아",
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-4__v1": [
+        {
+          "id": "track_1794995536156_grq0",
+          "type": "narration",
+          "text": "밥 먹었냐는 말은~... 너가 신경 쓰인다는 뜻이에요.",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.85,
+            "stability": 55,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-1__v1": [
+        {
+          "id": "track_1794995557271_6m76",
+          "type": "narration",
+          "text": "밥 먹었어?는 진짜 밥 질문이 아니에요.",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.85,
+            "stability": 55,
+            "similarity": 75
+          }
+        }
       ]
     },
     "mergedUrls": {
-      "cut-2__v1": "blob:http://localhost:5173/c61ebc05-a716-453c-b668-5202d90d022b"
+      "cut-2__v1": "blob:http://localhost:5173/5aa7df5c-99fb-4e6b-a3a6-d08a690d59cf"
     }
   },
   "voiceInsertState": {

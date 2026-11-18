@@ -11,6 +11,15 @@ import TabToolbar from '../components/TabToolbar'
 import VoicePicker from '../components/VoicePicker'
 import s from './TTSTab.module.css'
 
+// server/lib/reelFinalize.js의 hasVoiceNarration과 동일(클라에선 못 import하는 서버 전용
+// 모듈이라 이 파일 관례대로 그대로 복제) — "(자막)" 같은 화면 글자 표기는 음성이 아니라고 봄.
+function hasVoiceNarration(cut) {
+  const nrText = String(cut?.narration || '').trim()
+  if (!nrText || /^(없음|-)$/.test(nrText)) return false
+  if (/^\(?\s*(화면\s*자막|자막|텍스트)\s*\)?/.test(nrText) || /대사 자막만/.test(nrText)) return false
+  return true
+}
+
 const DEFAULT_VOICE_ID = 'RmYuvmCbqOMBJxDLW4k8'
 const FALLBACK_DEFAULTS = {
   dialogue:  { speed: 0.9,  stability: 30, similarity: 75 },
@@ -621,12 +630,17 @@ export default function TTSTab() {
         alert('릴스 대사는 영상 자체 음성을 쓰므로 저장하지 않았습니다(미리듣기만 가능). 나레이션 트랙만 있는 경우엔 정상 저장됩니다.')
       } else if (c2) {
         const epNo = state.episode?.number ?? ''
+        // 2026-11-18: 합친 게 나레이션뿐이고 이 컷에 대사도 있으면(컷2처럼 대사는 Veo 네이티브로
+        // 따로 말함) reelFinalize.js가 찾는 파일명이 cut_NN.mp3가 아니라 cut_NN_nr.mp3다 —
+        // 서버에 그대로 알려준다(위 skipSaveDialogueReel과 같은 toMerge 판정 재사용).
+        const narrOnly = toMerge.length > 0 && toMerge.every(t => t.type === 'narration')
+        const nrSuffix = narrOnly && String(c2.dialogue || '').trim() ? '1' : '0'
         setSaving(p => ({ ...p, [key]: true }))
         try {
           const wavRes  = await fetch(url)
           const wavBlob = await wavRes.blob()
           const saveRes = await fetch(
-            `http://localhost:3001/api/save-audio?ep=${epNo}&cutNo=${String(c2.no).padStart(2,'0')}`,
+            `http://localhost:3001/api/save-audio?ep=${epNo}&cutNo=${String(c2.no).padStart(2,'0')}&nr=${nrSuffix}`,
             { method: 'POST', headers: { 'Content-Type': 'audio/wav' }, body: wavBlob }
           )
           if (!saveRes.ok) throw new Error('저장 실패')
@@ -1260,11 +1274,16 @@ export default function TTSTab() {
 
             {/* 2026-11-15: voiceSource==='video'인 컷은 합친 결과가 아예 없을 수 있어(TTS를 안
                 만드니까) 아래 "합친 결과" 블록(mergedUrls 조건부)만으로는 배지가 안 뜬다 —
-                독립적으로 여기서 바로 보여준다. */}
-            {cut.voiceSource === 'video' && (
+                독립적으로 여기서 바로 보여준다.
+                2026-11-18 확장(성준님 제보 — 컷3 "G3 배지가 왜 안 뜨지?"): 원래 문구 자체가
+                "나레이션/대사가 영상 생성에 이미 포함된 컷"이라고 대사 쪼까지 이미 포괄해서
+                써뒀었는데, 조건은 voiceSource==='video'(나레이션 V.O. 내장)만 체크해서 대사만
+                Veo 네이티브로 말하고 나레이션이 없는 컷(컷3)은 걸리지 않았다 — 문구 의도에 맞게
+                조건만 넓힌다(문구는 그대로 하나로 유지, 새 문구 안 만듦). */}
+            {(cut.voiceSource === 'video' || !hasVoiceNarration(cut)) && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, color: 'var(--text-3)', margin: '4px 0' }}>
                 <span className={s.g3Tag} style={{ opacity: 0.45, filter: 'grayscale(1)' }}
-                  title="나레이션/대사가 Flow·Veo3 영상 생성 자체에 화면 밖 음성(V.O.)으로 이미 포함됨 — TTS 불필요(yeori_ruleset §⑬-4, 2026-11-15)">
+                  title="나레이션/대사가 Flow·Veo3 영상 생성 자체에 이미 포함됨(화면 밖 음성 V.O. 또는 Veo 네이티브 발화) — TTS 불필요(yeori_ruleset §⑬-2/⑬-4)">
                   G3 해당없음
                 </span>
                 <span>나레이션/대사가 영상 생성에 이미 포함된 컷 — TTS 생성 불필요</span>

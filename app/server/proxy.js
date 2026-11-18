@@ -5457,8 +5457,15 @@ app.post('/api/save-audio', async (req, res) => {
   const audioDir = mp.audioDir(ep)
   fs.mkdirSync(audioDir, { recursive: true })
 
+  // 2026-11-18 수정(성준님 제보 — 컷2 TTS 나레이션 합치기 후 영상탭에서 안 들림): 이 엔드포인트는
+  // 항상 cut_NN.mp3로만 저장했는데, reelFinalize.js(실제 최종 믹싱)는 그 컷에 대사(dialogue)가
+  // 있으면 나레이션을 cut_NN_nr.mp3에서만 찾는다(server/lib/reelFinalize.js d.nrFileExpected,
+  // studio-run-g3의 자동생성 경로는 이미 이 규칙을 지킴 — TTS탭의 수동 "합치기" 경로만 안 지키고
+  // 있었음). 클라이언트(TTSTab.jsx)가 "합친 게 나레이션뿐이고 이 컷에 대사도 있는지"를 이미
+  // 알고 있으니 그대로 넘겨받아 같은 규칙을 적용한다 — 안 보내면(구버전 클라 호환) 예전처럼 .mp3.
+  const useNrSuffix = req.query.nr === '1'
   const wavPath = path.join(audioDir, `cut_${String(cutNo).padStart(2,'0')}_tmp.wav`)
-  const mp3Path = path.join(audioDir, `cut_${String(cutNo).padStart(2,'0')}.mp3`)
+  const mp3Path = path.join(audioDir, `cut_${String(cutNo).padStart(2,'0')}${useNrSuffix ? '_nr' : ''}.mp3`)
 
   const chunks = []
   req.on('data', chunk => chunks.push(chunk))

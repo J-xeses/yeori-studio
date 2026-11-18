@@ -4,6 +4,15 @@ import { loadGPoints } from '../lib/gpoints'
 import { displayEpisodeCode, resolveEpisodeCode } from '../lib/episodeCode'
 import s from './EpisodeInfoSidebar.module.css'
 
+// server/lib/reelFinalize.js의 hasVoiceNarration과 동일(클라에선 못 import하는 서버 전용
+// 모듈이라 이 파일 관례대로 그대로 복제, TTSTab.jsx에도 같은 복제본 있음).
+function hasVoiceNarration(cut) {
+  const nrText = String(cut?.narration || '').trim()
+  if (!nrText || /^(없음|-)$/.test(nrText)) return false
+  if (/^\(?\s*(화면\s*자막|자막|텍스트)\s*\)?/.test(nrText) || /대사 자막만/.test(nrText)) return false
+  return true
+}
+
 // 대본생성 탭(ScriptGenTab.jsx)의 코드 라벨과 동일 — 이 사이드바는 읽기 전용
 // 개요 표시용이라 대본생성 탭의 편집 폼(설정)과는 별개로 최소 라벨만 둔다.
 const CONTENT_TYPE_LABELS = {
@@ -197,7 +206,11 @@ export function CutList({ cuts, gData, episodeCode, activeCutId, onCutClick, max
         // (cut.voiceSource==='video', yeori_ruleset §⑬-4)은 G3(TTS) 자체가 해당없음 — g.g3가
         // 영원히 false라 배지가 그냥 안 보이면 "아직 안 했나?"로 헷갈린다. 비활성 G3 배지를
         // 따로 끼워 넣어 단계 전개가 끊기지 않고 보이게 한다(성준님 요청).
-        const g3NA = c.voiceSource === 'video' && stages.includes('g3')
+        // 2026-11-18 확장(컷3 "사이드바에 G3 배지가 안 뜬다" 제보, TTSTab.jsx와 동일 수정) —
+        // voiceSource==='video'만 보면, 나레이션 자체가 없고 대사만 Veo가 네이티브로 말하는
+        // 컷(⑬-2, STS로 음성만 변환)은 걸리지 않는다. "나레이션/대사가 영상 생성에 이미
+        // 포함된 컷"이라는 문구 의도대로 조건을 넓힌다.
+        const g3NA = (c.voiceSource === 'video' || !hasVoiceNarration(c)) && stages.includes('g3')
         // 2026-11-16: g3NA 배지가 badges.map() 뒤에 따로 붙어 나와서, 실제 g4가 있는 컷은
         // "G4, G3(흐리게)"처럼 순서가 뒤집혀 보이던 버그(성준님 지적: "G3→G4가 맞는 순서 아냐??") —
         // g1→g2→g3(실제 또는 NA)→g4→g5 오름차순이 맞으므로, NA 자리도 stages 순서 그대로

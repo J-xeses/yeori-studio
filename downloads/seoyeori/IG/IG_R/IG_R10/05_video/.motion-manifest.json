@@ -9,13 +9,15 @@
     "method": "multi-clip-compose",
     "motion": null,
     "baked": true,
-    "producedAt": "2026-11-18T09:34:27.719Z"
+    "producedAt": "2026-11-18T10:18:55.728Z"
   },
   "3": {
     "method": "multi-clip-compose",
     "motion": null,
     "baked": true,
-    "producedAt": "2026-11-18T08:26:15.505Z"
+    "producedAt": "2026-11-18T08:26:15.505Z",
+    "overlay": true,
+    "overlayAt": "2026-11-18T10:19:27.564Z"
   },
   "4": {
     "method": "multi-clip-compose",

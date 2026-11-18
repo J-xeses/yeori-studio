@@ -2272,7 +2272,7 @@
     },
     "cut_2": {
       "g1": true,
-      "updatedAt": "2026-11-18T08:29:25.483Z",
+      "updatedAt": "2026-11-18T09:41:32.948Z",
       "g2Checklist": {
         "0": {
           "filename": "cut_02_a.jpg",
@@ -2314,7 +2314,8 @@
         }
       },
       "g2": true,
-      "selectedImage": "cut_02_b.jpg"
+      "selectedImage": "cut_02_b.jpg",
+      "g3": true
     },
     "cut_3": {
       "g1": true,
