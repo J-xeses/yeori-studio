@@ -1,5 +1,5 @@
 {
-  "activeTab": "studio",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -13368,7 +13368,7 @@
   "videoTabState": {
     "videoClips": {},
     "g4Approved": {},
-    "selectedCutId": "cut-1",
+    "selectedCutId": "cut-3",
     "subtitles": {}
   },
   "ttsTabState": {
