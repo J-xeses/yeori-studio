@@ -321,9 +321,16 @@ function applyPrivateCastGuard(sceneKr, chField, ip, vp) {
 // 과거 에피소드들의 기존 텍스트는 건드리지 않고(이미 완성된 영상의 기록일 뿐), 앞으로
 // 신규/재구성 대본에만 이 가드로 표준을 강제한다(성준님 2026-10-13 확정).
 const SILENT_FILM_ADDENDUM = 'NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.'
+// 2026-11-18(IG_R10 실측): ⑬-4(V.O. 영상 내장 생성, v1.4.7 2026-11-15)로 쓴 VP는 "Add an
+// off-screen voice-over narration (V.O. ...)"로 Flow가 음성을 직접 생성하게 지시하는데, 이
+// 가드가 그 뒤에 "SILENT FILM"(음성 자체를 내지 말라는 뜻)을 또 붙이면 같은 VP 안에서 서로
+// 모순되는 지시가 된다. VP가 이미 voice-over/V.O. 생성을 명시했으면 이 가드를 건너뛴다 —
+// 그 외(기존 "포스트 TTS로 별도 삽입" 방식) 컷은 그대로 SILENT FILM 강제 유지.
+const VOICEOVER_VP_RE = /voice-over|\bV\.O\.\b/i
 function applyNarrationSilentGuard(dl, nr, vp) {
   if (dl || !nr || !vp) return vp
   if (vp.includes(SILENT_FILM_ADDENDUM)) return vp // 멱등성
+  if (VOICEOVER_VP_RE.test(vp)) return vp // ⑬-4 V.O. 내장 생성 컷은 SILENT FILM과 모순 — 건너뜀
   const trimmed = vp.trim()
   const sep = /[.!?]$/.test(trimmed) ? ' ' : '. '
   return `${trimmed}${sep}${SILENT_FILM_ADDENDUM}`

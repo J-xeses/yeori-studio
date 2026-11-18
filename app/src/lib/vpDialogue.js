@@ -66,10 +66,20 @@ export function computeCaptionTimeline(cut = {}) {
   const dlRaw = isNoneText(cut.dialogue) ? '' : String(cut.dialogue).trim()
   const nrRaw = isNoneText(cut.narration) ? '' : String(cut.narration).trim()
   const turns = dlRaw ? splitSpeakerSegments(dlRaw) : []
-  const parts = [
-    ...turns.map(t => ({ kind: 'dialogue', speaker: t.speaker, text: t.text })),
-    ...(nrRaw ? [{ kind: 'narration', speaker: null, text: nrRaw }] : []),
-  ]
+  // 2026-11-18 (IG_R10 CUT2 실측): 대사·나레이션이 둘 다 있으면 기본값은 "대사 먼저,
+  // 나레이션 마지막"을 가정했는데, 실제 연출(AC/VP)은 컷마다 다르다 — 이 컷은 나레이션이
+  // 먼저(0~5초) 나오고 그 뒤에 자막 대사(5~8초)가 온다. CP(화면자막) 필드는 사람이 이미
+  // 연출 순서대로 "나레이션문구 / 대사문구"처럼 써둔 값이므로, CP에 둘 다 식별되면 그
+  // 순서를 그대로 따른다. CP가 없거나 식별이 안 되면 기존 기본값(대사 먼저)으로 안전하게
+  // 폴백 — 기존 컷들 동작은 그대로 유지.
+  const cpRawForOrder = isNoneText(cut.subtitle) ? '' : String(cut.subtitle || '').trim()
+  const nrBareText = nrRaw.replace(/^\([^)]*\)\s*/, '').trim()
+  const narrationFirst = !!(nrRaw && turns.length && cpRawForOrder && nrBareText && turns[0].text
+    && cpRawForOrder.indexOf(nrBareText) !== -1 && cpRawForOrder.indexOf(turns[0].text) !== -1
+    && cpRawForOrder.indexOf(nrBareText) < cpRawForOrder.indexOf(turns[0].text))
+  const dialogueParts = turns.map(t => ({ kind: 'dialogue', speaker: t.speaker, text: t.text }))
+  const narrationPart = nrRaw ? [{ kind: 'narration', speaker: null, text: nrRaw }] : []
+  const parts = narrationFirst ? [...narrationPart, ...dialogueParts] : [...dialogueParts, ...narrationPart]
   // 2026-10-09 실측(SF_E109 컷4): 발화 음성(DL/NR)은 없지만 화면 자막(CP)만 있는 컷도 있다
   // (예: 리액션 컷에 캡션만 얹는 경우) — 이런 컷은 timeline이 빈 배열로 떨어져서 전체
   // 목록/상세편집에 시간설정 UI 자체가 안 뜨고, captionSegTiming이 있어도 조절할 방법이

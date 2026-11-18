@@ -12873,7 +12873,13 @@
               "ac": "0~4초 소파에 늘어져 지친 채 폰을 봄 → 4~8초 알림(큰 글씨 '밥 먹었어?')이 뜨며 화면을 바라보는 데서 나레이션",
               "md": "지침, 무심함"
             }
-          }
+          },
+          "captionSegTiming": [
+            [
+              3,
+              8
+            ]
+          ]
         },
         {
           "id": "cut-2",
@@ -12917,6 +12923,23 @@
               "ac": "0~5초 폰 화면(흐리게)에 답장 입력하는 손, 나레이션 → 5~8초 \"아직… 왜?\" 입력 후 전송",
               "md": "의아함, 호기심"
             }
+          },
+          "captionSegTiming": [
+            [
+              0,
+              5
+            ],
+            [
+              5,
+              8
+            ]
+          ],
+          "overrides": {
+            "dialogue": {
+              "value": "(자막) 아직… 왜?",
+              "at": "2026-11-18T04:44:39.118Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            }
           }
         },
         {
@@ -12929,9 +12952,9 @@
           "character": "서여리",
           "dialogue": "여리 \"…진짜 왔어?\" / 지아 \"그럴 줄 알았어. 일단 먹어.\"",
           "narration": "",
-          "subtitle": "진짜 왔어? / 그럴 줄 알았어. 일단 먹어.",
+          "subtitle": "…진짜 왔어? / 그럴 줄 알았어. 일단 먹어.",
           "imagePrompt": "MEDIUM SHOT from inside a Korean apartment entryway (hyeonggwan) looking out through the open front door, evening, warm indoor lighting, the apartment corridor clearly visible OUTSIDE beyond the doorway, fixed camera,\nThe woman on the right (INSIDE the apartment, near the camera, in three-quarter view turned toward the doorway so her face is visible, hand on the door handle, door opened inward toward the right edge of frame): long wavy dark brown hair falling loosely, clear healthy skin, smooth even complexion with a soft natural finish, casual gray lounge t-shirt and soft gray home pants, barefoot, a soft hopeful anticipating look,\nThe woman on the left (standing OUTSIDE in the corridor at the doorway threshold, facing the camera): oval face, large dark brown almond eyes with dramatic curled lashes and subtle winged black eyeliner, softly arched dark brows, full lips in deep mauve-brown, fair warm skin with a small mole near the nose, clear healthy skin, short wavy black bob with wispy curtain bangs, NOT long hair, wearing a cropped black-and-white houndstooth tweed jacket with white buttons over a fitted white ribbed knit top, a black pleated mini skirt, black knee-high socks, white leather sneakers on her feet, delicate silver necklace with a tiny heart pendant, small black shoulder bag, holding a cloth-wrapped lunchbox up in front of her chest with both hands, confident playful grin, DO NOT change clothing,\nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no clothing logos or text, no other people in the background, only the two named women in frame, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine",
-          "videoPrompt": "[CLIP 1 · 0-4s] Fixed camera INSIDE the apartment entryway looking toward the front door; the apartment corridor is visible outside. The woman on the right (long wavy hair, gray t-shirt, barefoot) is in three-quarter view with her face visible, finishing pulling the door fully open with one hand. She sees the woman on the left, and her face lights up into a warm, happy smile of delight. The woman on the left stands OUTSIDE in the corridor at the threshold, feet planted, does NOT step inside and does NOT touch her shoes, grinning and lifting the cloth-wrapped lunchbox slightly with both hands. NO dialogue. NO speaking. MOUTH STAYS CLOSED for both women. Quiet evening ambience only. No on-screen subtitle text or captions. No clothing logos or text. No other people in the background, only the two named women in frame.\n\n[CLIP 2 · 4-8s, hard cut to a MEDIUM SHOT, fixed camera inside the entryway facing both women] Now the woman on the left stands INSIDE the entryway beside the other woman, wearing only black knee-high socks, no shoes on her feet; a pair of white sneakers sits neatly on the entryway floor beside the other shoes by the door. She holds the cloth-wrapped lunchbox in front of her chest, smiling warmly. The front door is closed behind them. The woman on the right (barefoot, gray t-shirt) turns toward her. Exactly two spoken lines, one speaker at a time, in this order. [0-1.5s of this clip] The woman on the right, with a delighted warm smile, says first in Korean, soft and happy (반말, close friend): \"…진짜 왔어?\" while the woman on the left stays silent with her mouth closed, smiling at her. [1.5-4s] Then the woman on the left, with a playful confident smile, says in Korean (반말): \"그럴 줄 알았어. 일단 먹어.\" and holds the lunchbox out toward her, while the woman on the right stays silent with her mouth closed, smiling warmly and reaching a hand toward the lunchbox. The two stand close together, affectionate and friendly. No on-screen subtitle text or captions. No clothing logos or text. No other people in the background, only the two named women in frame.",
+          "videoPrompt": "[CLIP 1 · 0-4s] Fixed camera INSIDE the apartment entryway looking toward the front door; the apartment corridor is visible outside. The woman on the right (long wavy hair, gray t-shirt and soft gray home pants, barefoot) is in three-quarter view with her face visible, finishing pushing the door fully open with one hand. She sees the woman on the left, and her face lights up into a warm, happy smile of delight. The woman on the left stands OUTSIDE the door, feet planted, does NOT step inside and does NOT touch her white leather sneakers, grinning and lifting the cloth-wrapped lunchbox slightly with both hands. NO dialogue. NO speaking. MOUTH STAYS CLOSED for both women. Quiet evening ambience only. No on-screen subtitle text or captions. No clothing logos or text. No other people in the background, only the two named women in frame.\n\n[CLIP 2 · 4-8s, hard cut to a MEDIUM SHOT, fixed camera inside the entryway facing both women] Now the woman on the left stands INSIDE the entryway beside the other woman, wearing only black knee-high socks, no shoes on her feet; a pair of white sneakers sits neatly on the entryway floor beside the other shoes by the door. She holds the cloth-wrapped lunchbox in front of her chest, smiling warmly. The front door is closed behind them. The woman on the right (barefoot, gray t-shirt, soft gray home pants) turns toward her. Exactly two spoken lines, one speaker at a time, in this order. [0-1.5s of this clip] The woman on the right, with a delighted warm smile, says first in Korean, soft and happy (반말, close friend): \"…진짜 왔어?\" while the woman on the left stays silent with her mouth closed, smiling at her. [1.5-4s] Then the woman on the left, with a playful confident smile, says in Korean (반말): \"그럴 줄 알았어. 일단 먹어.\" and holds the lunchbox out toward her, while the woman on the right stays silent with her mouth closed, smiling warmly and reaching a hand toward the lunchbox. The two stand close together, affectionate and friendly. No on-screen subtitle text or captions. No clothing logos or text. No other people in the background, only the two named women in frame.",
           "duration": 8,
           "shotType": "FULLBODY",
           "cutType": "YEORI",
@@ -13016,6 +13039,12 @@
               "md": "따뜻함, 편안한 친밀감"
             }
           },
+          "captionSegTiming": [
+            [
+              3,
+              8
+            ]
+          ],
           "overrides": {
             "narration": {
               "value": "(나레이션) 밥 먹었냐는 말은~... 너가 신경 쓰인다는 뜻이에요.",
@@ -13091,7 +13120,13 @@
           "ac": "0~4초 소파에 늘어져 지친 채 폰을 봄 → 4~8초 알림(큰 글씨 '밥 먹었어?')이 뜨며 화면을 바라보는 데서 나레이션",
           "md": "지침, 무심함"
         }
-      }
+      },
+      "captionSegTiming": [
+        [
+          3,
+          8
+        ]
+      ]
     },
     {
       "id": "cut-2",
@@ -13135,6 +13170,23 @@
           "ac": "0~5초 폰 화면(흐리게)에 답장 입력하는 손, 나레이션 → 5~8초 \"아직… 왜?\" 입력 후 전송",
           "md": "의아함, 호기심"
         }
+      },
+      "captionSegTiming": [
+        [
+          0,
+          5
+        ],
+        [
+          5,
+          8
+        ]
+      ],
+      "overrides": {
+        "dialogue": {
+          "value": "(자막) 아직… 왜?",
+          "at": "2026-11-18T04:44:39.118Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        }
       }
     },
     {
@@ -13147,9 +13199,9 @@
       "character": "서여리",
       "dialogue": "여리 \"…진짜 왔어?\" / 지아 \"그럴 줄 알았어. 일단 먹어.\"",
       "narration": "",
-      "subtitle": "진짜 왔어? / 그럴 줄 알았어. 일단 먹어.",
+      "subtitle": "…진짜 왔어? / 그럴 줄 알았어. 일단 먹어.",
       "imagePrompt": "MEDIUM SHOT from inside a Korean apartment entryway (hyeonggwan) looking out through the open front door, evening, warm indoor lighting, the apartment corridor clearly visible OUTSIDE beyond the doorway, fixed camera,\nThe woman on the right (INSIDE the apartment, near the camera, in three-quarter view turned toward the doorway so her face is visible, hand on the door handle, door opened inward toward the right edge of frame): long wavy dark brown hair falling loosely, clear healthy skin, smooth even complexion with a soft natural finish, casual gray lounge t-shirt and soft gray home pants, barefoot, a soft hopeful anticipating look,\nThe woman on the left (standing OUTSIDE in the corridor at the doorway threshold, facing the camera): oval face, large dark brown almond eyes with dramatic curled lashes and subtle winged black eyeliner, softly arched dark brows, full lips in deep mauve-brown, fair warm skin with a small mole near the nose, clear healthy skin, short wavy black bob with wispy curtain bangs, NOT long hair, wearing a cropped black-and-white houndstooth tweed jacket with white buttons over a fitted white ribbed knit top, a black pleated mini skirt, black knee-high socks, white leather sneakers on her feet, delicate silver necklace with a tiny heart pendant, small black shoulder bag, holding a cloth-wrapped lunchbox up in front of her chest with both hands, confident playful grin, DO NOT change clothing,\nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no clothing logos or text, no other people in the background, only the two named women in frame, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine",
-      "videoPrompt": "[CLIP 1 · 0-4s] Fixed camera INSIDE the apartment entryway looking toward the front door; the apartment corridor is visible outside. The woman on the right (long wavy hair, gray t-shirt, barefoot) is in three-quarter view with her face visible, finishing pulling the door fully open with one hand. She sees the woman on the left, and her face lights up into a warm, happy smile of delight. The woman on the left stands OUTSIDE in the corridor at the threshold, feet planted, does NOT step inside and does NOT touch her shoes, grinning and lifting the cloth-wrapped lunchbox slightly with both hands. NO dialogue. NO speaking. MOUTH STAYS CLOSED for both women. Quiet evening ambience only. No on-screen subtitle text or captions. No clothing logos or text. No other people in the background, only the two named women in frame.\n\n[CLIP 2 · 4-8s, hard cut to a MEDIUM SHOT, fixed camera inside the entryway facing both women] Now the woman on the left stands INSIDE the entryway beside the other woman, wearing only black knee-high socks, no shoes on her feet; a pair of white sneakers sits neatly on the entryway floor beside the other shoes by the door. She holds the cloth-wrapped lunchbox in front of her chest, smiling warmly. The front door is closed behind them. The woman on the right (barefoot, gray t-shirt) turns toward her. Exactly two spoken lines, one speaker at a time, in this order. [0-1.5s of this clip] The woman on the right, with a delighted warm smile, says first in Korean, soft and happy (반말, close friend): \"…진짜 왔어?\" while the woman on the left stays silent with her mouth closed, smiling at her. [1.5-4s] Then the woman on the left, with a playful confident smile, says in Korean (반말): \"그럴 줄 알았어. 일단 먹어.\" and holds the lunchbox out toward her, while the woman on the right stays silent with her mouth closed, smiling warmly and reaching a hand toward the lunchbox. The two stand close together, affectionate and friendly. No on-screen subtitle text or captions. No clothing logos or text. No other people in the background, only the two named women in frame.",
+      "videoPrompt": "[CLIP 1 · 0-4s] Fixed camera INSIDE the apartment entryway looking toward the front door; the apartment corridor is visible outside. The woman on the right (long wavy hair, gray t-shirt and soft gray home pants, barefoot) is in three-quarter view with her face visible, finishing pushing the door fully open with one hand. She sees the woman on the left, and her face lights up into a warm, happy smile of delight. The woman on the left stands OUTSIDE the door, feet planted, does NOT step inside and does NOT touch her white leather sneakers, grinning and lifting the cloth-wrapped lunchbox slightly with both hands. NO dialogue. NO speaking. MOUTH STAYS CLOSED for both women. Quiet evening ambience only. No on-screen subtitle text or captions. No clothing logos or text. No other people in the background, only the two named women in frame.\n\n[CLIP 2 · 4-8s, hard cut to a MEDIUM SHOT, fixed camera inside the entryway facing both women] Now the woman on the left stands INSIDE the entryway beside the other woman, wearing only black knee-high socks, no shoes on her feet; a pair of white sneakers sits neatly on the entryway floor beside the other shoes by the door. She holds the cloth-wrapped lunchbox in front of her chest, smiling warmly. The front door is closed behind them. The woman on the right (barefoot, gray t-shirt, soft gray home pants) turns toward her. Exactly two spoken lines, one speaker at a time, in this order. [0-1.5s of this clip] The woman on the right, with a delighted warm smile, says first in Korean, soft and happy (반말, close friend): \"…진짜 왔어?\" while the woman on the left stays silent with her mouth closed, smiling at her. [1.5-4s] Then the woman on the left, with a playful confident smile, says in Korean (반말): \"그럴 줄 알았어. 일단 먹어.\" and holds the lunchbox out toward her, while the woman on the right stays silent with her mouth closed, smiling warmly and reaching a hand toward the lunchbox. The two stand close together, affectionate and friendly. No on-screen subtitle text or captions. No clothing logos or text. No other people in the background, only the two named women in frame.",
       "duration": 8,
       "shotType": "FULLBODY",
       "cutType": "YEORI",
@@ -13234,6 +13286,12 @@
           "md": "따뜻함, 편안한 친밀감"
         }
       },
+      "captionSegTiming": [
+        [
+          3,
+          8
+        ]
+      ],
       "overrides": {
         "narration": {
           "value": "(나레이션) 밥 먹었냐는 말은~... 너가 신경 쓰인다는 뜻이에요.",
@@ -13364,7 +13422,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-18T00:02:55.682Z",
+  "savedAt": "2026-11-18T05:12:11.999Z",
   "videoTabState": {
     "videoClips": {},
     "g4Approved": {},

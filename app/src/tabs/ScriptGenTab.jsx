@@ -611,9 +611,14 @@ function applyPrivateCastGuard(sceneKr, chField, ip, vp) {
 
 // 나레이션 컷 "무발화" 지시 강화 (server/lib/scriptParserV3.js와 동일 유지, 2026-10-13 추가)
 const SILENT_FILM_ADDENDUM = 'NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.'
+// 2026-11-18(IG_R10 실측, server/lib/scriptParserV3.js와 동일 유지): ⑬-4(V.O. 영상 내장 생성,
+// v1.4.7 2026-11-15) VP는 "Add an off-screen voice-over narration (V.O. ...)"로 Flow가 음성을
+// 직접 생성하게 지시하는데, 이 가드가 SILENT FILM을 또 붙이면 서로 모순되는 지시가 된다.
+const VOICEOVER_VP_RE = /voice-over|\bV\.O\.\b/i
 function applyNarrationSilentGuard(dl, nr, vp) {
   if (dl || !nr || !vp) return vp
   if (vp.includes(SILENT_FILM_ADDENDUM)) return vp // 멱등성
+  if (VOICEOVER_VP_RE.test(vp)) return vp // ⑬-4 V.O. 내장 생성 컷은 SILENT FILM과 모순 — 건너뜀
   const trimmed = vp.trim()
   const sep = /[.!?]$/.test(trimmed) ? ' ' : '. '
   return `${trimmed}${sep}${SILENT_FILM_ADDENDUM}`

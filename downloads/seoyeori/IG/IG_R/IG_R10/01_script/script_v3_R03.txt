@@ -12,11 +12,12 @@
   지아 등장: characters.json "jia" 참조(오벌 페이스, 다크브라운 아몬드 눈+윙드 아이라이너, 모브브라운 립,
   짧은 웨이브 블랙 보브+커튼뱅, 코 옆 모). 목소리 voiceId 5n5gqmaQi9Ewevrz7bOS(Sian - Tender, Calm & Clear).
   언어 설계: 모든 컷 한국어 자막(나레이션/대사) + 영어 부제 한 줄(EN). 캡션은 영/한/일 3단.
-  ※ 나레이션(NR) 주의: Flow 영상 생성 VP 프롬프트에는 나레이션을 "says/voice-over"로 절대 넣지 않는다 —
-  캐릭터가 나레이션 텍스트에 입모양으로 반응(대사처럼 처리)하는 오류가 과거 반복됨. 나레이션 구간은 VP에
-  "mouth closed, not speaking / NO dialogue, NO lip movement"로 명시하고, 실제 나레이션 오디오는
-  04_making 단계에서 TTS로 별도 생성해 타이밍만 맞춰 삽입한다(대사DL과 구분). CUT3의 실제 대사(DL)는 예외 —
-  입모양과 함께 Flow에서 그대로 생성.
+  ※ 나레이션(NR) 처리: Flow 영상 생성 VP에 나레이션을 화면 밖 음성(V.O.)으로 명시해 영상 생성 자체에
+  포함시킨다(룰셋 ⑬-4, v1.4.7 2026-11-15 확정 — TTS보다 자연스럽고 립싱크 혼동도 없음, IG_R09 실측 성공).
+  VP에 "mouth closed, not speaking on camera" + "Add an off-screen voice-over narration (V.O. — she does
+  not speak on camera, no lip movement, no mouth movement): a [톤] voice says in Korean: '[원문]'"을 명시하고,
+  해당 컷은 cut.voiceSource='video'로 표시해 TTS(G3)를 건너뛴다(⑬-2처럼 "says/voice-over"를 쓰지 않는 건
+  옛 기준). CUT3의 실제 대사(DL)는 원래부터 입모양과 함께 Flow에서 그대로 생성(변경 없음).
 ================================================================
 EP.HEADER
 CHAR  : YEORI.BASE + JIA (characters.json jia, 두 번째 등장)
@@ -51,7 +52,7 @@ CT: YEORI
 BEAT: 훅
 오디오:
   BGM: 잔잔한 로파이 (0초부터)
-  음성: 여리 — 나른하고 담담한 톤 — ※나레이션, Flow 생성에는 미포함, 포스트 TTS로 별도 삽입
+  음성: 여리 — 나른하고 담담한 톤 — ※나레이션, Flow 영상 생성에 화면 밖 V.O.로 직접 포함(⑬-4, TTS 불필요)
   효과음: 폰 알림음(짧게, 4초 지점)
   앰비언스: 조용한 저녁 거실
 
@@ -78,7 +79,7 @@ photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible te
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-[0-4s] She sits slumped on her living room sofa, barefoot, scrolling her phone with a tired, blank expression. [4-8s] A notification pops up on her screen; she glances at it with a flat, puzzled look, mouth closed, not speaking. NO dialogue, NO lip movement — the Korean narration ("한국에서 '밥 먹었어?'는 진짜 밥 질문이 아니에요.") is added afterward as a separate voice-over in post-production, not generated here. No on-screen subtitle text or captions.
+[0-4s] She sits slumped on her living room sofa, barefoot, scrolling her phone with a tired, blank expression. [4-8s] A notification pops up on her screen; she glances at it with a flat, puzzled look, mouth closed, not speaking on camera. Add an off-screen voice-over narration (V.O. — she does not speak on camera, no lip movement, no mouth movement): a drowsy, flat young woman's voice says in Korean: "한국에서 '밥 먹었어?'는 진짜 밥 질문이 아니에요." No on-screen subtitle text or captions.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -101,7 +102,7 @@ CT: YEORI
 BEAT: 전개
 오디오:
   BGM: 로파이 (이어서)
-  음성: 여리 — 설명하듯 차분한 톤(나레이션) — ※Flow 생성에는 미포함, 포스트 TTS로 별도 삽입. "아직… 왜?"도 음성 아닌 자막(타이핑) 처리
+  음성: 여리 — 설명하듯 차분한 톤(나레이션) — ※Flow 영상 생성에 화면 밖 V.O.로 직접 포함(⑬-4, TTS 불필요). "아직… 왜?"는 음성 아닌 자막(타이핑) 처리
   효과음: 타이핑 소리(가볍게), 전송음
   앰비언스: 조용한 저녁 거실
 
@@ -128,7 +129,7 @@ photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible te
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-[0-5s] Close on her hand typing a reply on her phone (screen softly blurred), puzzled thoughtful expression, silent, not speaking. NO dialogue, NO lip movement — the Korean narration ("걱정된다는 뜻으로 건네는 말이에요.") is added afterward as a separate voice-over in post-production, not generated here. [5-8s] She types a reply and taps send, still silent. No on-screen subtitle text or captions — both the narration and her typed reply ("아직… 왜?") are added as on-screen text/audio elements in post.
+[0-5s] Close on her hand typing a reply on her phone (screen softly blurred), puzzled thoughtful expression, mouth closed, not speaking on camera. Add an off-screen voice-over narration (V.O. — she does not speak on camera, no lip movement, no mouth movement): a calm, explaining young woman's voice says in Korean: "걱정된다는 뜻으로 건네는 말이에요." [5-8s] She types a reply and taps send, still silent, mouth closed. No on-screen subtitle text or captions — her typed reply ("아직… 왜?") is added as on-screen text in post.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -179,9 +180,9 @@ photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no clothing l
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-[CLIP 1 · 0-4s] Fixed camera INSIDE the apartment entryway looking toward the front door; the apartment corridor is visible outside. The woman on the right (long wavy hair, gray t-shirt, barefoot) is in three-quarter view with her face visible, finishing pulling the door fully open with one hand. She sees the woman on the left, and her face lights up into a warm, happy smile of delight. The woman on the left stands OUTSIDE in the corridor at the threshold, feet planted, does NOT step inside and does NOT touch her shoes, grinning and lifting the cloth-wrapped lunchbox slightly with both hands. NO dialogue. NO speaking. MOUTH STAYS CLOSED for both women. Quiet evening ambience only. No on-screen subtitle text or captions. No clothing logos or text. No other people in the background, only the two named women in frame.
+[CLIP 1 · 0-4s] Fixed camera INSIDE the apartment entryway looking toward the front door; the apartment corridor is visible outside. The woman on the right (long wavy hair, gray t-shirt and soft gray home pants, barefoot) is in three-quarter view with her face visible, finishing pushing the door fully open with one hand. She sees the woman on the left, and her face lights up into a warm, happy smile of delight. The woman on the left stands OUTSIDE the door, feet planted, does NOT step inside and does NOT touch her white leather sneakers, grinning and lifting the cloth-wrapped lunchbox slightly with both hands. NO dialogue. NO speaking. MOUTH STAYS CLOSED for both women. Quiet evening ambience only. No on-screen subtitle text or captions. No clothing logos or text. No other people in the background, only the two named women in frame.
 
-[CLIP 2 · 4-8s, hard cut to a MEDIUM SHOT, fixed camera inside the entryway facing both women] Now the woman on the left stands INSIDE the entryway beside the other woman, wearing only black knee-high socks, no shoes on her feet; a pair of white sneakers sits neatly on the entryway floor beside the other shoes by the door. She holds the cloth-wrapped lunchbox in front of her chest, smiling warmly. The front door is closed behind them. The woman on the right (barefoot, gray t-shirt) turns toward her. Exactly two spoken lines, one speaker at a time, in this order. [0-1.5s of this clip] The woman on the right, with a delighted warm smile, says first in Korean, soft and happy (반말, close friend): "…진짜 왔어?" while the woman on the left stays silent with her mouth closed, smiling at her. [1.5-4s] Then the woman on the left, with a playful confident smile, says in Korean (반말): "그럴 줄 알았어. 일단 먹어." and holds the lunchbox out toward her, while the woman on the right stays silent with her mouth closed, smiling warmly and reaching a hand toward the lunchbox. The two stand close together, affectionate and friendly. No on-screen subtitle text or captions. No clothing logos or text. No other people in the background, only the two named women in frame.
+[CLIP 2 · 4-8s, hard cut to a MEDIUM SHOT, fixed camera inside the entryway facing both women] Now the woman on the left stands INSIDE the entryway beside the other woman, wearing only black knee-high socks, no shoes on her feet; a pair of white sneakers sits neatly on the entryway floor beside the other shoes by the door. She holds the cloth-wrapped lunchbox in front of her chest, smiling warmly. The front door is closed behind them. The woman on the right (barefoot, gray t-shirt, soft gray home pants) turns toward her. Exactly two spoken lines, one speaker at a time, in this order. [0-1.5s of this clip] The woman on the right, with a delighted warm smile, says first in Korean, soft and happy (반말, close friend): "…진짜 왔어?" while the woman on the left stays silent with her mouth closed, smiling at her. [1.5-4s] Then the woman on the left, with a playful confident smile, says in Korean (반말): "그럴 줄 알았어. 일단 먹어." and holds the lunchbox out toward her, while the woman on the right stays silent with her mouth closed, smiling warmly and reaching a hand toward the lunchbox. The two stand close together, affectionate and friendly. No on-screen subtitle text or captions. No clothing logos or text. No other people in the background, only the two named women in frame.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -204,7 +205,7 @@ CT: YEORI
 BEAT: 결말
 오디오:
   BGM: 로파이 → 4~6초 지점 2초간 완전 정지(여운) → 6초부터 낮게 흐르다 엔딩카드에서 페이드아웃
-  음성: 여리 — 잔잔하고 진심 어린 톤 — ※나레이션, Flow 생성에는 미포함, 포스트 TTS로 별도 삽입
+  음성: 여리 — 잔잔하고 진심 어린 톤 — ※나레이션, Flow 영상 생성에 화면 밖 V.O.로 직접 포함(⑬-4, TTS 불필요)
   효과음: 도시락 뚜껑 여는 소리, 수저 소리(자연스럽게)
   앰비언스: 조용한 저녁 거실(정적 구간엔 거의 무음)
 
@@ -231,7 +232,7 @@ photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no other peop
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-[0-4s] The two women sit together at the living room table, eating from the shared lunchbox, warm and relaxed. [4-6s] They pause, chopsticks resting, exchanging a quiet smile — a held breath of stillness, no sound but faint ambient room noise. [6-8s] The woman on the right looks toward camera with a warm soft expression, mouth closed, not speaking. NO dialogue, NO lip movement — the Korean narration ("밥 먹었냐는 말은, 네가 신경 쓰인다는 뜻이에요.") is added afterward as a separate voice-over in post-production, not generated here. No on-screen subtitle text or captions.
+[0-4s] The two women sit together at the living room table, eating from the shared lunchbox, warm and relaxed. [4-6s] They pause, chopsticks resting, exchanging a quiet smile — a held breath of stillness, no sound but faint ambient room noise. [6-8s] The woman on the right looks toward camera with a warm soft expression, mouth closed, not speaking on camera. Add an off-screen voice-over narration (V.O. — she does not speak on camera, no lip movement, no mouth movement): a warm, sincere young woman's voice says in Korean: "밥 먹었냐는 말은, 네가 신경 쓰인다는 뜻이에요." No on-screen subtitle text or captions.
 ================================================================
 
 
@@ -257,6 +258,7 @@ JP: 韓国では「ご飯食べた?」(パブ モゴッソ?)が「あなたの�
 - [CUT3 클립2 시작 프레임 IP-2] MEDIUM SHOT inside a Korean apartment entryway, evening warm indoor lighting, fixed camera facing the front door from inside, the front door closed. The woman on the left (standing INSIDE, facing the camera, smiling): oval face, large dark brown almond eyes with dramatic curled lashes and subtle winged black eyeliner, full lips in deep mauve-brown, fair warm skin with a small mole near the nose, clear healthy skin, short wavy black bob with wispy curtain bangs, NOT long hair, wearing a cropped black-and-white houndstooth tweed jacket with white buttons over a fitted white ribbed knit top, a black pleated mini skirt, black knee-high socks only, NO shoes on her feet, delicate silver necklace with a tiny heart pendant, holding a cloth-wrapped lunchbox in front of her chest with both hands, DO NOT change clothing. The woman on the right (barefoot, three-quarter view toward her, face clearly visible, warm delighted smile): long wavy dark brown hair, clear healthy skin, gray lounge t-shirt and gray home pants. A pair of white leather sneakers sits neatly on the entryway floor beside other shoes by the door. photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no clothing logos or text, no other people in the background, only the two named women in frame, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine
 - 룰셋 v1.4.1 피부 문구 적용(IP의 right cheek skin texture 제거 → clear healthy skin + avoid 절)
 - 엔딩 A는 ①(IG_R09)과 동일 — 지아 등장 자체의 영향만 보기 위해 변수 최소화
-- 나레이션 3곳(CUT1·2·4) 전부 04_making 단계에서 TTS 별도 생성 필요 — Flow 생성본엔 음성 미포함.
-  CUT2의 "아직… 왜?"도 음성이 아니라 타이핑 자막으로 처리(①과 동일 원칙).
+- 나레이션 3곳(CUT1·2·4) 전부 Flow 영상 생성 자체에 화면 밖 V.O.로 직접 포함(⑬-4, 2026-11-15) —
+  04_making TTS 별도 생성 불필요(cut.voiceSource='video'로 표시, G3 해당없음).
+  CUT2의 "아직… 왜?"는 음성이 아니라 타이핑 자막으로 처리(①과 동일 원칙).
   구간 길이는 LF_T01 발음오류 수정과 동일한 방법(TTS 생성 → STT 단어 타임스탬프로 구간 측정 → atempo 속도 보정) 활용 가능
