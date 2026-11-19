@@ -276,6 +276,13 @@ export function buildClipPrompt(cut, k, n) {
     // 동일 함수)로 교체 — 글자수 비례뿐 아니라, 성준님이 화면에서 직접 초를 고쳐 저장한
     // cut.captionSegTiming override가 있으면 그걸 그대로 쓴다("숫자를 고치면 실제 생성에도
     // 반영돼야 한다"). 다중 화자(두 명이 번갈아 대화 + 나레이션)도 일반적으로 처리.
+    // 2026-11-19 교정(대사는 립싱크 필요·나레이션은 화면 밖 음성이라 서로 성격이 다르다는
+    // 성준님 지적 + 6초 샘플 "Woman_sitting_at_desk" 단일변수 테스트 성공,
+    // [[project_narration_vp_visual_audio_split_standard_2026_11_19]] 참고): 기존엔 화면
+    // 서술(prompt) 뒤에 구간별 (DIALOGUE,lip-synced)/(NARRATION,voiceover) 태그를 그냥 이어
+    // 붙였는데, 그것도 결국 "한 문단에 Visual과 Audio 지시가 섞인" 구조라 같은 위험이 있었다.
+    // 테스트로 확인된 패턴대로 Visual:/Audio: 두 블록으로 명시 분리하고, Audio: 블록 안에서
+    // 구간별 시간대+입모양 상태를 불릿으로 나열하는 구조로 교정.
     const dl = String(cut.dialogue).trim()
     line = dl
     const dur = Math.max(1, Number(cut.duration) || 8)
@@ -285,24 +292,25 @@ export function buildClipPrompt(cut, k, n) {
     // 2026-10-09 (성준님: "앞부분 대사가 끝나자마자 바로 이어지지 않는 상황... 간격을 1초정도
     // 두고 연출될 상황도 있잖아!") — 구간 쌍이 서로 독립적이라 사이에 공백(무음)이 생길 수
     // 있다. 그 공백도 명시하지 않으면 Veo가 공백 구간에 뭘 해야 할지 몰라 임의로 채운다.
+    const audioLines = []
     let prevEnd = 0
     for (const p of parts) {
       if (p.start > prevEnd + 0.05) {
-        prompt += `\n\n${prevEnd.toFixed(1)}-${p.start.toFixed(1)}s: no one speaks, mouth stays closed in a natural neutral/resting shape.`
+        audioLines.push(`- ${prevEnd.toFixed(1)}s-${p.start.toFixed(1)}s: silence, no one speaks, her lips stay closed in a natural neutral/resting shape.`)
       }
       const s0 = p.start.toFixed(1), s1 = p.end.toFixed(1)
       if (p.kind === 'dialogue') {
         const who = p.speaker ? (CHAR_EN[p.speaker] || p.speaker) : 'She'
-        prompt += `\n\n${s0}-${s1}s (DIALOGUE, lip-synced): ${who} says in Korean, lips synced: "${p.text}". Only this line is spoken here, lips move naturally in sync with these exact words.`
+        audioLines.push(`- ${s0}s-${s1}s: ${who} speaks on camera, lips moving naturally in sync with her own voice, says in Korean: "${p.text}". Only this line is spoken here.`)
       } else {
-        prompt += `\n\n${s0}-${s1}s (NARRATION, voiceover added in post): she does NOT speak and her lips do NOT move — mouth stays closed or in a natural neutral/resting shape, no mouthing or mumbling. She may shift her gaze or expression slightly, but must not appear to be talking. The line "${p.text}" is narration audio added afterward, not something she says on camera.`
+        audioLines.push(`- ${s0}s-${s1}s: a separate off-screen narrator (a calm, natural voice that does not belong to the woman on screen) says in Korean: "${p.text}". Her lips never move during this time — mouth stays closed or in a natural neutral/resting shape, no mouthing or mumbling. She may shift her gaze or expression slightly, but must not appear to be talking.`)
       }
       prevEnd = p.end
     }
     if (prevEnd < dur - 0.05) {
-      prompt += `\n\n${prevEnd.toFixed(1)}-${dur.toFixed(1)}s: no one speaks, mouth stays closed in a natural neutral/resting shape.`
+      audioLines.push(`- ${prevEnd.toFixed(1)}s-${dur.toFixed(1)}s: silence, no one speaks, her lips stay closed in a natural neutral/resting shape.`)
     }
-    prompt += `\n\nNo on-screen subtitle text or captions.`
+    prompt = `Visual: ${prompt}\n\nAudio:\n${audioLines.join('\n')}\n\nNo on-screen subtitle text or captions.`
     const anchors = segs.length ? voiceAnchors(cut, speakers) : []
     if (anchors.length) prompt += `\n\n${anchors.map(a => a.replace(/\.?$/, '.')).join(' ')} Keep exactly this voice for the dialogue portion.`
   } else if (String(cut.dialogue || '').trim()) {
