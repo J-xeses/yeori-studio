@@ -256,6 +256,32 @@ function Workbench() {
   // ── 캔버스 상태: nodes 에는 위치만(실시간 값은 LiveCtx), edges 는 정의에서 자동 생성한 기본 배선 + 화면에서 그은 임시 배선 ──
   const [nodes, setNodes, onNodesChange] = useNodesState([])
   const [edges, setEdges, onEdgesChange] = useEdgesState(buildEdges().map(e => ({ ...e, deletable: false })))
+  // 2026-11-19(성준님 — "배선 테스트해보니 실행 취소가 있어야겠다") — 배치·배선 되돌리기.
+  // ref 로 항상 최신 nodes/edges 를 들고 있다가(state 는 액션 핸들러가 정의된 렌더 시점의 값을
+  // 들고 있을 수 있어 stale closure 위험이 있음) 조작 "직전"에 pushHistory() 로 그 스냅샷을 쌓는다.
+  // 구상 노드 생성·삭제는 서버 기록(/api/pipeline-draft-nodes)과 얽혀 되돌리기가 반쪽짜리가 될 수
+  // 있어(되돌려도 새로고침하면 서버 기록 기준으로 되돌아옴) 범위에서 뺐다 — "지우기" 버튼 자체가
+  // 그 경우의 되돌리기 역할을 한다. 여기서 다루는 건 노드 드래그(배치)·배선(연결·재배선·삭제·
+  // 자동 정렬)뿐.
+  const nodesRef = useRef(nodes), edgesRef = useRef(edges)
+  useEffect(() => { nodesRef.current = nodes }, [nodes])
+  useEffect(() => { edgesRef.current = edges }, [edges])
+  // ★ 스택 자체는 state 가 아니라 ref 에 둔다 — React 18 StrictMode(이 앱은 켜져 있다, main.jsx)는
+  // setState(prev => ...) 함수형 업데이터를 "순수한지" 검증하려고 개발 모드에서 일부러 두 번
+  // 호출한다. 그 안에 setNodes·setEdges·saveLayout 같은 부수효과를 넣었더니 실측으로 바로
+  // 드러났다 — undo 한 번 눌렀는데 "다시 실행 (2)"가 찍힘(실행 취소 버튼으로 직접 확인). 부수효과가
+  // 있는 로직은 updater 밖, 평범한 함수 본문에서 ref 를 직접 변경하는 쪽으로 옮겨야 두 번 불려도
+  // 안전하다 — count 용 state 만 따로 둔다(화면 표시만 담당, 부수효과 없음).
+  const HISTORY_LIMIT = 50
+  const historyRef = useRef([]), futureRef = useRef([])
+  const [historyCount, setHistoryCount] = useState(0)
+  const [futureCount, setFutureCount] = useState(0)
+  const pushHistory = useCallback(() => {
+    historyRef.current = [...historyRef.current, { nodes: nodesRef.current, edges: edgesRef.current }].slice(-HISTORY_LIMIT)
+    futureRef.current = []   // 새 조작이 일어나면 redo 스택은 버린다 — 표준 undo/redo 동작
+    setHistoryCount(historyRef.current.length)
+    setFutureCount(0)
+  }, [])
   const [layoutReady, setLayoutReady] = useState(false)
   const [saveState, setSaveState] = useState({ kind: 'idle' }) // idle | saving | saved(at) | error(msg)
   const [resetArmed, setResetArmed] = useState(false)
@@ -323,7 +349,47 @@ function Workbench() {
       .catch(() => setSaveState({ kind: 'error', msg: '배치 저장 실패 — 서버 연결 확인' }))
   }, [])
 
+  // undo/redo — 스택은 ref(historyRef/futureRef)에서 직접 읽고 바꾼다(위 주석 참고). count state 는
+  // 화면 표시 전용이라 StrictMode 이중호출이 일어나도 그냥 같은 값을 한 번 더 쓸 뿐 안전하다.
+  const undo = useCallback(() => {
+    if (!historyRef.current.length) return
+    const prev = historyRef.current[historyRef.current.length - 1]
+    historyRef.current = historyRef.current.slice(0, -1)
+    futureRef.current = [...futureRef.current, { nodes: nodesRef.current, edges: edgesRef.current }].slice(-HISTORY_LIMIT)
+    setNodes(prev.nodes)
+    setEdges(prev.edges)
+    saveLayout(prev.nodes)
+    setHistoryCount(historyRef.current.length)
+    setFutureCount(futureRef.current.length)
+  }, [setNodes, setEdges, saveLayout])
+  const redo = useCallback(() => {
+    if (!futureRef.current.length) return
+    const next = futureRef.current[futureRef.current.length - 1]
+    futureRef.current = futureRef.current.slice(0, -1)
+    historyRef.current = [...historyRef.current, { nodes: nodesRef.current, edges: edgesRef.current }].slice(-HISTORY_LIMIT)
+    setNodes(next.nodes)
+    setEdges(next.edges)
+    saveLayout(next.nodes)
+    setHistoryCount(historyRef.current.length)
+    setFutureCount(futureRef.current.length)
+  }, [setNodes, setEdges, saveLayout])
+  // 키보드 단축키 — 입력칸(이름/컨셉/변수 등)에 포커스가 있을 때는 그 칸의 평소 Ctrl+Z(텍스트 되돌리기)를
+  // 가로채지 않는다.
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      const tag = document.activeElement?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+      if (!(e.ctrlKey || e.metaKey)) return
+      const k = e.key.toLowerCase()
+      if (k === 'z' && !e.shiftKey) { e.preventDefault(); undo() }
+      else if ((k === 'z' && e.shiftKey) || k === 'y') { e.preventDefault(); redo() }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [undo, redo])
+
   // 드래그를 놓는 순간 전체 노드 좌표 저장(방금 끈 노드는 이벤트가 준 최종 좌표로 덮어 확실히 반영)
+  const onNodeDragStart = useCallback(() => pushHistory(), [pushHistory])
   const onNodeDragStop = useCallback((_e, _node, dragged) => {
     const moved = Object.fromEntries((dragged || []).map(n => [n.id, n]))
     saveLayout(getNodes().map(n => moved[n.id] || n))
@@ -338,6 +404,7 @@ function Workbench() {
   const resetLayout = () => {
     if (!resetArmed) { setResetArmed(true); return }
     setResetArmed(false)
+    pushHistory()
     // 구상 노드(draft)는 autoLayout 이 모르는 id라 — 자동 정렬에서 사라지지 않게 같은 "맨 아래 쌓기"
     // 기본 위치로 같이 다시 놓는다(불러오기 effect와 같은 규칙).
     const real = toFlowNodes(autoLayout(PIPELINE_NODES, {}))
@@ -382,12 +449,13 @@ function Workbench() {
   }
 
   // 화면에서 새로 그은 배선(보라) — 이번 단계는 보여주기만, 저장·검증 없음(새로고침하면 사라진다)
-  const onConnect = useCallback((conn) => setEdges(es => addEdge({ ...conn, data: { user: true } }, es)), [setEdges])
+  const onConnect = useCallback((conn) => { pushHistory(); setEdges(es => addEdge({ ...conn, data: { user: true } }, es)) }, [setEdges, pushHistory])
   // 임시 배선 지우기 — 저장된 게 없는 화면 전용 선이라 하나씩은 바로 지우고, "모두 지우기"만 두 번 눌러 실행
-  const removeUserEdge = (id) => setEdges(es => es.filter(e => !(e.data?.user && e.id === id)))
+  const removeUserEdge = (id) => { pushHistory(); setEdges(es => es.filter(e => !(e.data?.user && e.id === id))) }
   const clearUserEdges = () => {
     if (!clearArmed) { setClearArmed(true); return }
     setClearArmed(false)
+    pushHistory()
     setEdges(es => es.filter(e => !e.data?.user))
   }
 
@@ -403,7 +471,7 @@ function Workbench() {
   // pipelineNodes.js 나 서버에 쓰지 않는다. deletable:false(실선의 키보드 삭제 방지)는 그대로
   // 유지 — 이번에 연 건 "끝을 드래그"뿐이라 실수로 선택 후 Delete 키를 누르는 사고는 안 일어난다.
   const edgeReconnectSuccessful = useRef(true)
-  const onReconnectStart = useCallback(() => { edgeReconnectSuccessful.current = false }, [])
+  const onReconnectStart = useCallback(() => { edgeReconnectSuccessful.current = false; pushHistory() }, [pushHistory])
   const onReconnect = useCallback((oldEdge, newConnection) => {
     edgeReconnectSuccessful.current = true
     setEdges(es => es.map(e => e.id !== oldEdge.id ? e : {
@@ -643,6 +711,14 @@ function Workbench() {
               <>
                 <div className={s.sideHead}><span className={s.sideTitle}>편집</span></div>
                 <div className={s.sideBlock}>
+                  <div className={s.sideLabel}>실행 취소 <span className={s.sideLabelHint}>Ctrl+Z / Ctrl+Shift+Z</span></div>
+                  <div className={s.undoRow}>
+                    <button className={s.toolBtn} disabled={!historyCount} onClick={undo}>⟲ 실행 취소{historyCount ? ` (${historyCount})` : ''}</button>
+                    <button className={s.toolBtn} disabled={!futureCount} onClick={redo}>⟳ 다시 실행{futureCount ? ` (${futureCount})` : ''}</button>
+                  </div>
+                  <p className={s.sideNote}>노드 드래그·배선 연결·재배선·삭제·자동 정렬을 되돌립니다(키보드 단축키는 입력칸 밖에서만 동작). 구상 노드의 생성·삭제는 대상이 아닙니다 — 잘못 만들었으면 그 카드의 "지우기"를 쓰세요.</p>
+                </div>
+                <div className={s.sideBlock}>
                   <div className={s.sideLabel}>배치</div>
                   <div className={`${s.saveState} ${saveState.kind === 'error' ? s.saveStateErr : ''}`}>{saveText}</div>
                   <button className={`${s.toolBtn} ${resetArmed ? s.toolBtnArmed : ''}`} onClick={resetLayout}>
@@ -735,6 +811,7 @@ function Workbench() {
               nodeTypes={nodeTypes}
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
+              onNodeDragStart={onNodeDragStart}
               onNodeDragStop={onNodeDragStop}
               onConnect={onConnect}
               onReconnectStart={onReconnectStart}

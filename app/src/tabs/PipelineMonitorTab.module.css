@@ -151,6 +151,7 @@
   background: rgba(13,11,9,.9); color: var(--text-2); font-family: var(--mono); font-size: 10.5px;
 }
 .toolBtn:hover { border-color: var(--accent); color: #ffd9b3; }
+.undoRow { display: flex; gap: 8px; align-self: stretch; }
 .toolBtn:disabled { opacity: .45; cursor: not-allowed; }
 .toolBtn:disabled:hover { border-color: var(--line-2); color: var(--text-2); }
 .toolBtnArmed { border-color: var(--hold); color: var(--hold); }
