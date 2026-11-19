@@ -17,6 +17,7 @@ import { execFile } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import * as mp from './mediaPaths.js'
 import { hasVoiceNarration, checkFinalStale, overlaySuppressesCaption } from './reelFinalize.js'
+import { loadOverrides } from './reelOverrides.js'
 
 const STATE_PATH = path.join(mp.MEDIA_ROOT, 'app', 'studio-state.json')
 const MAKING_TYPES = ['GRAPHIC', 'BROLL', 'CAPCUT']
@@ -258,6 +259,25 @@ async function checkFinalize({ code, cuts, gp, dirs, compose, staleFn }) {
   return finish({ issues, verified: issues.some(i => i.level === 'fail') ? 0 : 1, total: 1, okText: `최종본 ${p.duration.toFixed(1)}초 · 오디오 ${p.audio}개${volText} · 현재 컷과 일치`, emptyText: '' })
 }
 
+// 체크업 탭(08) — BGM 세부 보정(곡위치 오프셋·구간음량, 2026-11-18~19 신설)이 설정됐다면,
+// 그 값이 실제 최종본(_finalize.json 의 bgm 노트, reelFinalize.js 가 적는 "· 트랙 N초 지점부터"/
+// "· 구간보정 N곳")에 반영됐는지 대조한다. loadOverrides()는 reelFinalize.js 가 읽는 바로 그
+// 함수라 경로가 갈라질 일이 없다. "설정은 됐는데 최종본은 옛 상태" — 이 모니터가 다른 노드들
+// (11/9 사고)에 적용하던 원칙(선언 vs 실제 파일)을 BGM 보정에도 그대로 적용.
+function checkCheckup({ code, dirs }) {
+  const bgm = loadOverrides(code)._bgm || {}
+  const offsetSec = Math.max(0, Number(bgm.offsetSec) || 0)
+  const segN = Array.isArray(bgm.gainSegments) ? bgm.gainSegments.length : 0
+  if (!offsetSec && !segN) return idle('BGM 세부 보정 미설정(기본값 그대로 재생)')
+  const manifest = readJson(path.join(dirs.final, `${code}_finalize.json`), null)
+  if (!manifest) return idle(`BGM 보정 설정됨(오프셋 ${offsetSec.toFixed(1)}s · 구간보정 ${segN}곳) · 최종본 아직 없음 — 생성 필요`)
+  const note = String(manifest.bgm || '')
+  const issues = []
+  if (offsetSec > 0 && !/지점부터/.test(note)) issues.push({ level: 'warn', msg: `체크업 탭 곡위치 오프셋(${offsetSec.toFixed(1)}s)이 최종본에 반영 안 됨 — 재생성 필요` })
+  if (segN > 0 && !/구간보정/.test(note)) issues.push({ level: 'warn', msg: `체크업 탭 구간음량 보정(${segN}곳)이 최종본에 반영 안 됨 — 재생성 필요` })
+  return finish({ issues, verified: issues.length ? 0 : 1, total: 1, okText: `BGM 보정 최종본 반영 확인(오프셋 ${offsetSec.toFixed(1)}s · 구간보정 ${segN}곳)`, emptyText: '' })
+}
+
 // ── 외부 앱 노드(2026-11-12) ────────────────────────────────────────
 // 트렌드레이더·Field Gate 는 이 저장소 밖의 별도 앱이고 "가끔 손으로 쓰는" 도구다. 그래서
 //   · 앱이 지금 켜져 있는지(포트 핑)는 보지 않는다 — 꺼져 있는 게 정상 운영일 수 있다.
@@ -380,8 +400,9 @@ export async function evaluatePipelineHealth({ code, cuts = [], gp = {}, dirs, s
   const finalize = await checkFinalize({ ...ctx, compose, staleFn: staleFn !== undefined ? staleFn : (dirs ? null : () => checkFinalStale(code)) })
   // 외부 앱 노드는 실패해도 에피소드 판정을 막지 않는다
   const safe = (fn) => { try { return fn(ctx) } catch (e) { return idle(`실측 실패 — ${e.message}`) } }
+  const checkup = safe(checkCheckup)
   const trendRadar = safe(checkTrendRadar), agentApp = safe(checkAgentApp), pipelineLeader = safe(checkPipelineLeader)
-  return { code, checkedAt: new Date().toISOString(), nodes: { script, image, tts, video, compose, preview, finalize, trendRadar, agentApp, pipelineLeader } }
+  return { code, checkedAt: new Date().toISOString(), nodes: { script, image, tts, video, compose, preview, finalize, checkup, trendRadar, agentApp, pipelineLeader } }
 }
 
 // studio-state.json 에서 코드에 해당하는 컷 목록(활성 에피소드는 최상위, 그 밖엔 episodes 보관본). code 생략 = 활성 에피소드.

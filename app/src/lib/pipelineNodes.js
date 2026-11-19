@@ -59,9 +59,51 @@ export const PIPELINE_NODES = [
       { port: 'VP', kind: 'text', text: '컷별 영상 프롬프트·세그 분할' },
       { port: 'narration', kind: 'text', text: '컷별 나레이션 텍스트(대사 컷 제외)' },
       { port: 'scriptTxt', kind: 'text', text: '01_script/*.txt' },
+      // 2026-11-19(성준님 — BGM 워크벤치 배선이 제작완료 이후에야 BGM을 보여주는 구조였다는 지적):
+      // 대본 작성 시점에 헤더·컷별 "BGM:" 서브필드로 분위기 초안을 이미 적는다
+      // (scriptParserV3.js V3_AUDIO_KEY_MAP → masterCode.audio.bgm). bgmSelect.js
+      // episodeBgmBrief()가 이 문구를 태그로 변환해 후보 매칭에 쓴다 — 지금까지 그래프엔
+      // 이 출발점이 전혀 없었다.
+      { port: 'bgmMood', kind: 'text', text: '헤더·컷별 "BGM:" 문구(분위기 초안, tagsFromText 매칭 대상)' },
     ],
     vars: [
       { key: 'format', label: '대본 포맷', type: 'select', options: ['v8 (CT·파이프 헤더)'], value: 'v8 (CT·파이프 헤더)' },
+    ],
+  },
+  // ── BGM 선곡(후보 큐레이션 → 최종 결정) — 2026-11-19 성준님 지적: "대본에서 분위기 초안을
+  //   잡지만 후보선곡 과정을 거쳐야 하고, 최종 결정을 거쳐야 체크업·퍼블리싱으로 이어지는 게
+  //   제작 흐름에 맞다"는데 지금까지 그래프엔 그 과정이 전혀 없었다 — trendRadar.bgm(원곡
+  //   라이브러리)이 finalize·checkup 양쪽에 그대로 직결돼 있어서, 사람이 뭘 고르고 뭐가
+  //   자동으로 정해지는지 그래프상으로는 안 보였다(실제로는 영상제작이 끝난 뒤 메이킹 탭
+  //   "최종 영상 조립" 버튼 옆 BGM 드롭다운에서야 비로소 결정이 일어나는 구조였음).
+  //   실제 코드 위치: 후보 큐레이션(검색·다운로드)은 메이킹 탭 자체 BGM 패널
+  //   (MakingTab.jsx "BGM(배경음악) — TrendRadar 검색", /api/bgm-search·/api/bgm-download)과
+  //   트렌드레이더 외부 앱 둘 다에서 같은 _shared/bgm 라이브러리(index.json)로 들어간다 — 생산자가
+  //   둘이라 트렌드레이더 노드의 출력 포트(trendRadar.bgm)를 그대로 "후보 풀"로 재사용하고,
+  //   여기서 새로 만들지 않는다. 최종 결정은 reelBgm 드롭다운('library'/'auto'/'none'/보유곡 직접
+  //   선택, MakingTab.jsx)이 /api/reel-finalize 의 bgmFile·bgmMode 로 넘어가 reelFinalize.js가
+  //   사람이 고른 곡을 쓰거나(직접 지정) bgmSelect.js의 자동 태그매칭으로 떨어진다.
+  //   위치 판단: script(분위기 초안)·trendRadar(후보 풀) 둘 다를 입력으로 받으므로 depth상
+  //   자연히 둘 다보다 다음 열에 놓인다(autoLayout, 좌표 수동 지정 안 함) — 대략 image/tts와
+  //   같은 열, finalize보다는 한참 앞. 아직 health 실측(pipelineHealth.js)은 없음 — 코드 경로
+  //   확인만 끝난 상태, 실측은 다음 단계로 미룸.
+  {
+    id: 'bgm', no: 'BG', icon: 'music', label: 'BGM 선곡', sub: '후보 큐레이션 → 최종 결정(메이킹 탭)', tab: 'making',
+    code: [
+      'src/tabs/MakingTab.jsx · BGM 패널(검색·다운로드·라이브러리) + "최종 영상 조립" BGM 드롭다운',
+      'server/lib/bgmSelect.js (태그 매칭·자동 선곡·2구간 크로스페이드)',
+      'server/proxy.js · /api/bgm-search · /api/bgm-download · /api/bgm-library · /api/bgm-remix',
+      'server/proxy.js · /api/reel-finalize (bgmFile/bgmMode 파라미터로 결정 전달)',
+    ],
+    inputs: [
+      { port: 'mood', kind: 'text', from: 'script.bgmMood', text: '헤더·컷별 BGM 분위기 초안(태그 매칭 대상)' },
+      { port: 'candidates', kind: 'media', from: 'trendRadar.bgm', text: '_shared/bgm 후보 풀(트렌드레이더+메이킹 탭 자체 검색 공용)' },
+    ],
+    outputs: [
+      { port: 'decided', kind: 'media', text: '최종 결정(사람이 직접 고른 곡 · 자동 선곡 · 없음) — reelFinalize·체크업 미리듣기가 그대로 씀' },
+    ],
+    vars: [
+      { key: 'mode', label: 'BGM 결정 방식', type: 'select', options: ['보유 곡에서만(library)', '자동 생성 포함(auto)', '없음(none)', '직접 선택(보유곡 중)'], value: '보유 곡에서만(library)' },
     ],
   },
   {
@@ -143,28 +185,35 @@ export const PIPELINE_NODES = [
       { port: 'cutVideo', kind: 'media', from: 'compose.cutVideo', text: '05_video 컷 영상 전체' },
       { port: 'narrationMp3', kind: 'media', from: 'tts.narrationMp3', text: '나레이션 음성(직접 믹스)' },
       { port: 'previewFile', kind: 'media', from: 'preview.previewFile', text: '미리듣기 결과(원본보다 최신일 때만 사용)' },
-      { port: 'bgm', kind: 'media', from: 'trendRadar.bgm', text: '_shared/bgm 라이브러리(bgmSelect.js 자동 선곡 대상)' },
+      // 2026-11-19: 이전엔 trendRadar.bgm(원곡 라이브러리)을 여기로 바로 연결해 "자동 선곡"만
+      // 보이는 그림이었다 — 실제로는 bgm 노드(후보선곡·최종 결정)를 거친 결과를 쓴다. BGM
+      // 결정 방식 선택(vars)도 그 노드로 옮겼다 — finalize는 이미 결정된 값을 실행만 한다.
+      { port: 'bgm', kind: 'media', from: 'bgm.decided', text: '최종 결정된 BGM(직접 지정 또는 자동 선곡)' },
     ],
     outputs: [
       { port: 'finalOutput', kind: 'media', text: '07_output/{CODE}_final.mp4' },
       { port: 'finalizeLog', kind: 'text', text: '_finalize.json (생성 기록)' },
     ],
     vars: [
-      { key: 'bgm', label: 'BGM', type: 'select', options: ['자동 선곡', '직접 지정'], value: '자동 선곡' },
       { key: 'subtitle', label: '자막 번인', type: 'select', options: ['켜기', '끄기'], value: '켜기' },
     ],
   },
   {
-    id: 'checkup', no: '08', icon: 'check', label: '체크업 · 퍼블리싱', sub: '최종본 확인·업로드', tab: 'checkup',
-    code: ['src/tabs/CheckupTab.jsx', 'src/tabs/PublishingTab.jsx', 'server/lib/igPublish.js', 'server/lib/publishStatus.js'],
+    id: 'checkup', no: '08', icon: 'check', label: '체크업 · 퍼블리싱', sub: '최종본 확인·업로드', tab: 'checkup', health: true, path: 'state/reel-overrides/<code>.json',
+    code: ['src/tabs/CheckupTab.jsx', 'src/tabs/PublishingTab.jsx', 'server/lib/igPublish.js', 'server/lib/publishStatus.js', 'server/lib/reelOverrides.js'],
     inputs: [
       { port: 'finalOutput', kind: 'media', from: 'finalize.finalOutput', text: '07_output 최종본' },
-      // 2026-11-16(성준님 — BGM 설정을 전체 영상과 매치시켜 점검할 경로 필요): 체크업 탭은 지금
-      // 컷별 cut_NN.mp4만 이어 재생해서 BGM이 화면에 구조적으로 없다(07_output 최종본을 아예 안
-      // 틈). 계획: 메이킹 탭 구간별 음량 보정이 반영된 BGM 미리듣기 오디오를 가볍게 만들어
-      // 체크업 타임라인 재생에 맞춰 같이 틀어준다(전체 재조립 없이). 아직 미착수 — planned:true로
-      // 배선만 먼저 표시(buildEdges가 일반 배선과 다르게 그림, PipelineMonitorTab.jsx 참고).
-      { port: 'bgmPreview', kind: 'media', from: 'trendRadar.bgm', text: 'BGM 미리듣기 — 구간별 음량 보정 반영 (계획, 미구현)', planned: true },
+      // 2026-11-16 계획 → 2026-11-18~19 실제 구현 완료: 체크업 탭에 BGM 미리듣기 토글(메인 영상과
+      // 함께 재생) + 곡위치 슬라이더(bgmOffsetSec, 전주 건너뛰기 등 "곡의 어느 지점을 영상과 맞출지")
+      // + 구간별 음량 보정(gainSegments)이 생겼다 — 둘 다 /api/reel-finalize/override로 즉시 저장되고
+      // reelFinalize.js가 그 오버라이드를 읽어 실제 최종본(-ss 오프셋 + 구간 음량)에도 반영한다.
+      // 더 이상 "계획"이 아니라 가동 중인 배선이라 planned 플래그를 뗐다 — 실측(pipelineHealth.js
+      // checkCheckup)은 "체크업 탭에서 설정한 값이 최종본(_finalize.json 의 bgm 노트)에 실제로
+      // 반영됐는가"만 대조한다(선언 vs 실제 파일 간극을 BGM 쪽에도 적용).
+      // 2026-11-19: trendRadar.bgm(원곡 라이브러리) 직결 → bgm 노드(최종 결정) 경유로 변경 —
+      // 체크업 탭이 미리듣는 BGM도 "아직 안 정해진 후보 전체"가 아니라 "실제로 정해진 그 곡"이어야
+      // finalize가 쓸 결과와 일치한다.
+      { port: 'bgmPreview', kind: 'media', from: 'bgm.decided', text: 'BGM 미리듣기 — 곡위치 오프셋·구간음량 보정, 최종본에 반영됨' },
     ],
     outputs: [
       { port: 'published', kind: 'media', text: '게시(Instagram·YouTube)' },

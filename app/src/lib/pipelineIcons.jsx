@@ -86,6 +86,14 @@ export const PIPELINE_ICON_PATHS = {
       <path d="M15 18.5l2.2 2.2 4.3-4.6" {...STROKE} />
     </>
   ),
+  // BGM 선곡(후보 큐레이션 → 최종 결정) — 8분음표 2개(2026-11-19 같은 스타일로 신규 제작)
+  music: (
+    <>
+      <circle cx="7" cy="17.5" r="2.6" {...STROKE} />
+      <circle cx="16" cy="15.5" r="2.6" {...STROKE} />
+      <path d="M9.6 17.5V5.5l9-2v10" {...STROKE} />
+    </>
+  ),
   // 에이전트 리더(pipeline-leader.js) — 지휘체계: 위의 리더 1 → 아래 에이전트 3 으로 갈라지는 지휘선(2026-11-12 같은 스타일로 신규 제작)
   conductor: (
     <>

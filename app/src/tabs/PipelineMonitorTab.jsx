@@ -305,8 +305,13 @@ function Workbench() {
   const stageState = (def) => {
     const h = healthOf(def)
     if (def.id === 'checkup') {
+      // 2026-11-19: checkup 자체 실측(checkCheckup — BGM 곡위치·구간보정이 최종본에 반영됐는지)이
+      // fail·warn 이면 그걸 우선한다 — finalize 가 ok 여도 "체크업 탭 설정이 최종본엔 안 반영"은
+      // 이 노드 고유의 문제다.
+      if (h?.state === 'fail') return 'fail'
       const fin = healthNodes?.finalize?.state
       if (!fin || fin === 'fail') return 'idle'
+      if (h?.state === 'warn') return 'warn'
       return fin === 'ok' && gSummary.g5 >= cutsTotal && cutsTotal > 0 ? 'done' : 'pending'
     }
     if (h?.state === 'fail') return 'fail'
