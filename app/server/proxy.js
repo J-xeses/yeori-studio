@@ -48,6 +48,7 @@ import { checkClip, loadQa, saveQa } from './lib/voiceQa.js'
 import { getWaveformPeaks } from './lib/waveform.js'
 import { getFilmstripFrames } from './lib/filmstrip.js'
 import { mountPipelineLayout } from './lib/pipelineLayout.js'
+import { mountPipelineDraftNodes } from './lib/pipelineDraftNodes.js'
 
 // TTS 탭 "캐릭터 목소리 미세조정"(state.ttsSettings.speakerSettings)에서 이 캐릭터의 안정성·
 // 유사도 튜닝을 찾는다 — resolveVoice()의 speakerVoices 느슨 매칭(별칭 포함)과 같은 방식.
@@ -182,6 +183,10 @@ app.get('/api/pipeline-health', async (req, res) => {
 // downloads/state/pipeline-layout.json 에 { positions: { nodeId: { x, y } }, savedAt }. PUT 본문 { positions } 통째 교체.
 // 검증·저장 로직: server/lib/pipelineLayout.js
 mountPipelineLayout(app)
+// ── GET/POST/DELETE /api/pipeline-draft-nodes — 워크벤치 "노드 신설"(구상 노드) 목록 (2026-11-19) ──
+// downloads/state/pipeline-draft-nodes.json 에 { drafts: [{id,label,concept,createdAt}], savedAt }.
+// 좌표는 pipeline-layout.json 이 그대로 같이 저장(이 파일은 내용만). 검증·저장 로직: server/lib/pipelineDraftNodes.js
+mountPipelineDraftNodes(app)
 
 // ── 파이프라인 리더 실행 여부 확인 (2026-09-17) ──────────────────────
 // "Yeori Pipeline Leader" 창이 떠 있는 채로 컷 영상을 지우면 자동으로 다시 채워 넣는다는 걸

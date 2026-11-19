@@ -37,12 +37,17 @@
 .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .16em; color: var(--accent); text-transform: uppercase; font-weight: 600; }
 
 .statusRow { display: flex; gap: 8px; flex-wrap: wrap; }
+/* 2026-11-19: 전부 <button> — 클릭하면 캔버스를 그 노드로 강조("연계 활성화"). appearance 리셋만 추가, 나머지 톤은 그대로. */
 .pill {
+  all: unset; box-sizing: border-box; cursor: pointer;
   display: inline-flex; align-items: center; gap: 6px;
   font-family: var(--mono); font-size: 10.5px; letter-spacing: .03em;
   padding: 5px 10px; border-radius: 999px; border: 1px solid var(--line-2); background: #0f0d0a;
-  color: var(--muted);
+  color: var(--muted); transition: border-color .15s, box-shadow .15s;
 }
+.pill:hover { border-color: var(--accent); }
+.pill:focus-visible { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(255,122,26,.25); }
+.pillActive { border-color: var(--accent) !important; box-shadow: 0 0 0 2px rgba(255,122,26,.3); }
 .pillDot { width: 6px; height: 6px; border-radius: 50%; background: #4a443d; flex: none; }
 .pillOk { border-color: rgba(78,230,168,.35); color: #9af0cc; }
 .pillOk .pillDot { background: var(--ok); box-shadow: 0 0 6px var(--ok); }
@@ -146,18 +151,52 @@
   background: rgba(13,11,9,.9); color: var(--text-2); font-family: var(--mono); font-size: 10.5px;
 }
 .toolBtn:hover { border-color: var(--accent); color: #ffd9b3; }
+.toolBtn:disabled { opacity: .45; cursor: not-allowed; }
+.toolBtn:disabled:hover { border-color: var(--line-2); color: var(--text-2); }
 .toolBtnArmed { border-color: var(--hold); color: var(--hold); }
+
+/* ── 노드 신설 폼(2026-11-19) — 배선 편집 패널과 같은 어휘(toolBtn/wireRow 재사용) ── */
+.draftFormField { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; align-self: stretch; }
+.draftFormField span { font-family: var(--mono); font-size: 10px; color: var(--muted); }
+.draftFormField .varInput, .draftTextarea { align-self: stretch; }
+.draftTextarea {
+  box-sizing: border-box; width: 100%; resize: vertical; min-height: 44px;
+  background: #110f0c; color: var(--text); border: 1px solid var(--line-2); border-radius: 5px;
+  font-family: var(--sans); font-size: 11.5px; line-height: 1.45; padding: 6px 7px; cursor: auto;
+}
+.draftTextarea:focus { outline: none; border-color: var(--accent); }
+
+/* ── 구상 노드 카드(2026-11-19) — 진짜 노드(.node)와 또렷이 다르게: 점선 테두리, 포트·배지 없음 ── */
+.draftNode {
+  width: 240px; box-sizing: border-box;
+  background: var(--panel-2); border: 1.5px dashed var(--line-2); border-radius: 12px;
+  color: var(--text-2); font-family: var(--sans); font-size: 12px;
+  padding: 10px 12px; cursor: grab; transition: opacity .25s;
+}
+.draftNode:active { cursor: grabbing; }
+.draftHead { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.draftBadge { font-family: var(--mono); font-size: 9px; letter-spacing: .06em; color: var(--dim); border: 1px dashed var(--line-2); border-radius: 999px; padding: 1px 7px; }
+.draftLabel { font-weight: 700; font-size: 13px; color: var(--text); }
+.draftConceptText { margin-top: 7px; font-size: 11.5px; line-height: 1.5; color: var(--text-2); overflow-wrap: anywhere; }
+.draftFoot { margin-top: 8px; font-family: var(--mono); font-size: 9.5px; color: var(--dim); }
 
 /* ── 노드 카드: 상단 → 코드 → 연결 → 변수 → 하단 ── */
 .node {
   width: 340px; box-sizing: border-box;
   background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
   color: var(--text); font-family: var(--sans); font-size: 12.5px;
-  transition: border-color .25s, box-shadow .25s;
+  transition: border-color .25s, box-shadow .25s, opacity .25s;
   cursor: grab;
 }
+/* overflow:hidden 은 일부러 안 씀 — 포트 플러그(Handle)가 카드 가장자리에 절반 걸쳐 있어서(.plug) 잘려버린다. */
 .node:active { cursor: grabbing; }
 .nodeSelected { outline: 1px solid var(--wire-edit); outline-offset: 2px; }
+/* 2026-11-19: 유형(핵심 제작/결정·운영/외부 앱) 전용 띠 — 테두리 색(상태)과 겹치지 않게 카드 맨 위에만.
+   부모에 overflow:hidden을 못 쓰므로(포트 플러그가 가장자리에 걸쳐 있음) 띠 자체에 모서리를 준다 —
+   음수 마진으로 카드 테두리(1px) 바로 위까지 덮고, border-radius를 부모보다 1px 작게 맞춘다. */
+.catBar { height: 4px; margin: -1px -1px 0; border-radius: 11px 11px 0 0; }
+/* 상단 바 상태 알약으로 필터링 중일 때, 관련 없는 노드는 흐리게(완전히 숨기지는 않음 — 맥락 유지) */
+.nodeDimmed { opacity: .22; filter: grayscale(.5); }
 .nodeHead { display: flex; align-items: flex-start; gap: 10px; padding: 12px 12px 10px; }
 /* 타이틀 아이콘 — 성준님 커스텀 제작(2026-10-08 회로도 기획)을 그대로 적용 + 실측 상태에 반응하도록 업그레이드:
    기본은 은은한 액센트 틴트 박스, 노드 상태(ok/warn/fail/active)에 따라 박스 테두리·아이콘 색·글로우가 같이 바뀐다. */

@@ -4,7 +4,7 @@ import '@xyflow/react/dist/style.css'
 import { useApp } from '../context/AppContext'
 import { getGPointSummary } from '../lib/gpoints'
 import { resolveEpisodeCode } from '../lib/episodeCode'
-import { PIPELINE_NODES, PORT_KINDS, buildEdges, autoLayout } from '../lib/pipelineNodes'
+import { PIPELINE_NODES, PORT_KINDS, LAYOUT, buildEdges, autoLayout } from '../lib/pipelineNodes'
 import { NodeIcon } from '../lib/pipelineIcons'
 import s from './PipelineMonitorTab.module.css'
 
@@ -22,7 +22,15 @@ import s from './PipelineMonitorTab.module.css'
 //     "아직 설계 전" 안내만 띄운다 — 캔버스의 노드·배선은 건드리지 않는다(작동하는 척 금지).
 //   - 편집: 캔버스 위에 떠 있던 툴바(배치 저장 상태·자동 정렬·포트 색 범례)를 이리로 옮기고, 화면에서 그은 임시 배선(보라)
 //     목록을 보여 주고 지울 수 있게 했다. 임시 배선 저장은 여전히 없다(범위 밖) — 그 사실을 패널에 그대로 적는다.
-//   - 노드 추가 UI 는 일부러 없다: 노드의 소스 오브 트루스는 src/lib/pipelineNodes.js 배열이다.
+//   - 실제로 가동되는 노드(코드·포트·health 실측)의 소스 오브 트루스는 여전히 src/lib/pipelineNodes.js 배열이다 —
+//     화면에서 "진짜" 노드를 만드는 기능은 없다.
+// 2026-11-19: 편집 패널에 "노드 신설"(구상 노드) 추가 — 이름+컨셉만 입력해 캔버스에 점선 카드로 올려본다.
+//   pipelineNodes.js 와는 별도 저장소(/api/pipeline-draft-nodes, downloads/state/pipeline-draft-nodes.json)라
+//   진짜 노드와 절대 안 섞인다 — 실제 단계로 쓰려면 사람이 그 배열에 손으로 반영해야 한다. 또한:
+//   - 사이드바는 이제 그 아이콘을 다시 눌러야만 닫힌다(바깥 클릭·Esc 로 안 닫힘).
+//   - 노드 카드 맨 위 띠로 유형(핵심 제작/결정·운영/외부 앱)을 구분(CATEGORY_COLOR) — 테두리 색(상태)과는 별개.
+//   - 상단 바 상태 알약 클릭 → 관련 노드만 캔버스에서 강조(하이라이트+자동 포커스), 다시 누르면 해제.
+//   - 정상(초록) 배선을 포트 색(텍스트/이미지/영상·음성)으로 세분화 — 경고·단선 색은 그대로.
 const API = 'http://localhost:3001'
 const HEALTH_LABEL = { ok: '정상', warn: '경고', fail: '단선' }
 const STATE_LABEL = { active: '진행 중', unverified: '파일 미확인', pending: '대기', partial: '진행', idle: '대기', done: '정상' }
@@ -31,6 +39,16 @@ const STATE_COLOR = { done: '#4ee6a8', partial: '#4ee6a8', warn: '#ffd23f', fail
 const IDLE_COLOR = '#3a342d'
 const USER_EDGE_COLOR = '#8d6bff'
 const PLANNED_EDGE_COLOR = '#6b7280'
+// 2026-11-19: 노드 카드 테두리는 실측 상태(ok/warn/fail/active) 전용이라, 그와 섞이지 않게
+// "유형"은 카드 맨 위 가느다란 띠(catBar)로 별도 표시한다 — 성준님 지적("프레임 구분이 안 된
+// 카드들을 유형별로 분류"). 분류 기준은 이미 있는 필드만 씀(새 필드 추가 없음): G포인트가 있으면
+// 핵심 제작 단계, external 이면 외부 앱, 그 둘 다 아니면(checkup·bgm) 결정·운영 단계.
+const CATEGORY_OF = (def) => (def.external ? 'external' : def.gate ? 'core' : 'decision')
+const CATEGORY_COLOR = { core: '#4f8fef', decision: '#b267e0', external: '#7d8a99' }
+const CATEGORY_LABEL = { core: '핵심 제작 단계(G-gate)', decision: '결정·운영 단계', external: '외부 앱' }
+// 상단 바 상태 알약 클릭 → 캔버스 하이라이트("연계 활성화"). 알약 키 → 하이라이트할 노드 id 목록을
+// 아래 Workbench 안에서 계산한다(실측 상태가 필요한 'worst'는 상수로 못 정함).
+const HIGHLIGHT_STATIC_IDS = { flow: ['image', 'video'], leader: ['pipelineLeader'] }
 
 // 좌측 아이콘 바의 모드. ready:true 인 것만 실제 캔버스 모드다(지금은 "전체" 하나).
 const RAIL_MODES = [
@@ -85,8 +103,10 @@ const PipelineNode = memo(function PipelineNode({ id, data, selected }) {
   const problem = live.state === 'fail' || live.state === 'warn'
   const badgeText = live.health?.state ? HEALTH_LABEL[live.health.state] : STATE_LABEL[live.state] || '대기'
   const badgeKind = live.state === 'fail' ? 'fail' : live.state === 'warn' ? 'warn' : live.state === 'active' ? 'active' : (live.state === 'done' || live.state === 'partial') ? 'ok' : 'idle'
+  const category = CATEGORY_OF(def)
   return (
-    <div className={`${s.node} ${s[live.state] || ''} ${selected ? s.nodeSelected : ''}`}>
+    <div className={`${s.node} ${s[live.state] || ''} ${selected ? s.nodeSelected : ''} ${live.dimmed ? s.nodeDimmed : ''}`}>
+      <div className={s.catBar} style={{ background: CATEGORY_COLOR[category] }} title={CATEGORY_LABEL[category]} />
       <div className={s.nodeHead}>
         <div className={s.icoWrap}><NodeIcon name={def.icon} className={s.icoSvg} /></div>
         <div className={s.nodeTitle}>
@@ -145,7 +165,23 @@ const PipelineNode = memo(function PipelineNode({ id, data, selected }) {
     </div>
   )
 })
-const nodeTypes = { pipeline: PipelineNode }
+// ── 구상 노드 카드(2026-11-19, "노드 신설") — pipelineNodes.js 와 무관한 메모판 카드.
+// 코드·포트·health 가 없다 — 실선 배선도 못 꽂는다(배선은 여전히 실제 포트 전용). 점선 테두리 +
+// "구상 중" 배지로 실제 가동 중인 노드와 절대 혼동되지 않게 한다.
+const DraftNode = memo(function DraftNode({ data, selected }) {
+  const d = data.draft
+  return (
+    <div className={`${s.draftNode} ${selected ? s.nodeSelected : ''}`}>
+      <div className={s.draftHead}>
+        <span className={s.draftBadge}>구상 중</span>
+        <span className={s.draftLabel}>{d.label}</span>
+      </div>
+      {d.concept && <div className={s.draftConceptText}>{d.concept}</div>}
+      <div className={s.draftFoot}>pipelineNodes.js 미반영 — 코드·포트·실측 없음</div>
+    </div>
+  )
+})
+const nodeTypes = { pipeline: PipelineNode, draft: DraftNode }
 
 const toFlowNodes = (positions) => PIPELINE_NODES.map(def => ({ id: def.id, type: 'pipeline', position: positions[def.id], data: { def }, deletable: false }))
 
@@ -177,35 +213,55 @@ function Workbench() {
   const [saveState, setSaveState] = useState({ kind: 'idle' }) // idle | saving | saved(at) | error(msg)
   const [resetArmed, setResetArmed] = useState(false)
   const [vars, setVars] = useState({})
-  const { getNodes, fitView } = useReactFlow()
+  const { getNodes, fitView, screenToFlowPosition } = useReactFlow()
   // 좌측 아이콘 바: panel = 열려 있는 사이드바(null | 'mode:<id>' | 'edit'). 캔버스 모드 자체는 "전체" 고정(다른 모드는 아직 없음).
   const [panel, setPanel] = useState(null)
   const [clearArmed, setClearArmed] = useState(false)
+  // 2026-11-19 "노드 신설" — pipelineNodes.js 와 무관한 구상 카드(draft). 내용은 /api/pipeline-draft-nodes,
+  // 좌표는 기존 pipeline-layout.json 에 다른 노드와 똑같이 섞여 저장된다(id 문자열만 다를 뿐).
+  const [draftNodes, setDraftNodes] = useState([])
+  const [draftLabel, setDraftLabel] = useState('')
+  const [draftConcept, setDraftConcept] = useState('')
+  const [draftBusy, setDraftBusy] = useState(false)
+  const [draftError, setDraftError] = useState('')
+  // 2026-11-19 상단 바 상태 알약 클릭 → 캔버스 하이라이트("연계 활성화"). null = 필터 없음.
+  const [highlightKey, setHighlightKey] = useState(null)
+  const togglePillHighlight = (key) => setHighlightKey(k => (k === key ? null : key))
   const railRef = useRef(null)
   const sideRef = useRef(null)
+  // 2026-11-19(성준님 요청): 전엔 바깥(캔버스 등)을 누르거나 Esc 를 누르면 사이드바가 접혔다 —
+  // 이제 그 아이콘을 다시 눌러야만 닫힌다(togglePanel 의 p===key?null:key 토글이 그 역할). 다른 곳을
+  // 눌러도 패널이 열린 채 유지돼, 캔버스를 조작하면서 패널 내용을 계속 참고할 수 있다.
   const togglePanel = (key) => setPanel(p => (p === key ? null : key))
-  // 바깥(캔버스 등)을 누르거나 Esc 를 누르면 접힌다
-  useEffect(() => {
-    if (!panel) return
-    const onDown = (e) => { if (!railRef.current?.contains(e.target) && !sideRef.current?.contains(e.target)) setPanel(null) }
-    const onKey = (e) => { if (e.key === 'Escape') setPanel(null) }
-    document.addEventListener('pointerdown', onDown, true)
-    document.addEventListener('keydown', onKey)
-    return () => { document.removeEventListener('pointerdown', onDown, true); document.removeEventListener('keydown', onKey) }
-  }, [panel])
   useEffect(() => {
     if (!clearArmed) return
     const t = setTimeout(() => setClearArmed(false), 3000)
     return () => clearTimeout(t)
   }, [clearArmed])
 
-  // 저장된 배치 불러오기(없거나 서버가 안 받으면 자동 배치). 저장 안 된 노드(새로 추가된 노드)는 autoLayout 이 채운다.
+  // 저장된 배치 불러오기(없거나 서버가 안 받으면 자동 배치) + 구상 노드 목록. 저장 안 된 노드(새로
+  // 추가된 노드·아직 안 드래그한 구상 노드)는 autoLayout 이 채운다. 구상 노드는 저장된 좌표가 없으면
+  // 캔버스 맨 아래(기존 그래프보다 낮은 행)에 순서대로 쌓아 둔다 — 드래그하면 그 자리가 저장된다.
   useEffect(() => {
     let alive = true
-    fetch(`${API}/api/pipeline-layout`).then(r => r.json())
-      .then(d => { if (alive) { setNodes(toFlowNodes(autoLayout(PIPELINE_NODES, d?.positions || {}))); if (d?.savedAt) setSaveState({ kind: 'saved', at: d.savedAt }) } })
-      .catch(() => { if (alive) { setNodes(toFlowNodes(autoLayout(PIPELINE_NODES, {}))); setSaveState({ kind: 'error', msg: '배치 불러오기 실패 — 자동 배치로 표시' }) } })
-      .finally(() => { if (alive) setLayoutReady(true) })
+    Promise.all([
+      fetch(`${API}/api/pipeline-layout`).then(r => r.json()).catch(() => null),
+      fetch(`${API}/api/pipeline-draft-nodes`).then(r => r.json()).catch(() => null),
+    ]).then(([layoutD, draftD]) => {
+      if (!alive) return
+      const positions = layoutD?.positions || {}
+      const drafts = Array.isArray(draftD?.drafts) ? draftD.drafts : []
+      setDraftNodes(drafts)
+      const real = toFlowNodes(autoLayout(PIPELINE_NODES, positions))
+      const draftFlow = drafts.map((d, i) => ({
+        id: d.id, type: 'draft',
+        position: positions[d.id] || { x: LAYOUT.x0 + i * LAYOUT.colW, y: LAYOUT.y0 + 7 * LAYOUT.rowH },
+        data: { draft: d }, deletable: false,
+      }))
+      setNodes([...real, ...draftFlow])
+      if (layoutD?.savedAt) setSaveState({ kind: 'saved', at: layoutD.savedAt })
+      if (!layoutD) setSaveState({ kind: 'error', msg: '배치 불러오기 실패 — 자동 배치로 표시' })
+    }).finally(() => { if (alive) setLayoutReady(true) })
     return () => { alive = false }
   }, [setNodes])
 
@@ -233,10 +289,45 @@ function Workbench() {
   const resetLayout = () => {
     if (!resetArmed) { setResetArmed(true); return }
     setResetArmed(false)
-    const next = toFlowNodes(autoLayout(PIPELINE_NODES, {}))
+    // 구상 노드(draft)는 autoLayout 이 모르는 id라 — 자동 정렬에서 사라지지 않게 같은 "맨 아래 쌓기"
+    // 기본 위치로 같이 다시 놓는다(불러오기 effect와 같은 규칙).
+    const real = toFlowNodes(autoLayout(PIPELINE_NODES, {}))
+    const draftFlow = draftNodes.map((d, i) => ({
+      id: d.id, type: 'draft', position: { x: LAYOUT.x0 + i * LAYOUT.colW, y: LAYOUT.y0 + 7 * LAYOUT.rowH }, data: { draft: d }, deletable: false,
+    }))
+    const next = [...real, ...draftFlow]
     setNodes(next)
     saveLayout(next)
     setTimeout(() => fitView({ padding: 0.12, duration: 300 }), 50)
+  }
+
+  // 2026-11-19 "노드 신설" — 이름·컨셉만 입력해 캔버스 중앙에 구상 카드 하나를 올린다. 서버에 내용을
+  // 저장하고, 위치는 지금 화면 중앙(screenToFlowPosition)으로 즉시 잡아 기존 pipeline-layout 저장
+  // 경로(saveLayout)에 같이 실어 보낸다 — 드래그로 옮긴 다른 노드와 저장 방식이 완전히 같다.
+  const submitDraft = async () => {
+    const label = draftLabel.trim()
+    if (!label || draftBusy) return
+    setDraftBusy(true)
+    setDraftError('')
+    try {
+      const r = await fetch(`${API}/api/pipeline-draft-nodes`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ label, concept: draftConcept.trim() }),
+      })
+      // 2026-11-19: 이 엔드포인트는 핫리로드 대상이 아닌 server/proxy.js 쪽 — 프록시 재시작 전엔
+      // 404(HTML)가 와서 .json() 이 바로 throw 한다. alert() 는 페이지를 멈춰서(네이티브 모달) 안 쓴다.
+      const d = await r.json()
+      if (!d.ok) throw new Error(d.error || '생성 실패')
+      const pos = screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
+      const draftFlowNode = { id: d.node.id, type: 'draft', position: pos, data: { draft: d.node }, deletable: false }
+      setDraftNodes(ds => [...ds, d.node])
+      setNodes(ns => { const next = [...ns, draftFlowNode]; saveLayout(next); return next })
+      setDraftLabel(''); setDraftConcept('')
+    } catch (e) { setDraftError(`노드 신설 실패: ${e.message} — 서버(프록시) 재시작이 필요할 수 있습니다`) } finally { setDraftBusy(false) }
+  }
+  const deleteDraft = async (id) => {
+    setNodes(ns => ns.filter(n => n.id !== id))
+    setDraftNodes(ds => ds.filter(d => d.id !== id))
+    try { await fetch(`${API}/api/pipeline-draft-nodes/${id}`, { method: 'DELETE' }) } catch { /* 로컬 화면은 이미 지웠다 */ }
   }
 
   // 화면에서 새로 그은 배선(보라) — 이번 단계는 보여주기만, 저장·검증 없음(새로고침하면 사라진다)
@@ -336,6 +427,13 @@ function Workbench() {
     ? ['fail', 'warn'].find(lv => CORE_NODE_IDS.some(id => healthNodes[id]?.state === lv)) || 'ok'
     : null
 
+  // 2026-11-19 상단 바 상태 알약 클릭 → 캔버스 하이라이트("연계 활성화"). highlightKey 에 따라
+  // 관련 노드 id 집합을 계산 — 'worst'(파일 단선·경고·정상 알약)만 실측 상태가 필요해 여기서 계산한다.
+  const highlightIds = !highlightKey ? null
+    : highlightKey === 'worst' ? new Set(healthNodes ? CORE_NODE_IDS.filter(id => healthNodes[id]?.state === worst) : [])
+    : new Set(HIGHLIGHT_STATIC_IDS[highlightKey] || [])
+  const highlightSig = highlightIds ? [...highlightIds].sort().join(',') : ''
+
   // 노드별 실시간 값 합성 → LiveCtx 로 커스텀 노드에 전달
   const byId = {}
   for (const def of PIPELINE_NODES) {
@@ -346,21 +444,35 @@ function Workbench() {
       evidence: evidenceOf(def),
       issueTip: h?.issues?.length ? h.issues.map(x => (x.cut != null ? `컷${x.cut} ` : '') + x.msg).join('\n') : undefined,
       gateDone: def.gate ? (gSummary[def.gate] ?? 0) : null,
+      dimmed: !!highlightIds && !highlightIds.has(def.id),
     }
   }
+
+  useEffect(() => {
+    if (!highlightIds || highlightIds.size === 0) return
+    fitView({ nodes: [...highlightIds].map(id => ({ id })), padding: 0.25, duration: 300 })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [highlightKey, highlightSig])
 
   // 배선 색 = 도착(다음) 노드의 상태. 진행 중이면 흐르는 점선, 단선이면 끊어진 빨간 점선. 화면에서 그은 임시 배선은 보라.
   // 2026-11-16: planned(아직 구현 안 된 기능의 배선 계획, pipelineNodes.js inputs[].planned)은
   // 실제 가동 중인 배선과 혼동되면 안 되므로 회색 점선 + "(계획)" 라벨로 명확히 구분한다 —
   // 상태색(STATE_COLOR)·건강검진 집계(healthOf) 대상에서도 제외(실제 코드가 없으니 당연히 제외).
+  // 2026-11-19(성준님 — "녹색 배선을 성격에 따라 구분"): 지금까지 정상 배선(done·partial)은 전부
+  // 같은 초록이라 뭐가 뭘 나르는지 선만 보고는 몰랐다. 경고·단선·진행 중처럼 "주의가 필요한" 색은
+  // 그대로 두고, 정상 배선만 포트 색(PORT_KINDS — 텍스트/이미지/영상·음성, 이미 있는 "포트 색"
+  // 범례와 같은 기준)으로 세분화한다.
   const styledEdges = edges.map(e => {
-    if (e.data?.user) return { ...e, type: 'default', style: { stroke: USER_EDGE_COLOR, strokeWidth: 2, strokeDasharray: '2 5' } }
-    if (e.planned) return { ...e, type: 'default', label: '계획', labelStyle: { fill: PLANNED_EDGE_COLOR, fontSize: 10 }, style: { stroke: PLANNED_EDGE_COLOR, strokeWidth: 1.5, strokeDasharray: '4 4', opacity: 0.7 } }
+    const dim = !!highlightIds && !(highlightIds.has(e.source) || highlightIds.has(e.target))
+    if (e.data?.user) return { ...e, type: 'default', style: { stroke: USER_EDGE_COLOR, strokeWidth: 2, strokeDasharray: '2 5', opacity: dim ? 0.15 : 1 } }
+    if (e.planned) return { ...e, type: 'default', label: '계획', labelStyle: { fill: PLANNED_EDGE_COLOR, fontSize: 10 }, style: { stroke: PLANNED_EDGE_COLOR, strokeWidth: 1.5, strokeDasharray: '4 4', opacity: dim ? 0.1 : 0.7 } }
     const st = byId[e.target]?.state
-    const color = STATE_COLOR[st] || IDLE_COLOR
+    const flowing = st === 'done' || st === 'partial'
+    const kindColor = PORT_KINDS[PORT_KIND_OF[`${e.source}.${e.sourceHandle}`]]?.color
+    const color = (flowing && kindColor) || STATE_COLOR[st] || IDLE_COLOR
     return {
       ...e, type: 'default', animated: st === 'active',
-      style: { stroke: color, strokeWidth: st === 'fail' ? 2.5 : 2, strokeDasharray: st === 'fail' ? '10 8' : undefined, opacity: STATE_COLOR[st] ? 0.9 : 1 },
+      style: { stroke: color, strokeWidth: st === 'fail' ? 2.5 : 2, strokeDasharray: st === 'fail' ? '10 8' : undefined, opacity: dim ? 0.1 : (STATE_COLOR[st] ? 0.9 : 1) },
     }
   })
 
@@ -377,14 +489,17 @@ function Workbench() {
       <div className={s.header}>
         <div className={s.eyebrow}>PIPELINE WORKBENCH · {epCode || '—'}</div>
         <div className={s.statusRow}>
-          <StatusPill ok={flowReady?.chrome} label="Flow Chrome" />
-          <StatusPill ok={flowReady?.flowTab} label="Flow 탭" />
-          <StatusPill ok={leaderRunning} label="지휘자" neutral={leaderRunning == null} />
-          <StatusPill ok={flowReady?.busy} label="작업중" warn />
-          <span className={`${s.pill} ${worst === 'fail' ? s.pillFail : worst === 'warn' ? s.pillWarn : worst === 'ok' ? s.pillOk : s.pillNeutral}`} title={health?.checkedAt ? `실측 ${new Date(health.checkedAt).toLocaleTimeString('ko-KR', { hour12: false })}` : ''}>
+          {/* 2026-11-19: 알약 클릭 → 관련 노드만 캔버스에서 강조("연계 활성화"). 같은 알약을 다시 누르면 해제. */}
+          <StatusPill ok={flowReady?.chrome} label="Flow Chrome" onClick={() => togglePillHighlight('flow')} active={highlightKey === 'flow'} title="클릭 — 이미지·영상 생성 노드 강조" />
+          <StatusPill ok={flowReady?.flowTab} label="Flow 탭" onClick={() => togglePillHighlight('flow')} active={highlightKey === 'flow'} title="클릭 — 이미지·영상 생성 노드 강조" />
+          <StatusPill ok={leaderRunning} label="지휘자" neutral={leaderRunning == null} onClick={() => togglePillHighlight('leader')} active={highlightKey === 'leader'} title="클릭 — 에이전트 리더 노드 강조" />
+          <StatusPill ok={flowReady?.busy} label="작업중" warn onClick={() => togglePillHighlight('flow')} active={highlightKey === 'flow'} title="클릭 — 이미지·영상 생성 노드 강조" />
+          <button type="button" className={`${s.pill} ${worst === 'fail' ? s.pillFail : worst === 'warn' ? s.pillWarn : worst === 'ok' ? s.pillOk : s.pillNeutral} ${highlightKey === 'worst' ? s.pillActive : ''}`}
+            onClick={() => togglePillHighlight('worst')}
+            title={(health?.checkedAt ? `실측 ${new Date(health.checkedAt).toLocaleTimeString('ko-KR', { hour12: false })} · ` : '') + '클릭 — 이 상태인 노드만 강조'}>
             <span className={s.pillDot} />
             {worst === 'fail' ? '파일 단선' : worst === 'warn' ? '파일 경고' : worst === 'ok' ? '파일 정상' : '파일 실측 대기'}
-          </span>
+          </button>
         </div>
       </div>
 
@@ -422,7 +537,8 @@ function Workbench() {
                     <div className={s.sideStat}><span>노드</span><b>{PIPELINE_NODES.length}개</b></div>
                     <div className={s.sideStat}><span>기본 배선</span><b>{baseEdgeCount}개</b></div>
                     <div className={s.sideStat}><span>임시 배선(미저장)</span><b>{userEdges.length}개</b></div>
-                    <p className={s.sideNote}>노드를 추가·수정하려면 <code>src/lib/pipelineNodes.js</code> 배열을 고칩니다 — 화면에서 노드를 만드는 기능은 일부러 두지 않았습니다.</p>
+                    <div className={s.sideStat}><span>구상 노드</span><b>{draftNodes.length}개</b></div>
+                    <p className={s.sideNote}>실제로 가동되는 노드(코드·포트·health 실측)를 추가·수정하려면 <code>src/lib/pipelineNodes.js</code> 배열을 고칩니다 — 이건 여전히 화면에서 안 만듭니다. 컨셉만 캔버스에 올려보는 "구상 노드"는 「편집」 패널의 노드 신설에서 만들 수 있습니다.</p>
                   </div>
                 ) : (
                   <div className={s.sideBlock}>
@@ -458,6 +574,39 @@ function Workbench() {
                       <span key={k} className={s.legendItem}><span className={s.legendDot} style={{ background: v.color }} />{v.label}</span>
                     ))}
                   </div>
+                  <p className={s.sideNote}>정상(초록) 배선도 이제 이 색으로 세분화됩니다 — 경고·단선·진행 중 배선은 기존 색을 그대로 유지합니다.</p>
+                </div>
+                <div className={s.sideBlock}>
+                  <div className={s.sideLabel}>노드 유형 <span className={s.sideLabelHint}>카드 맨 위 띠 색</span></div>
+                  <div className={s.legend}>
+                    {Object.entries(CATEGORY_LABEL).map(([k, label]) => (
+                      <span key={k} className={s.legendItem}><span className={s.legendDot} style={{ background: CATEGORY_COLOR[k] }} />{label}</span>
+                    ))}
+                  </div>
+                </div>
+                <div className={s.sideBlock}>
+                  <div className={s.sideLabel}>노드 신설 <span className={s.sideLabelHint}>구상 노드 {draftNodes.length}개</span></div>
+                  <div className={s.sideWarn}>여기서 만든 노드는 아직 코드와 연결되지 않은 "구상용" 카드입니다(점선 테두리). 실제로 쓰려면 이후 <code>pipelineNodes.js</code>에 손으로 반영해야 합니다.</div>
+                  <label className={s.draftFormField}>
+                    <span>이름</span>
+                    <input className={`${s.varInput} nodrag nopan`} value={draftLabel} onChange={e => setDraftLabel(e.target.value)} placeholder="예: 자막 QA" maxLength={60} />
+                  </label>
+                  <label className={s.draftFormField}>
+                    <span>컨셉</span>
+                    <textarea className={`${s.draftTextarea} nodrag nopan`} value={draftConcept} onChange={e => setDraftConcept(e.target.value)} placeholder="무엇을 하는 단계인지, 왜 필요한지 적어주세요" maxLength={2000} rows={3} />
+                  </label>
+                  <button className={s.toolBtn} disabled={!draftLabel.trim() || draftBusy} onClick={submitDraft}>
+                    {draftBusy ? '올리는 중…' : '+ 워크벤치에 업로드'}
+                  </button>
+                  {draftError && <div className={`${s.saveState} ${s.saveStateErr}`}>{draftError}</div>}
+                  {draftNodes.length > 0 && draftNodes.map(d => (
+                    <div key={d.id} className={s.wireRow}>
+                      <div className={s.wireEnds}>
+                        <span className={s.wireEnd} title={d.concept}>{d.label}</span>
+                      </div>
+                      <button className={s.wireDel} onClick={() => deleteDraft(d.id)}>지우기</button>
+                    </div>
+                  ))}
                 </div>
                 <div className={s.sideBlock}>
                   <div className={s.sideLabel}>배선 편집 <span className={s.sideLabelHint}>임시 배선 {userEdges.length}개</span></div>
@@ -534,12 +683,12 @@ function Workbench() {
   )
 }
 
-function StatusPill({ ok, label, warn, neutral }) {
+function StatusPill({ ok, label, warn, neutral, onClick, active, title }) {
   const cls = neutral ? s.pillNeutral : ok ? (warn ? s.pillWarnOn : s.pillOk) : s.pillOff
   return (
-    <span className={`${s.pill} ${cls}`}>
+    <button type="button" className={`${s.pill} ${cls} ${active ? s.pillActive : ''}`} onClick={onClick} title={title}>
       <span className={s.pillDot} />
       {label}
-    </span>
+    </button>
   )
 }
