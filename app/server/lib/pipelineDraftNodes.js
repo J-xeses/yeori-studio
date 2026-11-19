@@ -14,6 +14,22 @@ export const PIPELINE_DRAFT_NODES_PATH = mp.statePath('pipeline-draft-nodes.json
 const MAX_DRAFTS = 100
 const MAX_LABEL = 60
 const MAX_CONCEPT = 2000
+// 2026-11-19(성준님 — "구상 노드도 배선을 꽂았다 뗐다 해볼 수 있어야 한다"): 구상 노드에 실제
+// Handle(포트)을 달기 위한 이름 목록. 이 포트엔 kind(텍스트/이미지/영상/음성) 개념이 없다 —
+// 아직 코드가 없는 카드라 "이게 정확히 어떤 데이터냐"까지 정하는 건 pipelineNodes.js 로
+// 승격할 때의 몫이다. 여기선 이름만 받아 화면에서 자유롭게 잇고 떼어볼 수 있게만 한다.
+const MAX_PORTS = 6
+const MAX_PORT_NAME = 24
+function sanitizePortNames(arr) {
+  if (!Array.isArray(arr)) return []
+  const out = []
+  for (const raw of arr) {
+    const name = String(raw || '').trim().slice(0, MAX_PORT_NAME)
+    if (name && !out.includes(name)) out.push(name)
+    if (out.length >= MAX_PORTS) break
+  }
+  return out
+}
 
 function loadRaw(file) {
   try {
@@ -37,15 +53,19 @@ export function loadDraftNodes(file = PIPELINE_DRAFT_NODES_PATH) {
   return { drafts: loadRaw(file), savedAt: readSavedAt(file) }
 }
 
-// patch: { label, concept }. label 필수(빈 문자열이면 400) — 이름 없이 캔버스에 올릴 이유가 없다.
+// patch: { label, concept, inputs?, outputs? }. label 필수(빈 문자열이면 400) — 이름 없이
+// 캔버스에 올릴 이유가 없다. inputs/outputs 는 포트 이름 배열(둘 다 선택, 없으면 포트 없는
+// 카드 — 기존과 동일하게 동작).
 export function addDraftNode(patch, file = PIPELINE_DRAFT_NODES_PATH) {
   const label = String(patch?.label || '').trim().slice(0, MAX_LABEL)
   const concept = String(patch?.concept || '').trim().slice(0, MAX_CONCEPT)
   if (!label) throw Object.assign(new Error('이름(label) 이 필요합니다'), { statusCode: 400 })
+  const inputs = sanitizePortNames(patch?.inputs)
+  const outputs = sanitizePortNames(patch?.outputs)
   const drafts = loadRaw(file)
   if (drafts.length >= MAX_DRAFTS) throw Object.assign(new Error(`구상 노드가 너무 많습니다(최대 ${MAX_DRAFTS}) — 정리 후 다시 시도하세요`), { statusCode: 400 })
   const id = `draft_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
-  const entry = { id, label, concept, createdAt: new Date().toISOString() }
+  const entry = { id, label, concept, inputs, outputs, createdAt: new Date().toISOString() }
   drafts.push(entry)
   saveRaw(drafts, file)
   return entry

@@ -22,11 +22,15 @@
 // 2026-11-11(2차): 성준님 지적 — ComfyUI 처럼 "전단계에서 받는 항목마다 이름 붙은 플러그에 전선이 꽂힌 모습"이어야 한다.
 //   노드-노드 뭉뚱그린 선 1개 → 데이터 아이템 단위 포트(IP·VP·selectedImage·narrationMp3·rawClip·cutVideo…)로 쪼갰다.
 
-// 플러그 점 색 = 나르는 데이터 성격. 상태색(초록·노랑·빨강)·액센트(주황)·배선편집(보라)과 겹치지 않는 3종만 쓴다.
+// 플러그 점 색 = 나르는 데이터 성격. 2026-11-19: "영상·음성"을 하나로 뭉쳐 두던 media 를
+// video(영상)·audio(음성)로 쪼갰다(성준님 요청 — "영상은 녹색, 음성은 분홍으로 구분"). video 는
+// 노드 카드 테두리의 "핵심 제작 단계" 색(아래 CATEGORY_COLOR.core)과 같은 초록을 그대로 쓴다 —
+// 의도적 재사용(둘 다 "제작 파이프라인의 핵심 산출물"이라는 결이 같다), 충돌 아님.
 export const PORT_KINDS = {
   text: { label: '텍스트·기록', color: '#a8a29a' },
   image: { label: '이미지', color: '#6cb6ff' },
-  media: { label: '영상·음성', color: '#f58fc8' },
+  video: { label: '영상', color: '#4ee6a8' },
+  audio: { label: '음성', color: '#f58fc8' },
 }
 
 export const PIPELINE_NODES = [
@@ -44,8 +48,13 @@ export const PIPELINE_NODES = [
     inputs: [],
     outputs: [
       { port: 'trendEpisodes', kind: 'text', text: 'state/trend_episodes.json (트렌드 → 에피소드 후보)' },
-      { port: 'candidates', kind: 'text', text: 'state/trend_candidates.json (후보풀로 전송)' },
-      { port: 'bgm', kind: 'media', text: '_shared/bgm/{무드}/*.mp3 (BGM 레이더 다운로드)' },
+      // 2026-11-19 감사(누락 배선 점검): 이 포트를 받는 노드가 하나도 없다 — 그런데 정상이다.
+      // /api/trend-candidates 주석(proxy.js)에 적혀 있듯, 이 파일은 "content_matrix_v3.html(별도
+      // origin)과 데이터를 주고받는 파일 경유 통로"라 소비자가 또 다른 '노드'가 아니라 사람이
+      // 보는 표시 화면(pipelineLeader.code 에 이미 참고로 적힌 그 HTML)이다 — agentApp.reviewLog·
+      // pipelineLeader.decisionLog 와 같은 이유로 의도적으로 안 꽂는다.
+      { port: 'candidates', kind: 'text', text: 'state/trend_candidates.json (후보풀로 전송 — 사람용 표시 화면이 소비, 노드 아님)' },
+      { port: 'bgm', kind: 'audio', text: '_shared/bgm/{무드}/*.mp3 (BGM 레이더 다운로드)' },
     ],
   },
   {
@@ -58,7 +67,13 @@ export const PIPELINE_NODES = [
       { port: 'IP', kind: 'text', text: '컷별 이미지 프롬프트' },
       { port: 'VP', kind: 'text', text: '컷별 영상 프롬프트·세그 분할' },
       { port: 'narration', kind: 'text', text: '컷별 나레이션 텍스트(대사 컷 제외)' },
-      { port: 'scriptTxt', kind: 'text', text: '01_script/*.txt' },
+      // 2026-11-19 감사(누락 배선 점검): scriptTxt 를 받는 노드가 하나도 없다 — 그런데 정상이다.
+      // 실제 코드(proxy.js resolveEpisodeCuts)는 아래 IP·VP·narration 을 "따로 전달받는" 게
+      // 아니라, 모든 다음 단계가 이 원본 .txt 파일을 직접 열어 scriptParserV3.js 로 그때그때
+      // 다시 파싱한다 — 즉 이 .txt 가 유일한 실제 산출물이고, IP·VP·narration 3개 포트는 그
+      // 파싱 결과를 "이미 뽑아 보여주는" 뷰일 뿐이다(파일이 하나, 의미상 갈래가 셋). 그래서
+      // scriptTxt 자체를 또 다른 포트로 이어 붙이면 같은 연결의 중복이 된다 — 안 잇는 게 맞다.
+      { port: 'scriptTxt', kind: 'text', text: '01_script/*.txt (실제 원본 — IP·VP·narration 은 전부 이 파일을 파싱한 결과)' },
       // 2026-11-19(성준님 — BGM 워크벤치 배선이 제작완료 이후에야 BGM을 보여주는 구조였다는 지적):
       // 대본 작성 시점에 헤더·컷별 "BGM:" 서브필드로 분위기 초안을 이미 적는다
       // (scriptParserV3.js V3_AUDIO_KEY_MAP → masterCode.audio.bgm). bgmSelect.js
@@ -97,10 +112,12 @@ export const PIPELINE_NODES = [
     ],
     inputs: [
       { port: 'mood', kind: 'text', from: 'script.bgmMood', text: '헤더·컷별 BGM 분위기 초안(태그 매칭 대상)' },
-      { port: 'candidates', kind: 'media', from: 'trendRadar.bgm', text: '_shared/bgm 후보 풀(트렌드레이더+메이킹 탭 자체 검색 공용)' },
+      { port: 'candidates', kind: 'audio', from: 'trendRadar.bgm', text: '_shared/bgm 후보 풀(트렌드레이더+메이킹 탭 자체 검색 공용)' },
     ],
     outputs: [
-      { port: 'decided', kind: 'media', text: '최종 결정(사람이 직접 고른 곡 · 자동 선곡 · 없음) — reelFinalize·체크업 미리듣기가 그대로 씀' },
+      // 2026-11-19 감사로 정정: 체크업 미리듣기는 이 포트가 아니라 finalize.finalizeLog 를 본다
+      // (아래 checkup 노드 주석 참고) — "reelFinalize 가 그대로 씀"만 맞고, 체크업 쪽 설명은 오류였다.
+      { port: 'decided', kind: 'audio', text: '최종 결정(사람이 직접 고른 곡 · 자동 선곡 · 없음) — reelFinalize 가 그대로 씀' },
     ],
     vars: [
       { key: 'mode', label: 'BGM 결정 방식', type: 'select', options: ['보유 곡에서만(library)', '자동 생성 포함(auto)', '없음(none)', '직접 선택(보유곡 중)'], value: '보유 곡에서만(library)' },
@@ -111,7 +128,9 @@ export const PIPELINE_NODES = [
     code: ['src/tabs/StudioTab.jsx', 'scripts/flow-image.js', 'scripts/lib/flowDriver.js', 'scripts/pipeline-leader.js'],
     inputs: [
       { port: 'IP', kind: 'text', from: 'script.IP', text: '컷별 이미지 프롬프트' },
-      { port: 'charRef', kind: 'image', text: '캐릭터 레퍼런스(characters.json)' },
+      // from 없음 = 의도적 "외부 입력"(카드에서 호버하면 "외부 입력"으로 뜬다) — characters.json 은
+      // 어느 파이프라인 단계의 산출물이 아니라 사람이 미리 등록해 둔 고정 레퍼런스 파일이다.
+      { port: 'charRef', kind: 'image', text: '캐릭터 레퍼런스(characters.json) — 고정 파일, 파이프라인 산출물 아님' },
     ],
     outputs: [
       { port: 'candidates', kind: 'image', text: '02_images/cut_NN_a·b.jpg (후보)' },
@@ -129,7 +148,7 @@ export const PIPELINE_NODES = [
       { port: 'narration', kind: 'text', from: 'script.narration', text: '컷별 나레이션 텍스트' },
     ],
     outputs: [
-      { port: 'narrationMp3', kind: 'media', text: '03_audio/cut_NN_nr.mp3' },
+      { port: 'narrationMp3', kind: 'audio', text: '03_audio/cut_NN_nr.mp3' },
     ],
     vars: [
       { key: 'provider', label: '음성 엔진', type: 'select', options: ['ElevenLabs', '무료(msedge-tts)'], value: 'ElevenLabs' },
@@ -144,7 +163,7 @@ export const PIPELINE_NODES = [
       { port: 'VP', kind: 'text', from: 'script.VP', text: '컷별 영상 프롬프트·세그 분할' },
     ],
     outputs: [
-      { port: 'rawClip', kind: 'media', text: '04_making/raw/cut_NN_clip_K.mp4 (Flow/Veo 원본)' },
+      { port: 'rawClip', kind: 'video', text: '04_making/raw/cut_NN_clip_K.mp4 (Flow/Veo 원본)' },
     ],
     vars: [
       { key: 'route', label: '생성 경로', type: 'select', options: ['Flow (무료)', 'Veo API (유료·긴급)'], value: 'Flow (무료)' },
@@ -155,10 +174,10 @@ export const PIPELINE_NODES = [
     id: 'compose', no: '05', icon: 'layers', label: '합성 · 컷 영상', sub: 'G4 · raw → 컷 영상', tab: 'video', gate: 'g4', health: true, path: '05_video',
     code: ['src/tabs/VideoTab.jsx', 'src/tabs/MakingTab.jsx', 'server/proxy.js · /api/run-ffmpeg', 'src/lib/cutDuration.js'],
     inputs: [
-      { port: 'rawClip', kind: 'media', from: 'video.rawClip', text: '원본 클립(세그 조합·트림)' },
+      { port: 'rawClip', kind: 'video', from: 'video.rawClip', text: '원본 클립(세그 조합·트림)' },
     ],
     outputs: [
-      { port: 'cutVideo', kind: 'media', text: '05_video/cut_NN.mp4 (컷 원본 — 덮어쓰기 금지)' },
+      { port: 'cutVideo', kind: 'video', text: '05_video/cut_NN.mp4 (컷 원본 — 덮어쓰기 금지)' },
     ],
     vars: [
       { key: 'trim', label: '세그 트림', type: 'select', options: ['DU 기준 자동', '수동'], value: 'DU 기준 자동' },
@@ -168,11 +187,11 @@ export const PIPELINE_NODES = [
     id: 'preview', no: '06', icon: 'headphones', label: '나레이션 미리듣기', sub: '영상 탭 · 나레이션+효과음', tab: 'video', health: true, path: '06_publishing',
     code: ['src/tabs/VideoTab.jsx', 'server/lib/subtitleBurn.js', 'server/lib/reelOverrides.js'],
     inputs: [
-      { port: 'cutVideo', kind: 'media', from: 'compose.cutVideo', text: '05_video/cut_NN.mp4' },
-      { port: 'narrationMp3', kind: 'media', from: 'tts.narrationMp3', text: '03_audio/cut_NN_nr.mp3' },
+      { port: 'cutVideo', kind: 'video', from: 'compose.cutVideo', text: '05_video/cut_NN.mp4' },
+      { port: 'narrationMp3', kind: 'audio', from: 'tts.narrationMp3', text: '03_audio/cut_NN_nr.mp3' },
     ],
     outputs: [
-      { port: 'previewFile', kind: 'media', text: '06_publishing/cut_NN_preview.mp4 (미리듣기 전용)' },
+      { port: 'previewFile', kind: 'video', text: '06_publishing/cut_NN_preview.mp4 (미리듣기 전용)' },
     ],
     vars: [
       { key: 'narrVol', label: '나레이션 음량', type: 'input', value: '100%' },
@@ -182,16 +201,16 @@ export const PIPELINE_NODES = [
     id: 'finalize', no: '07', icon: 'rocket', label: '최종화', sub: 'G5 · 최종 영상 조립', tab: 'making', gate: 'g5', health: true, path: '07_output',
     code: ['server/lib/reelFinalize.js', 'server/lib/bgmSelect.js', 'server/lib/reelOverrides.js', 'server/proxy.js · /api/reel-finalize'],
     inputs: [
-      { port: 'cutVideo', kind: 'media', from: 'compose.cutVideo', text: '05_video 컷 영상 전체' },
-      { port: 'narrationMp3', kind: 'media', from: 'tts.narrationMp3', text: '나레이션 음성(직접 믹스)' },
-      { port: 'previewFile', kind: 'media', from: 'preview.previewFile', text: '미리듣기 결과(원본보다 최신일 때만 사용)' },
+      { port: 'cutVideo', kind: 'video', from: 'compose.cutVideo', text: '05_video 컷 영상 전체' },
+      { port: 'narrationMp3', kind: 'audio', from: 'tts.narrationMp3', text: '나레이션 음성(직접 믹스)' },
+      { port: 'previewFile', kind: 'video', from: 'preview.previewFile', text: '미리듣기 결과(원본보다 최신일 때만 사용)' },
       // 2026-11-19: 이전엔 trendRadar.bgm(원곡 라이브러리)을 여기로 바로 연결해 "자동 선곡"만
       // 보이는 그림이었다 — 실제로는 bgm 노드(후보선곡·최종 결정)를 거친 결과를 쓴다. BGM
       // 결정 방식 선택(vars)도 그 노드로 옮겼다 — finalize는 이미 결정된 값을 실행만 한다.
-      { port: 'bgm', kind: 'media', from: 'bgm.decided', text: '최종 결정된 BGM(직접 지정 또는 자동 선곡)' },
+      { port: 'bgm', kind: 'audio', from: 'bgm.decided', text: '최종 결정된 BGM(직접 지정 또는 자동 선곡)' },
     ],
     outputs: [
-      { port: 'finalOutput', kind: 'media', text: '07_output/{CODE}_final.mp4' },
+      { port: 'finalOutput', kind: 'video', text: '07_output/{CODE}_final.mp4' },
       { port: 'finalizeLog', kind: 'text', text: '_finalize.json (생성 기록)' },
     ],
     vars: [
@@ -202,7 +221,7 @@ export const PIPELINE_NODES = [
     id: 'checkup', no: '08', icon: 'check', label: '체크업 · 퍼블리싱', sub: '최종본 확인·업로드', tab: 'checkup', health: true, path: 'state/reel-overrides/<code>.json',
     code: ['src/tabs/CheckupTab.jsx', 'src/tabs/PublishingTab.jsx', 'server/lib/igPublish.js', 'server/lib/publishStatus.js', 'server/lib/reelOverrides.js'],
     inputs: [
-      { port: 'finalOutput', kind: 'media', from: 'finalize.finalOutput', text: '07_output 최종본' },
+      { port: 'finalOutput', kind: 'video', from: 'finalize.finalOutput', text: '07_output 최종본' },
       // 2026-11-16 계획 → 2026-11-18~19 실제 구현 완료: 체크업 탭에 BGM 미리듣기 토글(메인 영상과
       // 함께 재생) + 곡위치 슬라이더(bgmOffsetSec, 전주 건너뛰기 등 "곡의 어느 지점을 영상과 맞출지")
       // + 구간별 음량 보정(gainSegments)이 생겼다 — 둘 다 /api/reel-finalize/override로 즉시 저장되고
@@ -210,13 +229,18 @@ export const PIPELINE_NODES = [
       // 더 이상 "계획"이 아니라 가동 중인 배선이라 planned 플래그를 뗐다 — 실측(pipelineHealth.js
       // checkCheckup)은 "체크업 탭에서 설정한 값이 최종본(_finalize.json 의 bgm 노트)에 실제로
       // 반영됐는가"만 대조한다(선언 vs 실제 파일 간극을 BGM 쪽에도 적용).
-      // 2026-11-19: trendRadar.bgm(원곡 라이브러리) 직결 → bgm 노드(최종 결정) 경유로 변경 —
-      // 체크업 탭이 미리듣는 BGM도 "아직 안 정해진 후보 전체"가 아니라 "실제로 정해진 그 곡"이어야
-      // finalize가 쓸 결과와 일치한다.
-      { port: 'bgmPreview', kind: 'media', from: 'bgm.decided', text: 'BGM 미리듣기 — 곡위치 오프셋·구간음량 보정, 최종본에 반영됨' },
+      // 2026-11-19 정정(누락 배선 감사 중 실제 코드로 재확인): 지난 턴엔 bgm.decided 로 배선했는데,
+      // /api/checkup-bgm-preview(proxy.js)를 직접 읽어보니 그 드롭다운 상태를 전혀 보지 않는다 —
+      // ①이 에피소드로 G5를 이미 한 번이라도 돌렸으면 그 finalize.finalizeLog(_finalize.json)에
+      // 적힌 곡을 그대로 재사용하고(reelFinalize.js가 "재합성 때도 같은 곡 유지"하는 것과 동일
+      // 우선순위), ②그마저 없을 때만 bgmSelect.selectBgm 으로 독자적으로 자동 추천한다(bgm 노드의
+      // 자동 선곡과 같은 함수를 쓰지만, bgm 노드의 '현재 결정'을 참조하는 게 아니라 완전히 새로
+      // 계산). 즉 진짜 입력은 bgm.decided 가 아니라 finalize.finalizeLog — "결정은 finalize 가
+      // 실행되는 순간에만 기록으로 남고, 체크업은 그 기록을 본다"가 실제 데이터 흐름이다.
+      { port: 'bgmPreview', kind: 'audio', from: 'finalize.finalizeLog', text: 'BGM 미리듣기 — 지난 최종본의 곡 우선 재사용, 없으면 독자 자동추천(둘 다 곡위치·구간음량 보정 반영)' },
     ],
     outputs: [
-      { port: 'published', kind: 'media', text: '게시(Instagram·YouTube)' },
+      { port: 'published', kind: 'video', text: '게시(Instagram·YouTube)' },
       { port: 'publishStatus', kind: 'text', text: 'publish-status.json' },
     ],
     vars: [
@@ -241,7 +265,7 @@ export const PIPELINE_NODES = [
     ],
     inputs: [
       { port: 'candidates', kind: 'image', from: 'image.candidates', text: '02_images 컷별 후보 이미지(G2 검토)' },
-      { port: 'cutVideo', kind: 'media', from: 'compose.cutVideo', text: '05_video 컷 영상(G4 검토·음성 변환)' },
+      { port: 'cutVideo', kind: 'video', from: 'compose.cutVideo', text: '05_video 컷 영상(G4 검토·음성 변환)' },
     ],
     outputs: [
       { port: 'reviewLog', kind: 'text', text: '01_script/.genline-review.json (판정·IP 초안·대본 수정안)' },

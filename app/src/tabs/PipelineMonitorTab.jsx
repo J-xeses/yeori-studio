@@ -26,11 +26,28 @@ import s from './PipelineMonitorTab.module.css'
 //     화면에서 "진짜" 노드를 만드는 기능은 없다.
 // 2026-11-19: 편집 패널에 "노드 신설"(구상 노드) 추가 — 이름+컨셉만 입력해 캔버스에 점선 카드로 올려본다.
 //   pipelineNodes.js 와는 별도 저장소(/api/pipeline-draft-nodes, downloads/state/pipeline-draft-nodes.json)라
-//   진짜 노드와 절대 안 섞인다 — 실제 단계로 쓰려면 사람이 그 배열에 손으로 반영해야 한다. 또한:
+//   진짜 노드와 절대 안 섞인다 — 실제 단계로 쓰려면 사람이 그 배열에 손으로 반영해야 한다.
+// 2026-11-19(같은 날 3차, 성준님 — "평소엔 안 쓰겠지만 상황이 생기면 직접 만져보며 원리를 알아야
+//   한다"): 배선을 화면에서 뗐다 다른 포트에 꽂을 수 있게(React Flow reconnect) + 구상 노드에도
+//   이름만 적어 넣는 실제 포트(Handle)를 달았다. ★ 실선(코드에서 온 배선)도 이제 드래그로 캔버스
+//   위에서 뗄 수 있다 — 단, 이것도 다른 임시 배선과 똑같이 "화면에서만", 떼는 순간 보라색 임시
+//   배선 취급(data.user=true)으로 바뀌고 새로고침하면 pipelineNodes.js 기준으로 원래대로
+//   돌아온다(절대 코드·서버에 반영 안 됨). 키보드 Delete 로 실선을 지우는 건 여전히 막혀 있다
+//   (edges 의 deletable:false) — 이번에 연 건 "끝을 잡아 드래그"뿐, 실수로 선택 후 삭제키 누르는
+//   사고는 그대로 방지된다. 또한:
 //   - 사이드바는 이제 그 아이콘을 다시 눌러야만 닫힌다(바깥 클릭·Esc 로 안 닫힘).
-//   - 노드 카드 맨 위 띠로 유형(핵심 제작/결정·운영/외부 앱)을 구분(CATEGORY_COLOR) — 테두리 색(상태)과는 별개.
 //   - 상단 바 상태 알약 클릭 → 관련 노드만 캔버스에서 강조(하이라이트+자동 포커스), 다시 누르면 해제.
-//   - 정상(초록) 배선을 포트 색(텍스트/이미지/영상·음성)으로 세분화 — 경고·단선 색은 그대로.
+//   - 정상(초록) 배선을 포트 색(텍스트/이미지/영상/음성)으로 세분화 — 경고·단선 색은 그대로.
+// 2026-11-19(같은 날 2차, 성준님 피드백 — "표시 간소화" + 누락 배선 감사):
+//   - 노드 유형 표시를 카드 맨 위 별도 띠 → 카드 테두리 자체로(G게이트=초록·결정운영=보라·외부=회색).
+//     단, 경고·단선·진행중 상태는 여전히 그 알림색이 테두리를 덮어쓴다(단선 우선 원칙 유지) —
+//     "정상 실측(ok)" 신호는 이제 테두리가 아니라 배지 텍스트·icoWrap 글로우로만 표시(정보 이동,
+//     소실 아님). PORT_KINDS 의 media(영상·음성 통합)를 video(초록)·audio(분홍)로 분리.
+//   - 누락 배선 감사: pipelineNodes.js 의 모든 입력(from 없음)·출력(아무도 안 받음) 포트를 스캔해
+//     "의도적 외부입력/종착점"과 "실제 버그"를 구분 — checkup.bgmPreview 가 bgm.decided 가 아니라
+//     finalize.finalizeLog 에서 와야 한다는 실제 배선 오류를 찾아 고쳤다(/api/checkup-bgm-preview
+//     코드를 직접 대조해 확인 — 체크업 미리듣기는 그 세션의 BGM 드롭다운이 아니라 "지난 최종본의
+//     곡"을 먼저 본다). 나머지 미연결 포트는 전부 의도적(각 포트 옆 주석 참고).
 const API = 'http://localhost:3001'
 const HEALTH_LABEL = { ok: '정상', warn: '경고', fail: '단선' }
 const STATE_LABEL = { active: '진행 중', unverified: '파일 미확인', pending: '대기', partial: '진행', idle: '대기', done: '정상' }
@@ -39,12 +56,15 @@ const STATE_COLOR = { done: '#4ee6a8', partial: '#4ee6a8', warn: '#ffd23f', fail
 const IDLE_COLOR = '#3a342d'
 const USER_EDGE_COLOR = '#8d6bff'
 const PLANNED_EDGE_COLOR = '#6b7280'
-// 2026-11-19: 노드 카드 테두리는 실측 상태(ok/warn/fail/active) 전용이라, 그와 섞이지 않게
-// "유형"은 카드 맨 위 가느다란 띠(catBar)로 별도 표시한다 — 성준님 지적("프레임 구분이 안 된
-// 카드들을 유형별로 분류"). 분류 기준은 이미 있는 필드만 씀(새 필드 추가 없음): G포인트가 있으면
-// 핵심 제작 단계, external 이면 외부 앱, 그 둘 다 아니면(checkup·bgm) 결정·운영 단계.
+// 2026-11-19: 노드 카드 유형 구분 — 처음엔 카드 맨 위 별도 띠로 했다가, 성준님 요청으로 "표시
+// 간소화": 띠를 없애고 테두리 자체를 유형색으로(G게이트=초록·결정운영=보라·외부=회색). 그 결과
+// 테두리의 "뜻"이 바뀐다 — 예전엔 ok(정상 실측)=초록이었는데, 이제 기본 테두리색은 유형(고정
+// 정체성)이고, 실측 상태(ok/warn/fail/active)는 경고·단선·진행중일 때만 테두리를 덮어써서
+// 보여준다(badge 텍스트·icoWrap 글로우는 여전히 실측 상태를 그대로 보여줌 — 정보가 없어진 게
+// 아니라 다른 요소로 옮겨감). 분류 기준은 이미 있는 필드만 씀: G포인트가 있으면 핵심 제작 단계,
+// external 이면 외부 앱, 그 둘 다 아니면(checkup·bgm) 결정·운영 단계.
 const CATEGORY_OF = (def) => (def.external ? 'external' : def.gate ? 'core' : 'decision')
-const CATEGORY_COLOR = { core: '#4f8fef', decision: '#b267e0', external: '#7d8a99' }
+const CATEGORY_COLOR = { core: '#4ee6a8', decision: '#b267e0', external: '#7d8a99' }
 const CATEGORY_LABEL = { core: '핵심 제작 단계(G-gate)', decision: '결정·운영 단계', external: '외부 앱' }
 // 상단 바 상태 알약 클릭 → 캔버스 하이라이트("연계 활성화"). 알약 키 → 하이라이트할 노드 id 목록을
 // 아래 Workbench 안에서 계산한다(실측 상태가 필요한 'worst'는 상수로 못 정함).
@@ -103,10 +123,15 @@ const PipelineNode = memo(function PipelineNode({ id, data, selected }) {
   const problem = live.state === 'fail' || live.state === 'warn'
   const badgeText = live.health?.state ? HEALTH_LABEL[live.health.state] : STATE_LABEL[live.state] || '대기'
   const badgeKind = live.state === 'fail' ? 'fail' : live.state === 'warn' ? 'warn' : live.state === 'active' ? 'active' : (live.state === 'done' || live.state === 'partial') ? 'ok' : 'idle'
+  // 2026-11-19(성준님 — "카드 상단 색상 띠는 삭제, 테두리색으로 간소화"): 별도 띠 대신 테두리 자체를
+  // 유형색(G게이트=초록/결정·운영=보라/외부=회색)으로 — 단, 경고·단선·진행중은 여전히 그 알림색이
+  // 이긴다(단선 신호가 무조건 우선한다는 원칙은 안 건드림). 그래서 그 세 상태일 때만 인라인
+  // 스타일을 비워 CSS의 .node.fail/.node.warn/.node.active 가 그대로 적용되게 한다.
   const category = CATEGORY_OF(def)
+  const isAlertState = live.state === 'fail' || live.state === 'warn' || live.state === 'active'
   return (
-    <div className={`${s.node} ${s[live.state] || ''} ${selected ? s.nodeSelected : ''} ${live.dimmed ? s.nodeDimmed : ''}`}>
-      <div className={s.catBar} style={{ background: CATEGORY_COLOR[category] }} title={CATEGORY_LABEL[category]} />
+    <div className={`${s.node} ${s[live.state] || ''} ${selected ? s.nodeSelected : ''} ${live.dimmed ? s.nodeDimmed : ''}`}
+      style={!isAlertState ? { borderColor: CATEGORY_COLOR[category] } : undefined} title={CATEGORY_LABEL[category]}>
       <div className={s.nodeHead}>
         <div className={s.icoWrap}><NodeIcon name={def.icon} className={s.icoSvg} /></div>
         <div className={s.nodeTitle}>
@@ -168,8 +193,14 @@ const PipelineNode = memo(function PipelineNode({ id, data, selected }) {
 // ── 구상 노드 카드(2026-11-19, "노드 신설") — pipelineNodes.js 와 무관한 메모판 카드.
 // 코드·포트·health 가 없다 — 실선 배선도 못 꽂는다(배선은 여전히 실제 포트 전용). 점선 테두리 +
 // "구상 중" 배지로 실제 가동 중인 노드와 절대 혼동되지 않게 한다.
+// 구상 노드의 포트는 kind(텍스트/이미지/영상/음성)가 없다 — 아직 코드가 없어 "정확히 어떤
+// 데이터냐"가 안 정해졌으므로, 색은 전부 배선편집(보라)과 같은 계열로 통일해 "구상 단계"임을
+// 바로 알아보게 한다. 이름만 서버에 저장되고(server/lib/pipelineDraftNodes.js), from 은 절대
+// 안 생긴다 — 이 포트로 들어오고 나가는 배선은 전부 onConnect/onReconnect 가 만드는 화면 전용
+// 배선(data.user=true)뿐이다.
 const DraftNode = memo(function DraftNode({ data, selected }) {
   const d = data.draft
+  const ins = d.inputs || [], outs = d.outputs || []
   return (
     <div className={`${s.draftNode} ${selected ? s.nodeSelected : ''}`}>
       <div className={s.draftHead}>
@@ -177,7 +208,23 @@ const DraftNode = memo(function DraftNode({ data, selected }) {
         <span className={s.draftLabel}>{d.label}</span>
       </div>
       {d.concept && <div className={s.draftConceptText}>{d.concept}</div>}
-      <div className={s.draftFoot}>pipelineNodes.js 미반영 — 코드·포트·실측 없음</div>
+      {(ins.length > 0 || outs.length > 0) && (
+        <div className={s.draftPorts}>
+          {ins.map(name => (
+            <div key={'i_' + name} className={`${s.draftPort} ${s.draftPortIn}`} title={`${name} · 입력(구상) · 외부/임시 배선만 가능`}>
+              <Handle type="target" position={Position.Left} id={name} className={s.draftPlug} />
+              <span className={s.draftPortName}>{name}</span>
+            </div>
+          ))}
+          {outs.map(name => (
+            <div key={'o_' + name} className={`${s.draftPort} ${s.draftPortOut}`} title={`${name} · 출력(구상) · 임시 배선만 가능`}>
+              <Handle type="source" position={Position.Right} id={name} className={s.draftPlug} />
+              <span className={s.draftPortName}>{name}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className={s.draftFoot}>pipelineNodes.js 미반영 — 배선은 전부 화면 전용(임시)</div>
     </div>
   )
 })
@@ -222,6 +269,8 @@ function Workbench() {
   const [draftNodes, setDraftNodes] = useState([])
   const [draftLabel, setDraftLabel] = useState('')
   const [draftConcept, setDraftConcept] = useState('')
+  const [draftInputsText, setDraftInputsText] = useState('')
+  const [draftOutputsText, setDraftOutputsText] = useState('')
   const [draftBusy, setDraftBusy] = useState(false)
   const [draftError, setDraftError] = useState('')
   // 2026-11-19 상단 바 상태 알약 클릭 → 캔버스 하이라이트("연계 활성화"). null = 필터 없음.
@@ -310,8 +359,10 @@ function Workbench() {
     setDraftBusy(true)
     setDraftError('')
     try {
+      const inputs = draftInputsText.split(',').map(x => x.trim()).filter(Boolean)
+      const outputs = draftOutputsText.split(',').map(x => x.trim()).filter(Boolean)
       const r = await fetch(`${API}/api/pipeline-draft-nodes`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ label, concept: draftConcept.trim() }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ label, concept: draftConcept.trim(), inputs, outputs }),
       })
       // 2026-11-19: 이 엔드포인트는 핫리로드 대상이 아닌 server/proxy.js 쪽 — 프록시 재시작 전엔
       // 404(HTML)가 와서 .json() 이 바로 throw 한다. alert() 는 페이지를 멈춰서(네이티브 모달) 안 쓴다.
@@ -321,7 +372,7 @@ function Workbench() {
       const draftFlowNode = { id: d.node.id, type: 'draft', position: pos, data: { draft: d.node }, deletable: false }
       setDraftNodes(ds => [...ds, d.node])
       setNodes(ns => { const next = [...ns, draftFlowNode]; saveLayout(next); return next })
-      setDraftLabel(''); setDraftConcept('')
+      setDraftLabel(''); setDraftConcept(''); setDraftInputsText(''); setDraftOutputsText('')
     } catch (e) { setDraftError(`노드 신설 실패: ${e.message} — 서버(프록시) 재시작이 필요할 수 있습니다`) } finally { setDraftBusy(false) }
   }
   const deleteDraft = async (id) => {
@@ -339,6 +390,33 @@ function Workbench() {
     setClearArmed(false)
     setEdges(es => es.filter(e => !e.data?.user))
   }
+
+  // 2026-11-19 배선 탈부착(React Flow reconnect) — 실선(코드에서 온 배선)도 포함해 전부 끝을 잡아
+  // 다른 포트로 옮기거나 빈 캔버스에 놓아 뗄 수 있다. 공식 예제와 같은 패턴(edgeReconnectSuccessful
+  // ref로 성공 여부 추적, onReconnectEnd 에서 false 로 남아있으면 빈 곳에 놓인 것 — 그 선을 지운다).
+  // ★ @xyflow/system 의 reconnectEdge() 헬퍼는 안 쓴다 — 그 구현이 newConnection 에서 source·target·
+  // sourceHandle·targetHandle 4개만 뽑고 나머지(내가 넣으려는 data.user=true)를 버린다(실측 확인:
+  // node_modules/@xyflow/system reconnectEdge 소스, `{ ...rest, id, source, target, sourceHandle,
+  // targetHandle }` — rest 는 oldEdge 에서 옴, newConnection 의 추가 필드는 무시됨). 그래서 직접
+  // id 를 찾아 필드만 교체한다. 재배선 결과는 data.user=true 로 표시해 "화면 전용 임시 배선"과
+  // 완전히 똑같이 취급(배선 편집 패널 목록·삭제 버튼·새로고침 시 원복 전부 공용) — 절대
+  // pipelineNodes.js 나 서버에 쓰지 않는다. deletable:false(실선의 키보드 삭제 방지)는 그대로
+  // 유지 — 이번에 연 건 "끝을 드래그"뿐이라 실수로 선택 후 Delete 키를 누르는 사고는 안 일어난다.
+  const edgeReconnectSuccessful = useRef(true)
+  const onReconnectStart = useCallback(() => { edgeReconnectSuccessful.current = false }, [])
+  const onReconnect = useCallback((oldEdge, newConnection) => {
+    edgeReconnectSuccessful.current = true
+    setEdges(es => es.map(e => e.id !== oldEdge.id ? e : {
+      ...e, planned: false,
+      source: newConnection.source, sourceHandle: newConnection.sourceHandle,
+      target: newConnection.target, targetHandle: newConnection.targetHandle,
+      data: { ...e.data, user: true },
+    }))
+  }, [setEdges])
+  const onReconnectEnd = useCallback((_evt, edge) => {
+    if (!edgeReconnectSuccessful.current) setEdges(es => es.filter(e => e.id !== edge.id))
+    edgeReconnectSuccessful.current = true
+  }, [setEdges])
   const setVar = useCallback((key, value) => setVars(v => ({ ...v, [key]: value })), [])
   const openTab = useCallback((tab) => dispatch({ type: 'SET_TAB', p: tab }), [dispatch])
 
@@ -464,20 +542,25 @@ function Workbench() {
   // 범례와 같은 기준)으로 세분화한다.
   const styledEdges = edges.map(e => {
     const dim = !!highlightIds && !(highlightIds.has(e.source) || highlightIds.has(e.target))
-    if (e.data?.user) return { ...e, type: 'default', style: { stroke: USER_EDGE_COLOR, strokeWidth: 2, strokeDasharray: '2 5', opacity: dim ? 0.15 : 1 } }
-    if (e.planned) return { ...e, type: 'default', label: '계획', labelStyle: { fill: PLANNED_EDGE_COLOR, fontSize: 10 }, style: { stroke: PLANNED_EDGE_COLOR, strokeWidth: 1.5, strokeDasharray: '4 4', opacity: dim ? 0.1 : 0.7 } }
+    // reconnectable: true — 실선 포함 전부 끝을 드래그해 다른 포트로 옮기거나 뗄 수 있다(위 onReconnect* 참고).
+    if (e.data?.user) return { ...e, type: 'default', reconnectable: true, style: { stroke: USER_EDGE_COLOR, strokeWidth: 2, strokeDasharray: '2 5', opacity: dim ? 0.15 : 1 } }
+    if (e.planned) return { ...e, type: 'default', reconnectable: true, label: '계획', labelStyle: { fill: PLANNED_EDGE_COLOR, fontSize: 10 }, style: { stroke: PLANNED_EDGE_COLOR, strokeWidth: 1.5, strokeDasharray: '4 4', opacity: dim ? 0.1 : 0.7 } }
     const st = byId[e.target]?.state
     const flowing = st === 'done' || st === 'partial'
     const kindColor = PORT_KINDS[PORT_KIND_OF[`${e.source}.${e.sourceHandle}`]]?.color
     const color = (flowing && kindColor) || STATE_COLOR[st] || IDLE_COLOR
     return {
-      ...e, type: 'default', animated: st === 'active',
+      ...e, type: 'default', reconnectable: true, animated: st === 'active',
       style: { stroke: color, strokeWidth: st === 'fail' ? 2.5 : 2, strokeDasharray: st === 'fail' ? '10 8' : undefined, opacity: dim ? 0.1 : (STATE_COLOR[st] ? 0.9 : 1) },
     }
   })
 
   const userEdges = edges.filter(e => e.data?.user)
   const baseEdgeCount = edges.length - userEdges.length
+  // 구상 노드는 NODE_LABEL_OF/PORT_KIND_OF(둘 다 PIPELINE_NODES 기준 상수)에 없다 — 배선 편집
+  // 목록에서 구상 노드가 끝인 임시 배선도 이름·점 색이 비어 보이지 않게 폴백을 추가.
+  const nodeLabelOf = (id) => NODE_LABEL_OF[id] || draftNodes.find(d => d.id === id)?.label || id
+  const portDotColor = (nodeId, handle) => PORT_KINDS[PORT_KIND_OF[`${nodeId}.${handle}`]]?.color || PORT_KINDS.text.color
   const panelMode = panel?.startsWith('mode:') ? RAIL_MODES.find(m => m.id === panel.slice(5)) : null
 
   const saveText = saveState.kind === 'saving' ? '배치 저장 중…'
@@ -577,12 +660,13 @@ function Workbench() {
                   <p className={s.sideNote}>정상(초록) 배선도 이제 이 색으로 세분화됩니다 — 경고·단선·진행 중 배선은 기존 색을 그대로 유지합니다.</p>
                 </div>
                 <div className={s.sideBlock}>
-                  <div className={s.sideLabel}>노드 유형 <span className={s.sideLabelHint}>카드 맨 위 띠 색</span></div>
+                  <div className={s.sideLabel}>노드 유형 <span className={s.sideLabelHint}>카드 테두리 기본색</span></div>
                   <div className={s.legend}>
                     {Object.entries(CATEGORY_LABEL).map(([k, label]) => (
                       <span key={k} className={s.legendItem}><span className={s.legendDot} style={{ background: CATEGORY_COLOR[k] }} />{label}</span>
                     ))}
                   </div>
+                  <p className={s.sideNote}>경고·단선·진행 중일 때만 각 상태의 알림색이 이 테두리색을 덮어씁니다 — 완료·정상 여부는 카드 배지 글자로 확인하세요.</p>
                 </div>
                 <div className={s.sideBlock}>
                   <div className={s.sideLabel}>노드 신설 <span className={s.sideLabelHint}>구상 노드 {draftNodes.length}개</span></div>
@@ -595,6 +679,15 @@ function Workbench() {
                     <span>컨셉</span>
                     <textarea className={`${s.draftTextarea} nodrag nopan`} value={draftConcept} onChange={e => setDraftConcept(e.target.value)} placeholder="무엇을 하는 단계인지, 왜 필요한지 적어주세요" maxLength={2000} rows={3} />
                   </label>
+                  <label className={s.draftFormField}>
+                    <span>입력 포트(선택, 쉼표로 구분)</span>
+                    <input className={`${s.varInput} nodrag nopan`} value={draftInputsText} onChange={e => setDraftInputsText(e.target.value)} placeholder="예: 원본, 설정" maxLength={200} />
+                  </label>
+                  <label className={s.draftFormField}>
+                    <span>출력 포트(선택, 쉼표로 구분)</span>
+                    <input className={`${s.varInput} nodrag nopan`} value={draftOutputsText} onChange={e => setDraftOutputsText(e.target.value)} placeholder="예: 결과" maxLength={200} />
+                  </label>
+                  <p className={s.sideNote}>포트를 적으면 카드 가장자리에 점이 생겨 — 다른 노드와 똑같이 끌어서 배선을 잇거나 뗄 수 있습니다(전부 화면 전용).</p>
                   <button className={s.toolBtn} disabled={!draftLabel.trim() || draftBusy} onClick={submitDraft}>
                     {draftBusy ? '올리는 중…' : '+ 워크벤치에 업로드'}
                   </button>
@@ -610,16 +703,16 @@ function Workbench() {
                 </div>
                 <div className={s.sideBlock}>
                   <div className={s.sideLabel}>배선 편집 <span className={s.sideLabelHint}>임시 배선 {userEdges.length}개</span></div>
-                  <div className={s.sideWarn}>이 배선들은 아직 저장되지 않습니다 — 새로고침하면 사라집니다. 실제 파이프라인 동작에도 영향이 없습니다(화면 표시뿐).</div>
+                  <div className={s.sideWarn}>이 배선들은 아직 저장되지 않습니다 — 새로고침하면 사라집니다. 실제 파이프라인 동작에도 영향이 없습니다(화면 표시뿐). 실선(코드에서 온 배선) 끝을 잡아 뗀 것도 여기 같이 뜹니다 — 뗀 순간부터 이 목록·삭제 버튼의 "임시 배선"으로 취급됩니다.</div>
                   {userEdges.length === 0 ? (
-                    <p className={s.sideText}>임시 배선이 없습니다. 출력 플러그(카드 오른쪽 점)에서 입력 플러그(왼쪽 점)로 끌면 보라색 점선 배선이 생기고, 여기 목록에 나타납니다.</p>
+                    <p className={s.sideText}>임시 배선이 없습니다. 출력 플러그(카드 오른쪽 점)에서 입력 플러그(왼쪽 점)로 끌면 보라색 점선 배선이 생기고, 여기 목록에 나타납니다. 기존 실선의 끝을 잡아 다른 포트로 옮기거나 빈 캔버스에 놓아 떼도 똑같이 여기 나타납니다.</p>
                   ) : (
                     <>
                       {userEdges.map(e => (
                         <div key={e.id} className={s.wireRow}>
                           <div className={s.wireEnds}>
-                            <span className={s.wireEnd} title={NODE_LABEL_OF[e.source]}><i style={{ background: PORT_KINDS[PORT_KIND_OF[`${e.source}.${e.sourceHandle}`]]?.color }} />{e.source}.{e.sourceHandle}</span>
-                            <span className={s.wireEnd} title={NODE_LABEL_OF[e.target]}><em>→</em><i style={{ background: PORT_KINDS[PORT_KIND_OF[`${e.target}.${e.targetHandle}`]]?.color }} />{e.target}.{e.targetHandle}</span>
+                            <span className={s.wireEnd} title={nodeLabelOf(e.source)}><i style={{ background: portDotColor(e.source, e.sourceHandle) }} />{e.source}.{e.sourceHandle}</span>
+                            <span className={s.wireEnd} title={nodeLabelOf(e.target)}><em>→</em><i style={{ background: portDotColor(e.target, e.targetHandle) }} />{e.target}.{e.targetHandle}</span>
                           </div>
                           <button className={s.wireDel} onClick={() => removeUserEdge(e.id)}>지우기</button>
                         </div>
@@ -629,7 +722,7 @@ function Workbench() {
                       </button>
                     </>
                   )}
-                  <p className={s.sideNote}>기본 배선 {baseEdgeCount}개는 <code>pipelineNodes.js</code> 의 입력 포트 <code>from</code> 에서 자동으로 만들어져 여기서 지울 수 없습니다.</p>
+                  <p className={s.sideNote}>기본 배선 {baseEdgeCount}개는 <code>pipelineNodes.js</code> 의 입력 포트 <code>from</code> 에서 자동으로 만들어집니다 — 캔버스에서 끝을 드래그해 옮기거나 뗄 수는 있지만(위 참고), 이 목록의 삭제 버튼으로 직접 지우지는 못합니다.</p>
                 </div>
               </>
             )}
@@ -644,6 +737,9 @@ function Workbench() {
               onEdgesChange={onEdgesChange}
               onNodeDragStop={onNodeDragStop}
               onConnect={onConnect}
+              onReconnectStart={onReconnectStart}
+              onReconnect={onReconnect}
+              onReconnectEnd={onReconnectEnd}
               colorMode="dark"
               fitView
               fitViewOptions={{ padding: 0.12 }}

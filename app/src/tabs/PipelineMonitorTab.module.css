@@ -166,7 +166,8 @@
 }
 .draftTextarea:focus { outline: none; border-color: var(--accent); }
 
-/* ── 구상 노드 카드(2026-11-19) — 진짜 노드(.node)와 또렷이 다르게: 점선 테두리, 포트·배지 없음 ── */
+/* ── 구상 노드 카드(2026-11-19) — 진짜 노드(.node)와 또렷이 다르게: 점선 테두리, health 배지 없음.
+   포트는 있을 수 있다(이름만 입력, kind 없음) — 전부 배선편집과 같은 보라색으로 통일. */
 .draftNode {
   width: 240px; box-sizing: border-box;
   background: var(--panel-2); border: 1.5px dashed var(--line-2); border-radius: 12px;
@@ -178,6 +179,12 @@
 .draftBadge { font-family: var(--mono); font-size: 9px; letter-spacing: .06em; color: var(--dim); border: 1px dashed var(--line-2); border-radius: 999px; padding: 1px 7px; }
 .draftLabel { font-weight: 700; font-size: 13px; color: var(--text); }
 .draftConceptText { margin-top: 7px; font-size: 11.5px; line-height: 1.5; color: var(--text-2); overflow-wrap: anywhere; }
+/* 구상 노드 포트 — 실제 노드의 .port 와 같은 원리(React Flow Handle 기본 top:50% 센터링에 맡김),
+   kind 색 구분이 없어 전부 보라(배선편집 색)로 통일해 "아직 구상 단계"임을 바로 알아보게 한다. */
+.draftPorts { margin: 8px -12px 0; border-top: 1px dashed var(--line-2); padding-top: 6px; }
+.draftPort { position: relative; display: flex; align-items: center; gap: 6px; padding: 4px 14px; font-family: var(--mono); font-size: 10.5px; color: var(--text-2); }
+.draftPortOut { flex-direction: row-reverse; text-align: right; }
+.draftPlug { width: 9px; height: 9px; border-width: 2px; border-style: solid; background: var(--wire-edit); border-color: var(--wire-edit); box-shadow: 0 0 0 2px var(--panel-2); }
 .draftFoot { margin-top: 8px; font-family: var(--mono); font-size: 9.5px; color: var(--dim); }
 
 /* ── 노드 카드: 상단 → 코드 → 연결 → 변수 → 하단 ── */
@@ -191,10 +198,6 @@
 /* overflow:hidden 은 일부러 안 씀 — 포트 플러그(Handle)가 카드 가장자리에 절반 걸쳐 있어서(.plug) 잘려버린다. */
 .node:active { cursor: grabbing; }
 .nodeSelected { outline: 1px solid var(--wire-edit); outline-offset: 2px; }
-/* 2026-11-19: 유형(핵심 제작/결정·운영/외부 앱) 전용 띠 — 테두리 색(상태)과 겹치지 않게 카드 맨 위에만.
-   부모에 overflow:hidden을 못 쓰므로(포트 플러그가 가장자리에 걸쳐 있음) 띠 자체에 모서리를 준다 —
-   음수 마진으로 카드 테두리(1px) 바로 위까지 덮고, border-radius를 부모보다 1px 작게 맞춘다. */
-.catBar { height: 4px; margin: -1px -1px 0; border-radius: 11px 11px 0 0; }
 /* 상단 바 상태 알약으로 필터링 중일 때, 관련 없는 노드는 흐리게(완전히 숨기지는 않음 — 맥락 유지) */
 .nodeDimmed { opacity: .22; filter: grayscale(.5); }
 .nodeHead { display: flex; align-items: flex-start; gap: 10px; padding: 12px 12px 10px; }
@@ -271,19 +274,20 @@
 .gateCount { margin-left: auto; font-family: var(--mono); font-size: 10.5px; color: #a0957f; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .askNote { font-family: var(--mono); font-size: 10px; line-height: 1.45; color: #b9a4ff; padding: 0 12px 10px; }
 
-/* 상태별 테두리 */
+/* 2026-11-19: 테두리 기본색은 이제 유형(JSX 인라인 style, CATEGORY_COLOR)이 정한다. 아래 상태
+   규칙은 "경고·단선·진행중"일 때만 그 색을 덮어쓰고(알림이 유형색보다 항상 이긴다), 그 밖의
+   상태(idle/pending/partial/done/unverified)는 border-color 를 더는 건드리지 않는다 —
+   opacity·border-style 같은 "꾸밈"만 남긴다. 실측 ok/완료 여부는 배지 텍스트·icoWrap 글로우가
+   보여준다(정보가 없어진 게 아니라 다른 요소로 옮겨감). */
 .node.idle { opacity: .62; }
-.node.pending { border-color: #3a3025; }
-.node.partial { border-color: rgba(78,230,168,.4); }
-.node.done { border-color: var(--ok); }
 .node.active {
   border-color: var(--accent);
   box-shadow: 0 0 0 1px rgba(255,122,26,.25), 0 0 22px rgba(255,122,26,.35);
   animation: pulse 1.6s ease-in-out infinite;
 }
 @keyframes pulse { 0%,100% { box-shadow: 0 0 0 1px rgba(255,122,26,.25), 0 0 22px rgba(255,122,26,.35); } 50% { box-shadow: 0 0 0 1px rgba(255,122,26,.4), 0 0 34px rgba(255,122,26,.55); } }
-/* 플래그는 완료인데 파일을 실측하지 못한 상태 — 초록을 켜지 않는다(점선 테두리) */
-.node.unverified { border-color: #3d4a40; border-style: dashed; }
+/* 플래그는 완료인데 파일을 실측하지 못한 상태 — 유형색은 유지하되 점선으로만 구분 */
+.node.unverified { border-style: dashed; }
 /* 경고: 파일은 재생되지만 정합성 의심. 진행 중 주황(accent)과 구분되는 노랑(hold) */
 .node.warn { border-color: var(--hold); box-shadow: 0 0 0 1px rgba(255,210,63,.12); }
 /* 단선: 파일을 열어보니 깨져 있음. 플래그가 완료여도 이 색이 이긴다 */
