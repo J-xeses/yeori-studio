@@ -380,11 +380,16 @@ export function buildClipPrompt(cut, k, n) {
     if (cut.voiceSource === 'video') {
       // 2026-11-15 신설(yeori_ruleset §⑬-4, IG_R09 CUT1/2/4 실측 성공) — 나레이션을 ElevenLabs
       // TTS로 후작업에서 입히지 않고, Flow/Veo3 생성 자체에 "화면 밖 음성(V.O.)"으로 내장하는
-      // 경로. 이 분기가 없으면 voiceSource==='video'인 컷도 그냥 SILENT_FILM_CUE만 붙어서
-      // 나레이션 자체가 영상에 전혀 안 들어간다(무음 클립) — 반드시 실제 나레이션 원문을 V.O.
-      // 지시문에 넣어야 Veo가 화면 밖 목소리로 그 문장을 말한다.
+      // 경로.
+      // 2026-11-19 교정(IG_R10 실측 — yeori_ruleset §⑬-4 11/19 갱신분,
+      // [[project_narration_vp_visual_audio_split_standard_2026_11_19]] 참고): 위 11/15
+      // 방식처럼 Visual 묘사와 "off-screen V.O." 지시를 한 문단에 섞어 쓰면, R10에서 대사처럼
+      // 반응하는 립싱크 버그가 재현됨 — "V.O." 라는 문구 자체는 필요조건일 뿐 충분조건이
+      // 아니었다. 유일하게 안정적으로 재현된 해결책은 Visual:/Audio: 를 입력 구조 자체에서
+      // 두 블록으로 명시 분리하는 것(한 단락에 섞지 않음). 그래서 prompt(화면 서술)를 통째로
+      // Visual: 블록에 넣고, 나레이션은 별도 Audio: 블록으로 분리한다.
       const nrText = String(cut.narration || '').trim()
-      prompt += `\n\nShe stays silent on camera throughout — mouth closed, no lip movement, not speaking on camera. Add an off-screen voice-over narration (V.O. — she does not speak on camera, no lip movement, no mouth movement): a calm, natural voice says in Korean: "${nrText}". No on-screen subtitle text or captions.`
+      prompt = `Visual: ${prompt.trim()} She stays silent on camera throughout, lips gently closed and relaxed, no mouth movement.\n\nAudio: a separate off-screen narrator, a calm, natural voice that does not belong to the woman on screen, says in Korean: "${nrText}". Her lips never move.\n\nNo on-screen subtitle text or captions.`
     } else if (!prompt.includes(SILENT_FILM_CUE)) {
       // 2026-11-08 성준님 실측(SF_E02 CUT3 Flow 생성) — "narration"/"voiceover"/"speak"/"mouth"
       // 같은 단어를 구간별로 여러 번 반복해서 강조할수록(부정문이라도) Flow가 오히려 말을

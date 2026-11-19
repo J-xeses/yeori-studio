@@ -1,4 +1,4 @@
-# 서여리 연출 원칙 — 에이전트 판단 룰셋 v1.4.11
+# 서여리 연출 원칙 — 에이전트 판단 룰셋 v1.4.12
 
 > 출처: 성준님 직접 정리 (AI 유튜브 채널 운영 시작하기 1\~7)
 > 용도: 프롬프트 생성 후 자동 품질 체크 기준
@@ -688,7 +688,40 @@ https://claude.ai/code/artifact/47d3b3c1-b5ed-41d3-bb5f-3b27732fedeb
 
 \---
 
-### ⑬-4 나레이션·대사 영상 내장(V.O.) 생성 — G3 조건부 전환 [v1.4.7 신설 — 2026-11-15]
+### ⑬-4 나레이션·대사 영상 내장(V.O.) 생성 — G3 조건부 전환 [v1.4.7 신설 — 2026-11-15, v1.4.12 교정 — 2026-11-19]
+
+**⚠️ 2026-11-19 교정 — 아래 "VP 작성 패턴"(한 문단에 Visual 묘사와 V.O. 지시를 섞어 쓰는
+방식)은 IG_R10에서 재현 실패함(대사처럼 반응하는 립싱크 버그 재현). "V.O."라는 문구를 쓰는지
+여부는 필요조건일 뿐 충분조건이 아니었다. 몇 가지 대안을 테스트해 단일변수 통제로 비교한 결과,
+유일하게 안정적으로 재현된 해결책은 VP를 `Visual:`/`Audio:` 두 블록으로 명시 분리하는 것
+(한 문단에 섞어 쓰지 않음)이었다 — 상세 테스트 과정·버전 비교는
+[[project_narration_vp_visual_audio_split_standard_2026_11_19]] 참고.**
+
+**새 VP 작성 패턴(2026-11-19 확정)**:
+```
+Visual: [시간 구간별 시각 묘사], lips gently closed and relaxed throughout, no mouth movement.
+
+Audio: [시간 구간] a separate off-screen narrator, a [톤 묘사] voice that does not belong to
+the woman on screen, says in Korean: "[나레이션 원문]." Her lips never move.
+[나레이션이 없는 구간은] no narration, only [앰비언스/효과음] 명시.
+
+No on-screen subtitle text or captions.
+```
+아래 "실측으로 걸린 함정" 2가지와 체크리스트 중 "V.O. 영상 내장 방식" 관련 항목은 여전히
+유효하되, "VP에 'mouth closed...' + 'off-screen voice-over' 둘 다 명시" 체크는 이제
+"Visual:/Audio: 두 블록으로 분리했는지"로 대체한다.
+
+**추가로 규명된 한계(발음)**: '걱정' 계열 단어는 '걱겁쩡'/'걱기쩡' 등으로 오발음되는 현상이
+Visual/Audio 분리와 무관하게 남아있고, 따옴표 제거·음차 텍스트 변형(예: '걱쩡') 등 프롬프트
+수정으로는 개선되지 않았다 — **프롬프트로 발음을 보장할 수 없는 단어로 규정**, 이 방향으로
+재시도하지 말고 TTS 전환 등 다른 경로를 먼저 고려할 것.
+
+**구현 반영**: `app/server/lib/clipPrompt.js` `buildClipPrompt()`의 `voiceSource==='video'` +
+나레이션 전용 분기를 이 패턴(Visual:/Audio: 블록 분리)으로 교정함(2026-11-19). 대사+나레이션이
+한 클립에 섞인 분기, 그리고 `app/src/lib/vpDialogue.js`의 UI 미리보기용 `ensureDialogueInVP`는
+아직 기존 방식 그대로 — 적용 범위 확장 여부는 다음 세션에서 결정.
+
+**아래는 2026-11-15 원본 기록(배경 참고용, 실제 패턴은 위 교정분을 따를 것):**
 
 **배경**: 지금까지 기본값은 "NR 컷은 인물 무발화(SILENT FILM) + ElevenLabs TTS 별도 삽입"이었다
 (⑬-2, §② 위). 그런데 ElevenLabs TTS가 상황별 톤·억양·뉘앙스를 일관되게 못 잡아서(성준님,
@@ -969,4 +1002,11 @@ v1.4.11 (2026-11-16) — ⑬-6 엔딩 카드(공유·팔로우 CTA) 자동 번�
                      섹션을 지금까지 어떤 코드도 읽지 않던 걸 발견, G5 drawtext 엔진 위에 마지막
                      2초 세그먼트로 번인하도록 구현. drawtext가 컬러 이모지를 두부(□)로 깨뜨리는
                      것도 실측 발견해 번인 전 이모지 제거(stripEmoji) 추가.
+v1.4.12 (2026-11-19) — ⑬-4 교정: "V.O." 문구 명시만으론 R10 재현 실패(대사처럼 반응하는
+                     립싱크 버그) 발견 — 진짜 변수는 VP를 Visual:/Audio: 두 블록으로 명시
+                     분리하는 구조였음(단일변수 통제 테스트로 확인). 패턴 교체 +
+                     `app/server/lib/clipPrompt.js` `buildClipPrompt()`의 나레이션/
+                     voiceSource='video' 분기를 새 패턴으로 수정. '걱정' 계열 단어는 오발음이
+                     프롬프트로 보장 안 되는 한계어로 규정(따옴표 제거·음차 변형 등 시도 모두
+                     실패). 상세: [[project_narration_vp_visual_audio_split_standard_2026_11_19]].
 ```
