@@ -1497,11 +1497,23 @@ export default function VideoTab() {
   }
 
   const removeClip = (cutId, idx) => {
+    // 2026-11-20 교정(H02/R10 실측 — [[project_videotab_h02_r10_cross_episode_leak_2026_11_20]]):
+    // 오염된 클립을 지워 영상이 0개가 됐는데도 G4 승인(✅) 체크가 그대로 남아있던 신고 —
+    // G4 승인은 "영상이 있다"는 사실과 별개로 관리되는 플래그라 클립을 지워도 자동으로 안
+    // 풀렸다(같은 뿌리: [[project_g4g5_flag_vs_file_integrity_gap]]). 삭제로 슬롯이 완전히
+    // 비면, 이미 승인돼 있던 경우에 한해 G4도 같이 취소해 "승인인데 파일 없음" 상태로 조용히
+    // 남지 않게 한다 — g4Approved(화면 체크) 와 gpoints.json(실제 게이트) 둘 다.
+    const remaining = (videoClipsRef.current[cutId] || []).filter((c, i) => i !== idx && c)
     setVideoClips(p => {
       const arr = [...(p[cutId] || [])]
       arr.splice(idx, 1)
       return { ...p, [cutId]: arr }
     })
+    if (!remaining.length && g4Approved[cutId]) {
+      setG4Approved(p => ({ ...p, [cutId]: false }))
+      const cut = (state.cuts || []).find(c => c.id === cutId)
+      if (cut) setGPoint(episodeCode, cut.no, 'g4', false)
+    }
   }
 
   const updateClipTrim = (cutId, idx, patch) => {
