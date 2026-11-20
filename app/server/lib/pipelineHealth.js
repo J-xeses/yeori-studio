@@ -124,7 +124,7 @@ async function checkTts({ cuts, gp, dirs }) {
 }
 
 // 영상 생성(04_making/raw) — Flow 원본 클립이 읽히는가. 업로드 소스로 만든 에피소드는 raw 가 없을 수 있어 "없음"은 문제가 아니다.
-async function checkRaw({ dirs }) {
+async function checkRaw({ dirs, code, episodeId, active }) {
   const files = listDir(dirs.raw).filter(f => /^cut_\d+.*\.mp4$/i.test(f))
   const issues = []; let verified = 0
   const cutSet = new Set()
@@ -134,7 +134,36 @@ async function checkRaw({ dirs }) {
     if (!p?.ok || p.video < 1 || p.duration <= 0.3) { issues.push({ cut: no, level: 'warn', msg: `원본 클립 ${f} 읽기 실패` }); continue }
     verified++; cutSet.add(no)
   }
-  return finish({ issues, verified, total: files.length, okText: `원본 클립 ${verified}개(컷 ${cutSet.size}개) 읽힘`, emptyText: 'Flow 원본 클립 없음' })
+  // 2026-11-20 추가(H02/R10 실측, [[project_videotab_h02_r10_cross_episode_leak_2026_11_20]]):
+  // 위 raw 폴더 스캔은 "이 에피소드 폴더 안의 파일"만 보니 당연히 항상 자기 자신이다 — 진짜
+  // 위험은 아직 폴더에 복사(합성)되지도 않은, 영상 탭 클립 슬롯(studio-state.json 의
+  // videoTabState.videoClips, 합성 전 "스테이징" 단계)에 다른 에피소드 파일이 꽂혀있는 경우다.
+  // 기존 노드들은 전부 "그 에피소드 자기 폴더에 실제로 쓰여진 파일"만 열어봐서 이 단계의
+  // 오염은 구조적으로 안 보였음 — 여기서만 유일하게 studio-state.json 자체를 연다. 활성
+  // 에피소드일 때만 의미 있음(비활성 보관본은 화면에 안 보이는 데이터일 뿐이라 경보 불필요).
+  let clipLeakText = ''
+  if (active && code && episodeId) {
+    const state = readJson(STATE_PATH, {})
+    if (state.activeEpisodeId === episodeId) {
+      const clips = state.videoTabState?.videoClips || {}
+      const otherPat = /[\\/]((?:IG|SF|LF)_[A-Z]+\d+)[\\/]/i
+      let leakN = 0, slotN = 0
+      for (const arr of Object.values(clips)) {
+        for (const c of (arr || [])) {
+          if (!c) continue
+          slotN++
+          const hay = `${c.url || ''} ${c.stagedPath || ''}`
+          const m = hay.match(otherPat)
+          if (m && m[1].toUpperCase() !== String(code).toUpperCase()) {
+            issues.push({ level: 'fail', msg: `영상 탭 클립 슬롯에 다른 에피소드(${m[1]}) 파일 꽂힘 — ${c.name || ''}` })
+            leakN++
+          }
+        }
+      }
+      clipLeakText = ` · 클립 슬롯 ${slotN}개 중 타에피소드 혼입 ${leakN}건`
+    }
+  }
+  return finish({ issues, verified, total: files.length, okText: `원본 클립 ${verified}개(컷 ${cutSet.size}개) 읽힘${clipLeakText}`, emptyText: 'Flow 원본 클립 없음' })
 }
 
 // 06_publishing 의 영상 탭 미리듣기 결과 중 최종화가 실제로 가져다 쓸 파일 — reelFinalize.js finalizeReel 의 소스 선택과 같은 규칙.
@@ -389,9 +418,9 @@ export function defaultDirs(code) {
     leaderLocks: LEADER_LOCK_DIR, leaderFlowState: path.join(mp.DOWNLOADS, 'state'),
   }
 }
-export async function evaluatePipelineHealth({ code, cuts = [], gp = {}, dirs, staleFn, episodeId } = {}) {
+export async function evaluatePipelineHealth({ code, cuts = [], gp = {}, dirs, staleFn, episodeId, active } = {}) {
   const d = dirs || defaultDirs(code)
-  const ctx = { code, cuts, gp, dirs: d, episodeId }
+  const ctx = { code, cuts, gp, dirs: d, episodeId, active }
   const scriptFiles = listDir(d.script).filter(f => /\.txt$/i.test(f))
   const script = cuts.length
     ? { state: 'ok', evidence: `컷 ${cuts.length}개 파싱됨 · 대본 파일 ${scriptFiles.length}개`, verified: cuts.length, total: cuts.length, complete: true, issues: [] }
@@ -418,5 +447,5 @@ export async function pipelineHealthFor(code) {
   const ep = resolveEpisodeCuts(code)
   if (!ep?.code) return null
   const gp = readJson(mp.statePath('gpoints.json'), {})[ep.code] || {}
-  return { ...(await evaluatePipelineHealth({ code: ep.code, cuts: ep.cuts, gp, episodeId: ep.episodeId })), active: ep.active }
+  return { ...(await evaluatePipelineHealth({ code: ep.code, cuts: ep.cuts, gp, episodeId: ep.episodeId, active: ep.active })), active: ep.active }
 }

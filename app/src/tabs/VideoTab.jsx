@@ -1360,14 +1360,22 @@ export default function VideoTab() {
   // 로컬 업로드한 클립을 실제 서버 파일로도 스테이징(2026-09-13) — 예전엔 blob: URL만 만들고
   // 서버엔 아무것도 안 남겨서 "클립 합성"이 실제 출력을 못 만들었다. 클립을 blob URL로 식별해서
   // 스테이징 완료 시 그 클립에만 stagedPath를 채워넣는다(다른 클립 추가/삭제와 섞여도 안전).
-  const stageClip = async (cutId, cutNo, idx, file, matchUrl) => {
-    const epNum = state.episode?.number
+  // 2026-11-20 교정(H02 영상 탭에서 R10 업로드 클립이 그대로 꽂혀 있던 실측 —
+  // [[project_videotab_h02_r10_cross_episode_leak_2026_11_20]]): 서버 저장(await fetch)이
+  // 끝나기 전에 사람이 다른 에피소드로 전환하면, 아래 setVideoClips가 "그때는 맞았지만
+  // 지금은 다른 에피소드가 된" cutId에 그대로 stagedPath를 꽂는다(addCandidateClip과 같은
+  // 원인 — cut.id가 에피소드끼리 겹침). expectedEpNum을 호출 시점에 고정해 받아 epNumRef와
+  // 대조, 그 사이 전환됐으면 조용히 버린다(그 클립은 staging:true 상태로 원래 에피소드에
+  // 남고, 사람이 다시 올리면 됨 — 엉뚱한 에피소드에 섞이는 것보다 안전).
+  const stageClip = async (cutId, cutNo, idx, file, matchUrl, expectedEpNum = state.episode?.number) => {
+    const epNum = expectedEpNum
     if (epNum == null) return
     try {
       const r = await fetch(`http://localhost:3001/api/stage-cut-clip?epNum=${epNum}&cutNo=${cutNo}&idx=${idx}`,
         { method: 'POST', headers: { 'Content-Type': 'video/mp4' }, body: file })
       const d = await r.json()
       if (!r.ok) throw new Error(d.error || '스테이징 실패')
+      if (epNumRef.current !== expectedEpNum) return   // 그 사이 다른 에피소드로 전환됨 — 버린다
       setVideoClips(p => {
         const arr = [...(p[cutId] || [])]
         // ⚠️ arr에 세그2처럼 빈 슬롯(null)이 섞여있을 수 있음 — 가드 없이 c.url을 읽으면
@@ -1383,6 +1391,7 @@ export default function VideoTab() {
       // 업로드 충돌) 저장 후에 정리하는 방식.
       if (typeof idx === 'string' && idx.startsWith('new')) setTimeout(() => normalizeClipNames({ cutIds: [cutId], quiet: true }), 900)
     } catch (e) {
+      if (epNumRef.current !== expectedEpNum) return
       setVideoClips(p => {
         const arr = [...(p[cutId] || [])]
         const i = arr.findIndex(c => c && c.url === matchUrl)
@@ -1398,11 +1407,15 @@ export default function VideoTab() {
   // sparse해지는데, 렌더 쪽은 어차피 clips[idx]로 읽어서 빈 자리는 그대로 "파일 없음"으로 보임.
   const handleVideoUpload = (cutId, files, targetIdx = null) => {
     const cut = (state.cuts || []).find(c => c.id === cutId)
+    const expectedEpNum = state.episode?.number   // addCandidateClip/stageClip과 동일한 전환 가드용
     Array.from(files).forEach((f) => {
       const url = URL.createObjectURL(f)
       const vid = document.createElement('video')
       vid.preload = 'metadata'
       vid.onloadedmetadata = () => {
+        // 2026-11-20: 메타데이터 로딩 중 다른 에피소드로 전환되면 여기도 같은 레이스 —
+        // [[project_videotab_h02_r10_cross_episode_leak_2026_11_20]] 참고.
+        if (epNumRef.current !== expectedEpNum) return
         const dur = Math.round(vid.duration * 100) / 100
         const ratio = vid.videoWidth >= vid.videoHeight ? '16:9' : '9:16'
         const obj = { url, name: f.name, duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true, ratio, staging: true, keepAudio: defaultKeepAudio(cut), createdAt: f.lastModified || Date.now() }
@@ -1426,7 +1439,7 @@ export default function VideoTab() {
           }
           return { ...p, [cutId]: [...existing, obj] }
         })
-        if (cut) stageClip(cutId, cut.no, clipIdx, f, url)
+        if (cut) stageClip(cutId, cut.no, clipIdx, f, url, expectedEpNum)
       }
       vid.src = url
     })
