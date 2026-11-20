@@ -1210,7 +1210,7 @@ export default function VideoTab() {
           const plannedLen = Array.isArray(cut.segments) ? cut.segments.length : Infinity
           const haveLen = (currentClips[cut.id] || []).filter(Boolean).length
           if (haveLen >= plannedLen) continue
-          addCandidateClip(cut.id, cut.no, c)
+          addCandidateClip(cut.id, cut.no, c, epNum)
         }
       })
       .catch(() => {})
@@ -1240,12 +1240,20 @@ export default function VideoTab() {
   }
 
   // 스캔된 후보 클립을 그 컷의 videoClips에 추가 — 이미 서버 파일이라 stagedPath를 바로 채움.
-  const addCandidateClip = (cutId, cutNo, candidate) => {
+  // 2026-11-20 교정(H02 신규 제작 중 R10 컷 영상이 섞여 보이던 신고 — "전에도 이런 증상이
+  // 있었다"): cut.id는 에피소드마다 "cut-1", "cut-2"…로 겹치는데(AppContext.jsx 주석 참고),
+  // 아래 vid.onloadedmetadata는 비동기(메타데이터 로딩)라 그 사이 사람이 다른 에피소드로
+  // 전환하면 setVideoClips가 "그때는 맞았지만 지금은 다른 에피소드가 된" cutId에 그대로
+  // 꽂혀, 방금 전환한 에피소드의 같은 번호 컷에 이전 에피소드 영상이 섞여 보인다. 2026-10-10
+  // loadFromProxy/loadVChk(위 529~533줄, 1155~1157줄)에 이미 적용했던 epNumRef 가드를 그
+  // 형제 함수인 여기엔 빠뜨렸던 게 원인 — 동일하게 적용.
+  const addCandidateClip = (cutId, cutNo, candidate, expectedEpNum = state.episode?.number) => {
     const url = `http://localhost:3001${candidate.url}?t=${Date.now()}`
     const cut = (state.cuts || []).find(c => c.id === cutId)
     const vid = document.createElement('video')
     vid.preload = 'metadata'
     vid.onloadedmetadata = () => {
+      if (epNumRef.current !== expectedEpNum) return   // 그 사이 다른 에피소드로 전환됨 — 버린다
       const dur = Math.round(vid.duration * 100) / 100
       const ratio = vid.videoWidth >= vid.videoHeight ? '16:9' : '9:16'
       const obj = {
