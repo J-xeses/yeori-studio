@@ -789,6 +789,18 @@ await check('V2', '컷 영상 전부 1080×1920', () => {
   return { ok: !bad.length, evidence: bad.length ? `규격 다른 컷 ${bad.map(c => c.no)}` : `${cuts.length}컷 모두 1080×1920` }
 })
 
+// 2026-11-20: H02 신규 제작 중 R10 컷 영상이 섞여 보이던 신고 — cut.id("cut-1" 등)가 에피소드마다
+// 겹치는데, 폴더 스캔 자동 채우기(addCandidateClip)의 vid.onloadedmetadata가 비동기라 그 사이
+// 다른 에피소드로 전환하면 setVideoClips가 지금 활성인(다른) 에피소드의 같은 번호 컷에 그대로
+// 꽂혔다. 2026-10-10 loadFromProxy/loadVChk에 적용했던 epNumRef 가드를 형제 함수엔 빠뜨렸던
+// 게 원인 — 정적 코드 점검으로 가드 존재를 고정(런타임 레이스는 자동 재현이 어려움).
+await check('V3', '폴더 스캔 자동 채우기 에피소드 전환 가드(H02/R10 컷 뒤섞임 재발 방지)', () => {
+  const vt = fs.readFileSync(new URL('../src/tabs/VideoTab.jsx', import.meta.url), 'utf-8')
+  const guard = /const addCandidateClip = \(cutId, cutNo, candidate, expectedEpNum = state\.episode\?\.number\) => \{[\s\S]{0,400}?if \(epNumRef\.current !== expectedEpNum\) return/.test(vt)
+  const callSite = /addCandidateClip\(cut\.id, cut\.no, c, epNum\)/.test(vt)
+  return { ok: guard && callSite, evidence: `addCandidateClip 가드 ${guard ? 'O' : 'X'} · loadVideoCandidates 호출부 epNum 명시 전달 ${callSite ? 'O' : 'X'}` }
+})
+
 // ── 5. 원본 클립 보관(렌더가 지우던 버그) ──
 await check('R1', '컷 영상 렌더 후 원본 클립 보관(_composed)', async () => {
   const raw = path.join(mp.makingDir(CODE), 'raw')
