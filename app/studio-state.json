@@ -1,5 +1,5 @@
 {
-  "activeTab": "script",
+  "activeTab": "making",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -13532,43 +13532,74 @@
         "scnCode": "EDU",
         "instaNum": "IG_P05",
         "character": "서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터",
-        "code": "IG_P05"
+        "code": "IG_P05",
+        "masterCode": "[IG_P05] :: [PL:IG_CR] :: [SP:MIXED] :: [CH:YR_VD] :: [SH:MIXED] :: [F군:미설정]",
+        "epHeaderRaw": ""
       },
       "cuts": [
         {
           "id": "cut-1",
           "no": 1,
-          "scene": "",
+          "cutTitle": "서여리 스틸 + 제목",
+          "lipsync": false,
+          "scene": "서여리 캐주얼 데일리 스틸컷 위에 제목 텍스트 오버레이.",
           "action": "",
           "character": "서여리",
           "dialogue": "",
           "narration": "",
+          "subtitle": "서울에서 매일 듣는 한국어 5개 / 5 Korean phrases you hear every day in Seoul",
           "imagePrompt": "",
-          "duration": 5,
-          "cutType": "YEORI",
+          "videoPrompt": "",
+          "duration": 8,
+          "shotType": "FULLBODY",
+          "cutType": "GRAPHIC",
           "cutMark": "NORMAL",
-          "subtitle": "",
-          "pipTarget": "",
-          "graphicTool": "",
+          "beat": "",
+          "masterCode": {
+            "sp": "IN.CF.DY.LT_WD (카페 또는 집, 낮 자연광)",
+            "pl": "YR_IM",
+            "ch": "서여리",
+            "sh": "",
+            "ca": "",
+            "md": "",
+            "ac": "",
+            "lookId": "",
+            "du": 8,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "카페 또는 집, 낮 자연광",
+              "ch": "서여리 — 캐주얼 데일리룩",
+              "sh": "",
+              "ca": "",
+              "ac": "",
+              "md": ""
+            }
+          },
+          "imageSeq": null,
           "overrides": {
-            "dialogue": {
-              "value": "",
-              "at": "2026-11-21T03:20:29.957Z",
+            "duration": {
+              "value": 8,
+              "at": "2026-11-21T05:32:45.559Z",
               "reason": "스튜디오 화면에서 직접 수정"
             },
             "narration": {
               "value": "",
-              "at": "2026-11-21T03:20:29.957Z",
+              "at": "2026-11-21T04:39:32.761Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "dialogue": {
+              "value": "",
+              "at": "2026-11-21T04:39:32.761Z",
               "reason": "스튜디오 화면에서 직접 수정"
             },
             "imagePrompt": {
               "value": "",
-              "at": "2026-11-21T03:20:29.957Z",
-              "reason": "스튜디오 화면에서 직접 수정"
-            },
-            "duration": {
-              "value": 5,
-              "at": "2026-11-21T03:20:29.957Z",
+              "at": "2026-11-21T04:39:32.761Z",
               "reason": "스튜디오 화면에서 직접 수정"
             }
           }
@@ -13576,37 +13607,65 @@
         {
           "id": "cut-2",
           "no": 2,
-          "scene": "",
+          "cutTitle": "밥 먹었어?",
+          "lipsync": false,
+          "scene": "텍스트 전용 그래픽 카드.",
           "action": "",
           "character": "서여리",
           "dialogue": "",
           "narration": "",
+          "subtitle": "밥 먹었어? (bap meogeosseo?) / Did you eat? = I care about you",
           "imagePrompt": "",
+          "videoPrompt": "",
           "duration": 5,
-          "cutType": "YEORI",
+          "shotType": "FULLBODY",
+          "cutType": "GRAPHIC",
           "cutMark": "NORMAL",
-          "subtitle": "",
-          "pipTarget": "",
-          "graphicTool": "",
+          "beat": "",
+          "masterCode": {
+            "sp": "GR.ED (HTML/그래픽 카드)",
+            "pl": "GR_ED",
+            "ch": "없음",
+            "sh": "",
+            "ca": "",
+            "md": "",
+            "ac": "",
+            "lookId": "",
+            "du": 8,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "텍스트 전용 그래픽 카드(배경 없음)",
+              "ch": "없음",
+              "sh": "",
+              "ca": "",
+              "ac": "",
+              "md": ""
+            }
+          },
           "overrides": {
-            "dialogue": {
-              "value": "",
-              "at": "2026-11-21T03:20:29.957Z",
+            "duration": {
+              "value": 5,
+              "at": "2026-11-21T04:39:32.761Z",
               "reason": "스튜디오 화면에서 직접 수정"
             },
             "narration": {
               "value": "",
-              "at": "2026-11-21T03:20:29.957Z",
+              "at": "2026-11-21T04:39:32.761Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "dialogue": {
+              "value": "",
+              "at": "2026-11-21T04:39:32.761Z",
               "reason": "스튜디오 화면에서 직접 수정"
             },
             "imagePrompt": {
               "value": "",
-              "at": "2026-11-21T03:20:29.957Z",
-              "reason": "스튜디오 화면에서 직접 수정"
-            },
-            "duration": {
-              "value": 5,
-              "at": "2026-11-21T03:20:29.957Z",
+              "at": "2026-11-21T04:39:32.761Z",
               "reason": "스튜디오 화면에서 직접 수정"
             }
           }
@@ -13614,37 +13673,65 @@
         {
           "id": "cut-3",
           "no": 3,
-          "scene": "",
+          "cutTitle": "잘 먹겠습니다",
+          "lipsync": false,
+          "scene": "텍스트 전용 그래픽 카드.",
           "action": "",
           "character": "서여리",
           "dialogue": "",
           "narration": "",
+          "subtitle": "잘 먹겠습니다 (jal meokgesseumnida) / Said before a meal: \"I will eat well\"",
           "imagePrompt": "",
+          "videoPrompt": "",
           "duration": 5,
-          "cutType": "YEORI",
+          "shotType": "FULLBODY",
+          "cutType": "GRAPHIC",
           "cutMark": "NORMAL",
-          "subtitle": "",
-          "pipTarget": "",
-          "graphicTool": "",
+          "beat": "",
+          "masterCode": {
+            "sp": "GR.ED",
+            "pl": "GR_ED",
+            "ch": "없음",
+            "sh": "",
+            "ca": "",
+            "md": "",
+            "ac": "",
+            "lookId": "",
+            "du": 8,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "텍스트 전용 그래픽 카드(배경 없음)",
+              "ch": "없음",
+              "sh": "",
+              "ca": "",
+              "ac": "",
+              "md": ""
+            }
+          },
           "overrides": {
-            "dialogue": {
-              "value": "",
-              "at": "2026-11-21T03:20:29.957Z",
+            "duration": {
+              "value": 5,
+              "at": "2026-11-21T04:39:32.761Z",
               "reason": "스튜디오 화면에서 직접 수정"
             },
             "narration": {
               "value": "",
-              "at": "2026-11-21T03:20:29.957Z",
+              "at": "2026-11-21T04:39:32.761Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "dialogue": {
+              "value": "",
+              "at": "2026-11-21T04:39:32.761Z",
               "reason": "스튜디오 화면에서 직접 수정"
             },
             "imagePrompt": {
               "value": "",
-              "at": "2026-11-21T03:20:29.957Z",
-              "reason": "스튜디오 화면에서 직접 수정"
-            },
-            "duration": {
-              "value": 5,
-              "at": "2026-11-21T03:20:29.957Z",
+              "at": "2026-11-21T04:39:32.761Z",
               "reason": "스튜디오 화면에서 직접 수정"
             }
           }
@@ -13652,37 +13739,65 @@
         {
           "id": "cut-4",
           "no": 4,
-          "scene": "",
+          "cutTitle": "고생했어요",
+          "lipsync": false,
+          "scene": "텍스트 전용 그래픽 카드.",
           "action": "",
           "character": "서여리",
           "dialogue": "",
           "narration": "",
+          "subtitle": "고생했어요 (gosaenghaesseoyo) / \"You worked hard.\" A thank-you for someone's effort",
           "imagePrompt": "",
+          "videoPrompt": "",
           "duration": 5,
-          "cutType": "YEORI",
+          "shotType": "FULLBODY",
+          "cutType": "GRAPHIC",
           "cutMark": "NORMAL",
-          "subtitle": "",
-          "pipTarget": "",
-          "graphicTool": "",
+          "beat": "",
+          "masterCode": {
+            "sp": "GR.ED",
+            "pl": "GR_ED",
+            "ch": "없음",
+            "sh": "",
+            "ca": "",
+            "md": "",
+            "ac": "",
+            "lookId": "",
+            "du": 8,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "텍스트 전용 그래픽 카드(배경 없음)",
+              "ch": "없음",
+              "sh": "",
+              "ca": "",
+              "ac": "",
+              "md": ""
+            }
+          },
           "overrides": {
-            "dialogue": {
-              "value": "",
-              "at": "2026-11-21T03:20:29.957Z",
+            "duration": {
+              "value": 5,
+              "at": "2026-11-21T04:39:32.761Z",
               "reason": "스튜디오 화면에서 직접 수정"
             },
             "narration": {
               "value": "",
-              "at": "2026-11-21T03:20:29.957Z",
+              "at": "2026-11-21T04:39:32.761Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "dialogue": {
+              "value": "",
+              "at": "2026-11-21T04:39:32.761Z",
               "reason": "스튜디오 화면에서 직접 수정"
             },
             "imagePrompt": {
               "value": "",
-              "at": "2026-11-21T03:20:29.957Z",
-              "reason": "스튜디오 화면에서 직접 수정"
-            },
-            "duration": {
-              "value": 5,
-              "at": "2026-11-21T03:20:29.957Z",
+              "at": "2026-11-21T04:39:32.761Z",
               "reason": "스튜디오 화면에서 직접 수정"
             }
           }
@@ -13690,37 +13805,65 @@
         {
           "id": "cut-5",
           "no": 5,
-          "scene": "",
+          "cutTitle": "밥 한번 먹자",
+          "lipsync": false,
+          "scene": "텍스트 전용 그래픽 카드.",
           "action": "",
           "character": "서여리",
           "dialogue": "",
           "narration": "",
+          "subtitle": "밥 한번 먹자 (bap hanbeon meokja) / \"Let's eat sometime.\" Often a friendly goodbye, not always a real plan",
           "imagePrompt": "",
+          "videoPrompt": "",
           "duration": 5,
-          "cutType": "YEORI",
+          "shotType": "FULLBODY",
+          "cutType": "GRAPHIC",
           "cutMark": "NORMAL",
-          "subtitle": "",
-          "pipTarget": "",
-          "graphicTool": "",
+          "beat": "",
+          "masterCode": {
+            "sp": "GR.ED",
+            "pl": "GR_ED",
+            "ch": "없음",
+            "sh": "",
+            "ca": "",
+            "md": "",
+            "ac": "",
+            "lookId": "",
+            "du": 8,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "텍스트 전용 그래픽 카드(배경 없음)",
+              "ch": "없음",
+              "sh": "",
+              "ca": "",
+              "ac": "",
+              "md": ""
+            }
+          },
           "overrides": {
-            "dialogue": {
-              "value": "",
-              "at": "2026-11-21T03:20:29.957Z",
+            "duration": {
+              "value": 5,
+              "at": "2026-11-21T04:39:32.761Z",
               "reason": "스튜디오 화면에서 직접 수정"
             },
             "narration": {
               "value": "",
-              "at": "2026-11-21T03:20:29.957Z",
+              "at": "2026-11-21T04:39:32.761Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "dialogue": {
+              "value": "",
+              "at": "2026-11-21T04:39:32.761Z",
               "reason": "스튜디오 화면에서 직접 수정"
             },
             "imagePrompt": {
               "value": "",
-              "at": "2026-11-21T03:20:29.957Z",
-              "reason": "스튜디오 화면에서 직접 수정"
-            },
-            "duration": {
-              "value": 5,
-              "at": "2026-11-21T03:20:29.957Z",
+              "at": "2026-11-21T04:39:32.761Z",
               "reason": "스튜디오 화면에서 직접 수정"
             }
           }
@@ -13728,37 +13871,65 @@
         {
           "id": "cut-6",
           "no": 6,
-          "scene": "",
+          "cutTitle": "대박",
+          "lipsync": false,
+          "scene": "텍스트 전용 그래픽 카드.",
           "action": "",
           "character": "서여리",
           "dialogue": "",
           "narration": "",
+          "subtitle": "대박 (daebak) / Wow! / Amazing!",
           "imagePrompt": "",
+          "videoPrompt": "",
           "duration": 5,
-          "cutType": "YEORI",
+          "shotType": "FULLBODY",
+          "cutType": "GRAPHIC",
           "cutMark": "NORMAL",
-          "subtitle": "",
-          "pipTarget": "",
-          "graphicTool": "",
+          "beat": "",
+          "masterCode": {
+            "sp": "GR.ED",
+            "pl": "GR_ED",
+            "ch": "없음",
+            "sh": "",
+            "ca": "",
+            "md": "",
+            "ac": "",
+            "lookId": "",
+            "du": 8,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "텍스트 전용 그래픽 카드(배경 없음)",
+              "ch": "없음",
+              "sh": "",
+              "ca": "",
+              "ac": "",
+              "md": ""
+            }
+          },
           "overrides": {
-            "dialogue": {
-              "value": "",
-              "at": "2026-11-21T03:20:29.957Z",
+            "duration": {
+              "value": 5,
+              "at": "2026-11-21T04:39:32.761Z",
               "reason": "스튜디오 화면에서 직접 수정"
             },
             "narration": {
               "value": "",
-              "at": "2026-11-21T03:20:29.957Z",
+              "at": "2026-11-21T04:39:32.761Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "dialogue": {
+              "value": "",
+              "at": "2026-11-21T04:39:32.761Z",
               "reason": "스튜디오 화면에서 직접 수정"
             },
             "imagePrompt": {
               "value": "",
-              "at": "2026-11-21T03:20:29.957Z",
-              "reason": "스튜디오 화면에서 직접 수정"
-            },
-            "duration": {
-              "value": 5,
-              "at": "2026-11-21T03:20:29.957Z",
+              "at": "2026-11-21T04:39:32.761Z",
               "reason": "스튜디오 화면에서 직접 수정"
             }
           }
@@ -13766,37 +13937,65 @@
         {
           "id": "cut-7",
           "no": 7,
-          "scene": "",
+          "cutTitle": "저장 유도 + 팔로우",
+          "lipsync": false,
+          "scene": "저장 + 팔로우 유도 카드 (텍스트 전용).",
           "action": "",
           "character": "서여리",
           "dialogue": "",
           "narration": "",
+          "subtitle": "Save this for your Seoul trip 📌 / Follow for everyday Korean life with Seoyeori",
           "imagePrompt": "",
+          "videoPrompt": "",
           "duration": 5,
-          "cutType": "YEORI",
+          "shotType": "FULLBODY",
+          "cutType": "GRAPHIC",
           "cutMark": "NORMAL",
-          "subtitle": "",
-          "pipTarget": "",
-          "graphicTool": "",
+          "beat": "",
+          "masterCode": {
+            "sp": "GR.ED",
+            "pl": "GR_ED",
+            "ch": "없음",
+            "sh": "",
+            "ca": "",
+            "md": "",
+            "ac": "",
+            "lookId": "",
+            "du": 8,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "텍스트 전용 그래픽 카드(배경 없음)",
+              "ch": "없음",
+              "sh": "",
+              "ca": "",
+              "ac": "",
+              "md": ""
+            }
+          },
           "overrides": {
-            "dialogue": {
-              "value": "",
-              "at": "2026-11-21T03:20:29.957Z",
+            "duration": {
+              "value": 5,
+              "at": "2026-11-21T04:39:32.761Z",
               "reason": "스튜디오 화면에서 직접 수정"
             },
             "narration": {
               "value": "",
-              "at": "2026-11-21T03:20:29.957Z",
+              "at": "2026-11-21T04:39:32.761Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "dialogue": {
+              "value": "",
+              "at": "2026-11-21T04:39:32.761Z",
               "reason": "스튜디오 화면에서 직접 수정"
             },
             "imagePrompt": {
               "value": "",
-              "at": "2026-11-21T03:20:29.957Z",
-              "reason": "스튜디오 화면에서 직접 수정"
-            },
-            "duration": {
-              "value": 5,
-              "at": "2026-11-21T03:20:29.957Z",
+              "at": "2026-11-21T04:39:32.761Z",
               "reason": "스튜디오 화면에서 직접 수정"
             }
           }
@@ -13820,43 +14019,74 @@
     "scnCode": "EDU",
     "instaNum": "IG_P05",
     "character": "서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터",
-    "code": "IG_P05"
+    "code": "IG_P05",
+    "masterCode": "[IG_P05] :: [PL:IG_CR] :: [SP:MIXED] :: [CH:YR_VD] :: [SH:MIXED] :: [F군:미설정]",
+    "epHeaderRaw": ""
   },
   "cuts": [
     {
       "id": "cut-1",
       "no": 1,
-      "scene": "",
+      "cutTitle": "서여리 스틸 + 제목",
+      "lipsync": false,
+      "scene": "서여리 캐주얼 데일리 스틸컷 위에 제목 텍스트 오버레이.",
       "action": "",
       "character": "서여리",
       "dialogue": "",
       "narration": "",
+      "subtitle": "서울에서 매일 듣는 한국어 5개 / 5 Korean phrases you hear every day in Seoul",
       "imagePrompt": "",
-      "duration": 5,
-      "cutType": "YEORI",
+      "videoPrompt": "",
+      "duration": 8,
+      "shotType": "FULLBODY",
+      "cutType": "GRAPHIC",
       "cutMark": "NORMAL",
-      "subtitle": "",
-      "pipTarget": "",
-      "graphicTool": "",
+      "beat": "",
+      "masterCode": {
+        "sp": "IN.CF.DY.LT_WD (카페 또는 집, 낮 자연광)",
+        "pl": "YR_IM",
+        "ch": "서여리",
+        "sh": "",
+        "ca": "",
+        "md": "",
+        "ac": "",
+        "lookId": "",
+        "du": 8,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "카페 또는 집, 낮 자연광",
+          "ch": "서여리 — 캐주얼 데일리룩",
+          "sh": "",
+          "ca": "",
+          "ac": "",
+          "md": ""
+        }
+      },
+      "imageSeq": null,
       "overrides": {
-        "dialogue": {
-          "value": "",
-          "at": "2026-11-21T03:20:29.957Z",
+        "duration": {
+          "value": 8,
+          "at": "2026-11-21T05:32:45.559Z",
           "reason": "스튜디오 화면에서 직접 수정"
         },
         "narration": {
           "value": "",
-          "at": "2026-11-21T03:20:29.957Z",
+          "at": "2026-11-21T04:39:32.761Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        },
+        "dialogue": {
+          "value": "",
+          "at": "2026-11-21T04:39:32.761Z",
           "reason": "스튜디오 화면에서 직접 수정"
         },
         "imagePrompt": {
           "value": "",
-          "at": "2026-11-21T03:20:29.957Z",
-          "reason": "스튜디오 화면에서 직접 수정"
-        },
-        "duration": {
-          "value": 5,
-          "at": "2026-11-21T03:20:29.957Z",
+          "at": "2026-11-21T04:39:32.761Z",
           "reason": "스튜디오 화면에서 직접 수정"
         }
       }
@@ -13864,37 +14094,65 @@
     {
       "id": "cut-2",
       "no": 2,
-      "scene": "",
+      "cutTitle": "밥 먹었어?",
+      "lipsync": false,
+      "scene": "텍스트 전용 그래픽 카드.",
       "action": "",
       "character": "서여리",
       "dialogue": "",
       "narration": "",
+      "subtitle": "밥 먹었어? (bap meogeosseo?) / Did you eat? = I care about you",
       "imagePrompt": "",
+      "videoPrompt": "",
       "duration": 5,
-      "cutType": "YEORI",
+      "shotType": "FULLBODY",
+      "cutType": "GRAPHIC",
       "cutMark": "NORMAL",
-      "subtitle": "",
-      "pipTarget": "",
-      "graphicTool": "",
+      "beat": "",
+      "masterCode": {
+        "sp": "GR.ED (HTML/그래픽 카드)",
+        "pl": "GR_ED",
+        "ch": "없음",
+        "sh": "",
+        "ca": "",
+        "md": "",
+        "ac": "",
+        "lookId": "",
+        "du": 8,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "텍스트 전용 그래픽 카드(배경 없음)",
+          "ch": "없음",
+          "sh": "",
+          "ca": "",
+          "ac": "",
+          "md": ""
+        }
+      },
       "overrides": {
-        "dialogue": {
-          "value": "",
-          "at": "2026-11-21T03:20:29.957Z",
+        "duration": {
+          "value": 5,
+          "at": "2026-11-21T04:39:32.761Z",
           "reason": "스튜디오 화면에서 직접 수정"
         },
         "narration": {
           "value": "",
-          "at": "2026-11-21T03:20:29.957Z",
+          "at": "2026-11-21T04:39:32.761Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        },
+        "dialogue": {
+          "value": "",
+          "at": "2026-11-21T04:39:32.761Z",
           "reason": "스튜디오 화면에서 직접 수정"
         },
         "imagePrompt": {
           "value": "",
-          "at": "2026-11-21T03:20:29.957Z",
-          "reason": "스튜디오 화면에서 직접 수정"
-        },
-        "duration": {
-          "value": 5,
-          "at": "2026-11-21T03:20:29.957Z",
+          "at": "2026-11-21T04:39:32.761Z",
           "reason": "스튜디오 화면에서 직접 수정"
         }
       }
@@ -13902,37 +14160,65 @@
     {
       "id": "cut-3",
       "no": 3,
-      "scene": "",
+      "cutTitle": "잘 먹겠습니다",
+      "lipsync": false,
+      "scene": "텍스트 전용 그래픽 카드.",
       "action": "",
       "character": "서여리",
       "dialogue": "",
       "narration": "",
+      "subtitle": "잘 먹겠습니다 (jal meokgesseumnida) / Said before a meal: \"I will eat well\"",
       "imagePrompt": "",
+      "videoPrompt": "",
       "duration": 5,
-      "cutType": "YEORI",
+      "shotType": "FULLBODY",
+      "cutType": "GRAPHIC",
       "cutMark": "NORMAL",
-      "subtitle": "",
-      "pipTarget": "",
-      "graphicTool": "",
+      "beat": "",
+      "masterCode": {
+        "sp": "GR.ED",
+        "pl": "GR_ED",
+        "ch": "없음",
+        "sh": "",
+        "ca": "",
+        "md": "",
+        "ac": "",
+        "lookId": "",
+        "du": 8,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "텍스트 전용 그래픽 카드(배경 없음)",
+          "ch": "없음",
+          "sh": "",
+          "ca": "",
+          "ac": "",
+          "md": ""
+        }
+      },
       "overrides": {
-        "dialogue": {
-          "value": "",
-          "at": "2026-11-21T03:20:29.957Z",
+        "duration": {
+          "value": 5,
+          "at": "2026-11-21T04:39:32.761Z",
           "reason": "스튜디오 화면에서 직접 수정"
         },
         "narration": {
           "value": "",
-          "at": "2026-11-21T03:20:29.957Z",
+          "at": "2026-11-21T04:39:32.761Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        },
+        "dialogue": {
+          "value": "",
+          "at": "2026-11-21T04:39:32.761Z",
           "reason": "스튜디오 화면에서 직접 수정"
         },
         "imagePrompt": {
           "value": "",
-          "at": "2026-11-21T03:20:29.957Z",
-          "reason": "스튜디오 화면에서 직접 수정"
-        },
-        "duration": {
-          "value": 5,
-          "at": "2026-11-21T03:20:29.957Z",
+          "at": "2026-11-21T04:39:32.761Z",
           "reason": "스튜디오 화면에서 직접 수정"
         }
       }
@@ -13940,37 +14226,65 @@
     {
       "id": "cut-4",
       "no": 4,
-      "scene": "",
+      "cutTitle": "고생했어요",
+      "lipsync": false,
+      "scene": "텍스트 전용 그래픽 카드.",
       "action": "",
       "character": "서여리",
       "dialogue": "",
       "narration": "",
+      "subtitle": "고생했어요 (gosaenghaesseoyo) / \"You worked hard.\" A thank-you for someone's effort",
       "imagePrompt": "",
+      "videoPrompt": "",
       "duration": 5,
-      "cutType": "YEORI",
+      "shotType": "FULLBODY",
+      "cutType": "GRAPHIC",
       "cutMark": "NORMAL",
-      "subtitle": "",
-      "pipTarget": "",
-      "graphicTool": "",
+      "beat": "",
+      "masterCode": {
+        "sp": "GR.ED",
+        "pl": "GR_ED",
+        "ch": "없음",
+        "sh": "",
+        "ca": "",
+        "md": "",
+        "ac": "",
+        "lookId": "",
+        "du": 8,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "텍스트 전용 그래픽 카드(배경 없음)",
+          "ch": "없음",
+          "sh": "",
+          "ca": "",
+          "ac": "",
+          "md": ""
+        }
+      },
       "overrides": {
-        "dialogue": {
-          "value": "",
-          "at": "2026-11-21T03:20:29.957Z",
+        "duration": {
+          "value": 5,
+          "at": "2026-11-21T04:39:32.761Z",
           "reason": "스튜디오 화면에서 직접 수정"
         },
         "narration": {
           "value": "",
-          "at": "2026-11-21T03:20:29.957Z",
+          "at": "2026-11-21T04:39:32.761Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        },
+        "dialogue": {
+          "value": "",
+          "at": "2026-11-21T04:39:32.761Z",
           "reason": "스튜디오 화면에서 직접 수정"
         },
         "imagePrompt": {
           "value": "",
-          "at": "2026-11-21T03:20:29.957Z",
-          "reason": "스튜디오 화면에서 직접 수정"
-        },
-        "duration": {
-          "value": 5,
-          "at": "2026-11-21T03:20:29.957Z",
+          "at": "2026-11-21T04:39:32.761Z",
           "reason": "스튜디오 화면에서 직접 수정"
         }
       }
@@ -13978,37 +14292,65 @@
     {
       "id": "cut-5",
       "no": 5,
-      "scene": "",
+      "cutTitle": "밥 한번 먹자",
+      "lipsync": false,
+      "scene": "텍스트 전용 그래픽 카드.",
       "action": "",
       "character": "서여리",
       "dialogue": "",
       "narration": "",
+      "subtitle": "밥 한번 먹자 (bap hanbeon meokja) / \"Let's eat sometime.\" Often a friendly goodbye, not always a real plan",
       "imagePrompt": "",
+      "videoPrompt": "",
       "duration": 5,
-      "cutType": "YEORI",
+      "shotType": "FULLBODY",
+      "cutType": "GRAPHIC",
       "cutMark": "NORMAL",
-      "subtitle": "",
-      "pipTarget": "",
-      "graphicTool": "",
+      "beat": "",
+      "masterCode": {
+        "sp": "GR.ED",
+        "pl": "GR_ED",
+        "ch": "없음",
+        "sh": "",
+        "ca": "",
+        "md": "",
+        "ac": "",
+        "lookId": "",
+        "du": 8,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "텍스트 전용 그래픽 카드(배경 없음)",
+          "ch": "없음",
+          "sh": "",
+          "ca": "",
+          "ac": "",
+          "md": ""
+        }
+      },
       "overrides": {
-        "dialogue": {
-          "value": "",
-          "at": "2026-11-21T03:20:29.957Z",
+        "duration": {
+          "value": 5,
+          "at": "2026-11-21T04:39:32.761Z",
           "reason": "스튜디오 화면에서 직접 수정"
         },
         "narration": {
           "value": "",
-          "at": "2026-11-21T03:20:29.957Z",
+          "at": "2026-11-21T04:39:32.761Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        },
+        "dialogue": {
+          "value": "",
+          "at": "2026-11-21T04:39:32.761Z",
           "reason": "스튜디오 화면에서 직접 수정"
         },
         "imagePrompt": {
           "value": "",
-          "at": "2026-11-21T03:20:29.957Z",
-          "reason": "스튜디오 화면에서 직접 수정"
-        },
-        "duration": {
-          "value": 5,
-          "at": "2026-11-21T03:20:29.957Z",
+          "at": "2026-11-21T04:39:32.761Z",
           "reason": "스튜디오 화면에서 직접 수정"
         }
       }
@@ -14016,37 +14358,65 @@
     {
       "id": "cut-6",
       "no": 6,
-      "scene": "",
+      "cutTitle": "대박",
+      "lipsync": false,
+      "scene": "텍스트 전용 그래픽 카드.",
       "action": "",
       "character": "서여리",
       "dialogue": "",
       "narration": "",
+      "subtitle": "대박 (daebak) / Wow! / Amazing!",
       "imagePrompt": "",
+      "videoPrompt": "",
       "duration": 5,
-      "cutType": "YEORI",
+      "shotType": "FULLBODY",
+      "cutType": "GRAPHIC",
       "cutMark": "NORMAL",
-      "subtitle": "",
-      "pipTarget": "",
-      "graphicTool": "",
+      "beat": "",
+      "masterCode": {
+        "sp": "GR.ED",
+        "pl": "GR_ED",
+        "ch": "없음",
+        "sh": "",
+        "ca": "",
+        "md": "",
+        "ac": "",
+        "lookId": "",
+        "du": 8,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "텍스트 전용 그래픽 카드(배경 없음)",
+          "ch": "없음",
+          "sh": "",
+          "ca": "",
+          "ac": "",
+          "md": ""
+        }
+      },
       "overrides": {
-        "dialogue": {
-          "value": "",
-          "at": "2026-11-21T03:20:29.957Z",
+        "duration": {
+          "value": 5,
+          "at": "2026-11-21T04:39:32.761Z",
           "reason": "스튜디오 화면에서 직접 수정"
         },
         "narration": {
           "value": "",
-          "at": "2026-11-21T03:20:29.957Z",
+          "at": "2026-11-21T04:39:32.761Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        },
+        "dialogue": {
+          "value": "",
+          "at": "2026-11-21T04:39:32.761Z",
           "reason": "스튜디오 화면에서 직접 수정"
         },
         "imagePrompt": {
           "value": "",
-          "at": "2026-11-21T03:20:29.957Z",
-          "reason": "스튜디오 화면에서 직접 수정"
-        },
-        "duration": {
-          "value": 5,
-          "at": "2026-11-21T03:20:29.957Z",
+          "at": "2026-11-21T04:39:32.761Z",
           "reason": "스튜디오 화면에서 직접 수정"
         }
       }
@@ -14054,37 +14424,65 @@
     {
       "id": "cut-7",
       "no": 7,
-      "scene": "",
+      "cutTitle": "저장 유도 + 팔로우",
+      "lipsync": false,
+      "scene": "저장 + 팔로우 유도 카드 (텍스트 전용).",
       "action": "",
       "character": "서여리",
       "dialogue": "",
       "narration": "",
+      "subtitle": "Save this for your Seoul trip 📌 / Follow for everyday Korean life with Seoyeori",
       "imagePrompt": "",
+      "videoPrompt": "",
       "duration": 5,
-      "cutType": "YEORI",
+      "shotType": "FULLBODY",
+      "cutType": "GRAPHIC",
       "cutMark": "NORMAL",
-      "subtitle": "",
-      "pipTarget": "",
-      "graphicTool": "",
+      "beat": "",
+      "masterCode": {
+        "sp": "GR.ED",
+        "pl": "GR_ED",
+        "ch": "없음",
+        "sh": "",
+        "ca": "",
+        "md": "",
+        "ac": "",
+        "lookId": "",
+        "du": 8,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "텍스트 전용 그래픽 카드(배경 없음)",
+          "ch": "없음",
+          "sh": "",
+          "ca": "",
+          "ac": "",
+          "md": ""
+        }
+      },
       "overrides": {
-        "dialogue": {
-          "value": "",
-          "at": "2026-11-21T03:20:29.957Z",
+        "duration": {
+          "value": 5,
+          "at": "2026-11-21T04:39:32.761Z",
           "reason": "스튜디오 화면에서 직접 수정"
         },
         "narration": {
           "value": "",
-          "at": "2026-11-21T03:20:29.957Z",
+          "at": "2026-11-21T04:39:32.761Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        },
+        "dialogue": {
+          "value": "",
+          "at": "2026-11-21T04:39:32.761Z",
           "reason": "스튜디오 화면에서 직접 수정"
         },
         "imagePrompt": {
           "value": "",
-          "at": "2026-11-21T03:20:29.957Z",
-          "reason": "스튜디오 화면에서 직접 수정"
-        },
-        "duration": {
-          "value": 5,
-          "at": "2026-11-21T03:20:29.957Z",
+          "at": "2026-11-21T04:39:32.761Z",
           "reason": "스튜디오 화면에서 직접 수정"
         }
       }

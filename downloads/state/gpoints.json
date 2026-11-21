@@ -2465,32 +2465,32 @@
   },
   "IG_P05": {
     "cut_1": {
-      "g1": false,
-      "updatedAt": "2026-11-21T03:20:28.509Z"
+      "g1": true,
+      "updatedAt": "2026-11-21T04:57:52.639Z"
     },
     "cut_2": {
-      "g1": false,
-      "updatedAt": "2026-11-21T03:20:28.510Z"
+      "g1": true,
+      "updatedAt": "2026-11-21T04:57:52.640Z"
     },
     "cut_3": {
-      "g1": false,
-      "updatedAt": "2026-11-21T03:20:28.510Z"
+      "g1": true,
+      "updatedAt": "2026-11-21T04:57:52.641Z"
     },
     "cut_4": {
-      "g1": false,
-      "updatedAt": "2026-11-21T03:20:28.511Z"
+      "g1": true,
+      "updatedAt": "2026-11-21T04:57:52.641Z"
     },
     "cut_5": {
-      "g1": false,
-      "updatedAt": "2026-11-21T03:20:28.512Z"
+      "g1": true,
+      "updatedAt": "2026-11-21T04:57:52.642Z"
     },
     "cut_6": {
-      "g1": false,
-      "updatedAt": "2026-11-21T03:20:28.512Z"
+      "g1": true,
+      "updatedAt": "2026-11-21T04:57:52.643Z"
     },
     "cut_7": {
-      "g1": false,
-      "updatedAt": "2026-11-21T03:20:28.513Z"
+      "g1": true,
+      "updatedAt": "2026-11-21T04:57:52.643Z"
     }
   }
 }
