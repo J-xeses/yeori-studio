@@ -1,3 +1,19 @@
 {
-  "IG_P05": {}
+  "IG_P05": {
+    "cut_1": {
+      "type": "video",
+      "videoUrl": "http://localhost:3001/downloads/seoyeori/IG/IG_P/IG_P05/04_making/background/cut_01_bg_1795251398700.mp4",
+      "localPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_P\\IG_P05\\04_making\\background\\cut_01_bg_1795251398700.mp4",
+      "source": "upload",
+      "attribution": "Woman_walking_along_river_promenade_202609061510.mp4",
+      "savedAt": "2026-11-21T08:56:38.737Z"
+    },
+    "cut_2": {
+      "type": "image",
+      "imageUrl": "http://localhost:3001/downloads/seoyeori/IG/IG_P/IG_P05/04_making/background/cut_02_bg_1795253738564.jpg",
+      "source": "upload",
+      "attribution": "Close-up_portrait_of_a_young_202605222053.jpeg",
+      "savedAt": "2026-11-21T09:35:38.603Z"
+    }
+  }
 }

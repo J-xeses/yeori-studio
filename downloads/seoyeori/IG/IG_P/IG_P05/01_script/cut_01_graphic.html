@@ -1,0 +1,71 @@
+
+<!DOCTYPE html><html><head><meta charset="UTF-8">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body {
+  width:1080px; height:1920px;
+  position:relative; overflow:hidden;
+  background:transparent;
+  font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;
+}
+.bg-image {
+  position:absolute; inset:0;
+  background-image:url('');
+  background-size:cover; background-position:center;
+}
+.bg-video {
+  position:absolute; inset:0;
+  width:100%; height:100%; object-fit:cover;
+}
+.bg-overlay {
+  position:absolute; inset:0;
+  background:rgba(0,0,0,0.45);
+}
+.content {
+  position:relative; width:100%; height:100%;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+}
+.accent-line {
+  width:150px; height:6px;
+  background:#5BB8FF;
+  margin-bottom:55px;
+  animation:expand 1s ease forwards;
+}
+@keyframes expand {
+  from { width:0; } to { width:150px; }
+}
+.title {
+  font-size:68px; font-weight:900;
+  color:#F5F1EC; text-align:center;
+  line-height:1.2; letter-spacing:4px;
+  margin-bottom:34px;
+  max-width:86%;
+  animation:fadeIn 0.8s ease forwards;
+}
+.subtitle {
+  font-size:58px; color:#14dbb4;
+  text-align:center; letter-spacing:3px;
+  max-width:86%;
+  animation:fadeIn 0.8s ease forwards;
+  animation-delay:0.4s; opacity:0;
+}
+.info {
+  position:absolute; bottom:10%;
+  font-size:28px; color:#14dbb4;
+  opacity:0.7; letter-spacing:2px;
+}
+@keyframes fadeIn {
+  from { opacity:0; transform:translateY(20px); }
+  to { opacity:1; transform:translateY(0); }
+}
+</style></head><body>
+
+<div class="bg-overlay"></div>
+<div class="content">
+<div class="accent-line"></div>
+<div class="title">서울에서 매일 듣는 한국어 5개</div>
+<div class="subtitle">5 Korean phrases you hear every day in Seoul</div>
+<div class="info">서울에서 매일 듣는 한국어 · 시리즈</div>
+</div>
+</body></html>

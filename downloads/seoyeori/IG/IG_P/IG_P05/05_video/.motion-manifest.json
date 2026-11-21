@@ -1,11 +1,11 @@
 {
   "1": {
     "method": "graphic",
-    "selfText": true,
-    "motion": "none",
+    "selfText": false,
+    "motion": "video-bg",
     "baked": true,
     "duration": 8,
-    "producedAt": "2026-11-21T06:05:46.735Z"
+    "producedAt": "2026-11-21T09:01:15.266Z"
   },
   "2": {
     "method": "graphic",

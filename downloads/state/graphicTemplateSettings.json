@@ -1,3 +1,28 @@
 {
-  "text-card": {}
+  "text-card": {
+    "yeori": {
+      "layout": {
+        "titleFontSize": 68,
+        "titleLetterSpacing": 4,
+        "titleMarginBottom": 34,
+        "titleMaxWidthPercent": 86,
+        "subtitleFontSize": 58,
+        "subtitleLetterSpacing": 3,
+        "subtitleMaxWidthPercent": 86,
+        "infoFontSize": 28,
+        "infoBottomPercent": 10,
+        "infoLetterSpacing": 2,
+        "accentWidth": 150,
+        "accentHeight": 6,
+        "accentMarginBottom": 55,
+        "overlayOpacity": 0.45
+      },
+      "colors": {
+        "bg": "#0C0A10",
+        "main": "#F5F1EC",
+        "sub": "#14dbb4",
+        "accent": "#5BB8FF"
+      }
+    }
+  }
 }

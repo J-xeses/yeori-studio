@@ -5756,6 +5756,39 @@ app.post('/api/upload-graphic-background', (req, res) => {
   })
 })
 
+// POST /api/generate-graphic-background-ai — 배경 꾸미기 "🤖 AI 생성" 탭.
+// 검색/업로드/URL과 달리 실제 비용이 발생하는 호출(Nano Banana — 무료 티어 없음, 과금됨)이라
+// 사람이 프롬프트를 직접 쓰고 버튼을 눌러야만 실행된다(자동 트리거 없음). 인물(서여리 등)
+// 합성은 범위 밖 — 스튜디오 탭의 기존 G2(캐릭터 참조 포함) 파이프라인이 그 용도이고, 여긴
+// 배경/풍경 생성 전용의 가벼운 경로다.
+app.post('/api/generate-graphic-background-ai', async (req, res) => {
+  const { epNum, cutNo, prompt, model } = req.body || {}
+  if (epNum == null || cutNo == null) return res.status(400).json({ error: 'epNum, cutNo 필요' })
+  if (!String(prompt || '').trim()) return res.status(400).json({ error: 'prompt 필요' })
+  try {
+    const secretsPath = path.join(CODE_ROOT, 'studio-secrets.json')
+    const secrets = fs.existsSync(secretsPath) ? JSON.parse(fs.readFileSync(secretsPath, 'utf-8')) : {}
+    const apiKey = secrets.apiKeys?.gemini
+    if (!apiKey) return res.status(400).json({ error: 'Gemini API 키가 studio-secrets.json에 없습니다(스튜디오 앱 상단 GEMINI 칸에 입력 후 확인)' })
+
+    const { ep } = findEpisodeByNumOrThrow(epNum)
+    const dims = cutDims(ep.episode || {})
+    const aspectRatio = dims.w === dims.h ? '1:1' : (dims.h > dims.w ? '9:16' : '16:9')
+    const modelKey = ['flash', 'nb2', 'pro'].includes(model) ? model : NANO_BANANA_DEFAULT
+
+    const fullPrompt = `${prompt.trim()}, photorealistic 8K cinematic, vertical ${dims.w}x${dims.h}, no text, no logos, no watermark, no people unless explicitly described above`
+    const { buffer } = await generateNanoBananaImage(apiKey, fullPrompt, [], aspectRatio, modelKey)
+
+    const dir = path.join(mp.makingDir(epNum), 'background')
+    fs.mkdirSync(dir, { recursive: true })
+    const destPath = path.join(dir, `cut_${String(cutNo).padStart(2, '0')}_ai_${Date.now()}.jpg`)
+    fs.writeFileSync(destPath, buffer)
+    res.json({ success: true, url: `http://localhost:3001${mp.toMediaUrl(destPath)}`, model: NANO_BANANA_MODELS[modelKey] || modelKey, prompt: fullPrompt })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
 // ── POST /api/save-audio — WAV blob → MP3 변환 후 저장 ──
 app.post('/api/save-audio', async (req, res) => {
   const ep    = req.query.ep
