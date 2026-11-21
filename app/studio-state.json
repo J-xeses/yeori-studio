@@ -5,7 +5,7 @@
     "connected": true,
     "remainingChars": 88814
   },
-  "activeEpisodeId": "ep_1794927139043",
+  "activeEpisodeId": "ep_1795230793669",
   "openTabIds": [
     "ep_1787406807164",
     "ep_1786261078428",
@@ -32,7 +32,8 @@
     "ep_1793793376185",
     "ep_1794467102083",
     "ep_1794659750628",
-    "ep_1794927139043"
+    "ep_1794927139043",
+    "ep_1795230793669"
   ],
   "episodes": {
     "ep_1786261078428": {
@@ -13335,65 +13336,10 @@
       "tabState": {
         "videoTabState": {
           "videoClips": {
-            "cut-1": [
-              {
-                "url": "blob:http://localhost:5173/6012644c-f396-4f1b-83c9-f2941de2cc80",
-                "name": "Woman_looking_at_phone_a8d1cf0b_1080p.mp4",
-                "duration": 7.93,
-                "trimStart": 0,
-                "trimEnd": 7.93,
-                "useFullDuration": true,
-                "ratio": "9:16",
-                "staging": false,
-                "keepAudio": true,
-                "createdAt": 1794986379459,
-                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R10\\04_making\\raw\\cut_01_clip_1.mp4"
-              }
-            ],
-            "cut-3": [
-              {
-                "url": "blob:http://localhost:5173/646723ea-3199-485e-9b4c-59931ad54c49",
-                "name": "Untitled_Scene_11-18_07_34_41_20261118163706.mp4",
-                "duration": 7.93,
-                "trimStart": 0,
-                "trimEnd": 7.93,
-                "useFullDuration": true,
-                "ratio": "9:16",
-                "staging": false,
-                "keepAudio": true,
-                "createdAt": 1794987426504,
-                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R10\\04_making\\raw\\cut_03_clip_1.mp4"
-              }
-            ],
-            "cut-4": [
-              {
-                "url": "blob:http://localhost:5173/b5960113-560f-47e9-9246-5be83014b1f4",
-                "name": "Two_women_eating_lunch_c5f6a98d_1080p.mp4",
-                "duration": 7.93,
-                "trimStart": 0,
-                "trimEnd": 7.93,
-                "useFullDuration": true,
-                "ratio": "9:16",
-                "staging": false,
-                "keepAudio": true,
-                "createdAt": 1794934071526,
-                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R10\\04_making\\raw\\cut_04_clip_1.mp4"
-              }
-            ],
-            "cut-2": [
-              {
-                "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R10/05_video/cut_02.mp4?t=1794994988655",
-                "name": "cut_02.mp4",
-                "duration": 7.94,
-                "trimStart": 0,
-                "trimEnd": 7.94,
-                "useFullDuration": true,
-                "ratio": "9:16",
-                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R10\\05_video\\cut_02.mp4",
-                "keepAudio": true,
-                "createdAt": 1794994467000
-              }
-            ]
+            "cut-1": [],
+            "cut-3": [],
+            "cut-4": [],
+            "cut-2": []
           },
           "g4Approved": {
             "cut-1": true,
@@ -13569,119 +13515,386 @@
           }
         }
       }
+    },
+    "ep_1795230793669": {
+      "id": "ep_1795230793669",
+      "episode": {
+        "number": 201,
+        "title": "서울에서 매일 듣는 한국어 5개",
+        "location": "기타",
+        "mood": [
+          "정보",
+          "K문화"
+        ],
+        "cutCount": 7,
+        "contentType": "IG_P",
+        "topicCode": "LIF",
+        "scnCode": "EDU",
+        "instaNum": "IG_P05",
+        "character": "서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터",
+        "code": "IG_P05"
+      },
+      "cuts": [
+        {
+          "id": "cut-1",
+          "no": 1,
+          "scene": "",
+          "action": "",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "",
+          "imagePrompt": "",
+          "duration": 5,
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "subtitle": "",
+          "pipTarget": "",
+          "graphicTool": "",
+          "overrides": {
+            "dialogue": {
+              "value": "",
+              "at": "2026-11-21T03:20:29.957Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "narration": {
+              "value": "",
+              "at": "2026-11-21T03:20:29.957Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "imagePrompt": {
+              "value": "",
+              "at": "2026-11-21T03:20:29.957Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "duration": {
+              "value": 5,
+              "at": "2026-11-21T03:20:29.957Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            }
+          }
+        },
+        {
+          "id": "cut-2",
+          "no": 2,
+          "scene": "",
+          "action": "",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "",
+          "imagePrompt": "",
+          "duration": 5,
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "subtitle": "",
+          "pipTarget": "",
+          "graphicTool": "",
+          "overrides": {
+            "dialogue": {
+              "value": "",
+              "at": "2026-11-21T03:20:29.957Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "narration": {
+              "value": "",
+              "at": "2026-11-21T03:20:29.957Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "imagePrompt": {
+              "value": "",
+              "at": "2026-11-21T03:20:29.957Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "duration": {
+              "value": 5,
+              "at": "2026-11-21T03:20:29.957Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            }
+          }
+        },
+        {
+          "id": "cut-3",
+          "no": 3,
+          "scene": "",
+          "action": "",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "",
+          "imagePrompt": "",
+          "duration": 5,
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "subtitle": "",
+          "pipTarget": "",
+          "graphicTool": "",
+          "overrides": {
+            "dialogue": {
+              "value": "",
+              "at": "2026-11-21T03:20:29.957Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "narration": {
+              "value": "",
+              "at": "2026-11-21T03:20:29.957Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "imagePrompt": {
+              "value": "",
+              "at": "2026-11-21T03:20:29.957Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "duration": {
+              "value": 5,
+              "at": "2026-11-21T03:20:29.957Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            }
+          }
+        },
+        {
+          "id": "cut-4",
+          "no": 4,
+          "scene": "",
+          "action": "",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "",
+          "imagePrompt": "",
+          "duration": 5,
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "subtitle": "",
+          "pipTarget": "",
+          "graphicTool": "",
+          "overrides": {
+            "dialogue": {
+              "value": "",
+              "at": "2026-11-21T03:20:29.957Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "narration": {
+              "value": "",
+              "at": "2026-11-21T03:20:29.957Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "imagePrompt": {
+              "value": "",
+              "at": "2026-11-21T03:20:29.957Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "duration": {
+              "value": 5,
+              "at": "2026-11-21T03:20:29.957Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            }
+          }
+        },
+        {
+          "id": "cut-5",
+          "no": 5,
+          "scene": "",
+          "action": "",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "",
+          "imagePrompt": "",
+          "duration": 5,
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "subtitle": "",
+          "pipTarget": "",
+          "graphicTool": "",
+          "overrides": {
+            "dialogue": {
+              "value": "",
+              "at": "2026-11-21T03:20:29.957Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "narration": {
+              "value": "",
+              "at": "2026-11-21T03:20:29.957Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "imagePrompt": {
+              "value": "",
+              "at": "2026-11-21T03:20:29.957Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "duration": {
+              "value": 5,
+              "at": "2026-11-21T03:20:29.957Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            }
+          }
+        },
+        {
+          "id": "cut-6",
+          "no": 6,
+          "scene": "",
+          "action": "",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "",
+          "imagePrompt": "",
+          "duration": 5,
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "subtitle": "",
+          "pipTarget": "",
+          "graphicTool": "",
+          "overrides": {
+            "dialogue": {
+              "value": "",
+              "at": "2026-11-21T03:20:29.957Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "narration": {
+              "value": "",
+              "at": "2026-11-21T03:20:29.957Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "imagePrompt": {
+              "value": "",
+              "at": "2026-11-21T03:20:29.957Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "duration": {
+              "value": 5,
+              "at": "2026-11-21T03:20:29.957Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            }
+          }
+        },
+        {
+          "id": "cut-7",
+          "no": 7,
+          "scene": "",
+          "action": "",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "",
+          "imagePrompt": "",
+          "duration": 5,
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "subtitle": "",
+          "pipTarget": "",
+          "graphicTool": "",
+          "overrides": {
+            "dialogue": {
+              "value": "",
+              "at": "2026-11-21T03:20:29.957Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "narration": {
+              "value": "",
+              "at": "2026-11-21T03:20:29.957Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "imagePrompt": {
+              "value": "",
+              "at": "2026-11-21T03:20:29.957Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "duration": {
+              "value": 5,
+              "at": "2026-11-21T03:20:29.957Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            }
+          }
+        }
+      ],
+      "scriptRaw": "",
+      "createdAt": "2026-11-21T03:13:13.669Z"
     }
   },
   "episode": {
-    "number": 110,
-    "title": "뉴욕 프리덤",
-    "location": "거리",
+    "number": 201,
+    "title": "서울에서 매일 듣는 한국어 5개",
+    "location": "기타",
     "mood": [
-      "감성",
-      "치명"
+      "정보",
+      "K문화"
     ],
-    "cutCount": 11,
-    "contentType": "IG_H",
-    "topicCode": "TRD",
-    "scnCode": "ENT",
-    "instaNum": "R10",
+    "cutCount": 7,
+    "contentType": "IG_P",
+    "topicCode": "LIF",
+    "scnCode": "EDU",
+    "instaNum": "IG_P05",
     "character": "서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터",
-    "code": "IG_H02",
-    "finishMode": "cutter",
-    "masterCode": "[IG_R10] :: [PL:IG_RL] :: [SP:IN.HM.LR.LT_EV] :: [CH:YR_VD+HJ_VD] :: [SH:SH_MCU+SH_MS] :: [F군:미설정]",
-    "epHeaderRaw": ""
+    "code": "IG_P05"
   },
   "cuts": [
     {
       "id": "cut-1",
       "no": 1,
-      "cutTitle": "횡단보도 전경 (도입)",
-      "lipsync": false,
-      "scene": "EXT. 미드타운 맨해튼 횡단보도 - 늦은 오후 — 분주한 횡단보도를 창문 높이 핸드헬드 하이앵글 와이드로 열고, 2초경부터 느리고 점진적인 망원 압축 줌으로 서여리만 미들샷까지 좁히는 도입 샷. 카메라는 제자리에서 초점거리만 바꾸고(돌리 전진 없음), 그녀도 카메라를 향해 다가오지 않고 횡단보도를 옆으로 계속 건넌다 — 급격한 펀치인으로 그녀가 거대해 보이는 원근 왜곡을 피하기 위함 (2026-11-20 1차 수정, 2026-11-20 2차 수정: 실제 생성본에서 펀치인+정면 접근이 겹쳐 거인처럼 보이는 문제 발견 후 재수정).",
-      "action": "인파가 사방으로 횡단보도를 건너는 가운데, 그녀는 횡단보도를 옆으로(카메라 쪽이 아니라) 계속 건너며 자신의 속도를 바꾸지 않는다 — 2초경부터 카메라가 서서히 그녀에게 초점을 좁혀 줌인하되, 그녀가 카메라 쪽으로 다가오는 동선과 줌이 겹치지 않게 한다(두 효과가 겹치면 원근 왜곡으로 거인처럼 보임, 2026-11-20 실측 발견)",
+      "scene": "",
+      "action": "",
       "character": "서여리",
       "dialogue": "",
       "narration": "",
-      "subtitle": "",
-      "imagePrompt": "기존 업로드 전신 참조 이미지를 image-to-video 입력으로 사용 — 이 컷은 별도 스틸 생성 없이\n아래 VP를 그대로 Veo에 투입.",
-      "videoPrompt": "",
-      "duration": 4,
-      "shotType": "FULLBODY",
+      "imagePrompt": "",
+      "duration": 5,
       "cutType": "YEORI",
       "cutMark": "NORMAL",
-      "beat": "훅",
-      "masterCode": {
-        "sp": "EXT.NYC_MIDTOWN_CROSSWALK.TZ_PM",
-        "pl": "YR_VD",
-        "ch": "서여리",
-        "sh": "SH_WS_TO_MS_TELEZOOM",
-        "ca": "CA_HANDHELD_HIGH_SWAY_TELE_SLOWZOOM",
-        "md": "MD_URBAN_BUSY_FOCUSIN",
-        "ac": "AT_CROWD_CROSS_LATERAL_ZOOM_01",
-        "lookId": "LOOK_YEORI_STREET",
-        "du": 4,
-        "audio": {
-          "bgm": "",
-          "voice": "",
-          "sfx": "",
-          "ambience": ""
+      "subtitle": "",
+      "pipTarget": "",
+      "graphicTool": "",
+      "overrides": {
+        "dialogue": {
+          "value": "",
+          "at": "2026-11-21T03:20:29.957Z",
+          "reason": "스튜디오 화면에서 직접 수정"
         },
-        "kr": {
-          "sp": "늦은 오후 미드타운 맨해튼 횡단보도, 노란 택시들이 줄지어 서 있고 사람들이 사방으로 건너는 분주한 거리, 흐린 하늘의 다소 가라앉은 색감",
-          "ch": "서여리 — 하이톱 번 머리, 로고 없는 은색 오버이어 헤드폰, 차콜그레이 보머재킷(오픈) + 네이비 크롭 티셔츠 + 연회색 와이드 카고팬츠 + 화이트&실버 청키 스니커즈 + 은색 숄더백",
-          "sh": "처음 2초는 창문에서 내려다보는 하이앵글 와이드샷(딥포커스), 2초경부터 망원렌즈 압축감으로 \"느리고 점진적으로\" 줌인해 서여리를 미들샷까지 좁힌다(심도는 점차 얕아짐) — 2초 동안 급하게 끝나는 펀치인이 아니라 남은 2초(2~4초) 내내 서서히 좁혀지는 속도감",
-          "ca": "핸드헬드 베이스 유지(약간 불안정한 흔들림, 매끄럽지 않은 움직임), 2초경부터 망원 압축 느낌의 \"느린\" 줌인 추가 — 카메라 위치 자체는 창문에 고정된 채 초점거리만 바뀌는 광학 줌(돌리 전진 아님), 마치 망원경/망원렌즈로 그녀를 찾아내 천천히 들여다보는 느낌",
-          "ac": "인파가 사방으로 횡단보도를 건너는 가운데, 그녀는 횡단보도를 옆으로(카메라 쪽이 아니라) 계속 건너며 자신의 속도를 바꾸지 않는다 — 2초경부터 카메라가 서서히 그녀에게 초점을 좁혀 줌인하되, 그녀가 카메라 쪽으로 다가오는 동선과 줌이 겹치지 않게 한다(두 효과가 겹치면 원근 왜곡으로 거인처럼 보임, 2026-11-20 실측 발견)",
-          "md": "분주하고 무심한 도시 분위기에서, 줌인 이후 서여리 한 명에게만 시선이 좁혀지는 집중감으로 전환 — 단, 그녀가 갑자기 거대해 보이거나 화면을 압도하는 느낌은 피하고 자연스러운 미들샷 비율 유지"
+        "narration": {
+          "value": "",
+          "at": "2026-11-21T03:20:29.957Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        },
+        "imagePrompt": {
+          "value": "",
+          "at": "2026-11-21T03:20:29.957Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        },
+        "duration": {
+          "value": 5,
+          "at": "2026-11-21T03:20:29.957Z",
+          "reason": "스튜디오 화면에서 직접 수정"
         }
       }
     },
     {
       "id": "cut-2",
       "no": 2,
-      "cutTitle": "클로즈업, 시선 아래 (도입)",
-      "lipsync": false,
-      "scene": "서여리 ECU - 같은 늦은 오후 — 고개를 살짝 숙인 채 표정 없이 아래를 응시하는 클로즈업, 호흡 외에는 움직임이 없다.",
-      "action": "고개 살짝 숙이고 시선은 아래·옆으로, 호흡만 보이고 고개는 움직이지 않는다",
+      "scene": "",
+      "action": "",
       "character": "서여리",
-      "dialogue": "(자막) 아직… 왜?",
+      "dialogue": "",
       "narration": "",
-      "subtitle": "",
-      "imagePrompt": "기존 업로드 전신/클로즈업 참조 이미지를 image-to-video 입력으로 사용 — 별도 스틸 생성 없음.",
-      "videoPrompt": "",
-      "duration": 4,
-      "shotType": "CLOSEUP",
+      "imagePrompt": "",
+      "duration": 5,
       "cutType": "YEORI",
       "cutMark": "NORMAL",
-      "beat": "훅",
-      "masterCode": {
-        "sp": "EXT.NYC_MIDTOWN_CROSSWALK.TZ_PM",
-        "pl": "YR_VD",
-        "ch": "서여리",
-        "sh": "SH_CU",
-        "ca": "CA_HANDHELD_85MM_COMPRESSION",
-        "md": "MD_FLAT_UNREADABLE",
-        "ac": "AT_STILLNESS_BREATH_01",
-        "lookId": "LOOK_YEORI_STREET",
-        "du": 4,
-        "audio": {
-          "bgm": "",
-          "voice": "",
-          "sfx": "",
-          "ambience": ""
-        },
-        "kr": {
-          "sp": "같은 횡단보도, 흐린 하늘의 평평한 주광",
-          "ch": "서여리 — CUT1과 동일 의상(올림머리+은색 헤드폰+차콜 보머재킷 등)",
-          "sh": "타이트 클로즈업, 85mm급 압축, 얕은 심도, 배경은 부드러운 회색 블러",
-          "ca": "핸드헬드, 실제 어깨 흔들림",
-          "ac": "고개 살짝 숙이고 시선은 아래·옆으로, 호흡만 보이고 고개는 움직이지 않는다",
-          "md": "표정 없고 읽히지 않는 무심함"
-        }
-      },
+      "subtitle": "",
+      "pipTarget": "",
+      "graphicTool": "",
       "overrides": {
         "dialogue": {
-          "value": "(자막) 아직… 왜?",
-          "at": "2026-11-18T04:44:39.118Z",
+          "value": "",
+          "at": "2026-11-21T03:20:29.957Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        },
+        "narration": {
+          "value": "",
+          "at": "2026-11-21T03:20:29.957Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        },
+        "imagePrompt": {
+          "value": "",
+          "at": "2026-11-21T03:20:29.957Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        },
+        "duration": {
+          "value": 5,
+          "at": "2026-11-21T03:20:29.957Z",
           "reason": "스튜디오 화면에서 직접 수정"
         }
       }
@@ -13689,94 +13902,75 @@
     {
       "id": "cut-3",
       "no": 3,
-      "cutTitle": "어안렌즈 로우앵글 (도입)",
-      "lipsync": false,
-      "scene": "EXT. 맨해튼 빈 거리 - 골든아워 — 한지아가 어안렌즈 로우앵글로 걸어오는 도입 샷, 유리 마천루가 프레임 가장자리에서 휘어 보인다.",
-      "action": "텅 빈 거리를 가로질러 걷는다, 따뜻한 역광이 머리카락에, 하늘은 차갑게",
+      "scene": "",
+      "action": "",
       "character": "서여리",
       "dialogue": "",
       "narration": "",
-      "subtitle": "",
-      "imagePrompt": "기존 업로드 전신 참조 이미지를 image-to-video 입력으로 사용 — 별도 스틸 생성 없음.",
-      "videoPrompt": "",
-      "duration": 4,
-      "shotType": "FULLBODY",
+      "imagePrompt": "",
+      "duration": 5,
       "cutType": "YEORI",
       "cutMark": "NORMAL",
-      "beat": "훅",
-      "masterCode": {
-        "sp": "EXT.NYC_EMPTY_STREET.TZ_GOLDENHOUR",
-        "pl": "HJ_VD",
-        "ch": "한지아",
-        "sh": "SH_WS",
-        "ca": "CA_FISHEYE_LOWANGLE_HANDHELD",
-        "md": "MD_SHARP_CHIC",
-        "ac": "AT_WALK_01",
-        "lookId": "LOOK_JIA_STREET",
-        "du": 4,
-        "audio": {
-          "bgm": "",
-          "voice": "",
-          "sfx": "",
-          "ambience": ""
+      "subtitle": "",
+      "pipTarget": "",
+      "graphicTool": "",
+      "overrides": {
+        "dialogue": {
+          "value": "",
+          "at": "2026-11-21T03:20:29.957Z",
+          "reason": "스튜디오 화면에서 직접 수정"
         },
-        "kr": {
-          "sp": "골든아워의 텅 빈 맨해튼 거리, 유리 마천루가 어안렌즈로 휘어 보임",
-          "ch": "한지아 — 블랙 웨이브 단발+풀 블런트 뱅, 윙아이라이너, 로즈브라운 입술, 블랙 나일론 보머재킷(은색 지퍼, 오픈) + 화이트 크롭 티셔츠 + 세이지그린 와이드 파라슈트 카고팬츠(드로스트링+발목 토글) + 화이트&실버 청키 스니커즈",
-          "sh": "극단적 로우앵글 어안렌즈, 아스팔트에 가까운 핸드헬드",
-          "ca": "핸드헬드, 살짝 틸트 드리프트",
-          "ac": "텅 빈 거리를 가로질러 걷는다, 따뜻한 역광이 머리카락에, 하늘은 차갑게",
-          "md": "시크하고 날카로운 분위기, 머리카락이 바람에 날림"
+        "narration": {
+          "value": "",
+          "at": "2026-11-21T03:20:29.957Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        },
+        "imagePrompt": {
+          "value": "",
+          "at": "2026-11-21T03:20:29.957Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        },
+        "duration": {
+          "value": 5,
+          "at": "2026-11-21T03:20:29.957Z",
+          "reason": "스튜디오 화면에서 직접 수정"
         }
       }
     },
     {
       "id": "cut-4",
       "no": 4,
-      "cutTitle": "유리창 너머 (전개)",
-      "lipsync": false,
-      "scene": "INT/EXT. 상점 쇼윈도 - 밤 — 유리창 너머로 보이는 서여리, 반사와 얼룩을 통해 실루엣만 드러나는 전개 샷.",
-      "action": "불 켜진 상점 안에 서 있고, 흐릿한 다른 손님이 뒤로 지나간다, 가만히 옆을 응시",
+      "scene": "",
+      "action": "",
       "character": "서여리",
       "dialogue": "",
-      "narration": "(나레이션) 밥 먹었냐는 말은~... 너가 신경 쓰인다는 뜻이에요.",
-      "subtitle": "",
-      "imagePrompt": "기존 업로드 전신 참조 이미지를 image-to-video 입력으로 사용 — 별도 스틸 생성 없음.",
-      "videoPrompt": "",
-      "duration": 4,
-      "shotType": "CLOSEUP",
+      "narration": "",
+      "imagePrompt": "",
+      "duration": 5,
       "cutType": "YEORI",
       "cutMark": "NORMAL",
-      "beat": "안정",
-      "masterCode": {
-        "sp": "EXT.NYC_STOREFRONT_WINDOW.TZ_NT",
-        "pl": "YR_VD",
-        "ch": "서여리",
-        "sh": "SH_MCU",
-        "ca": "CA_HANDHELD_STATIC_85MM",
-        "md": "MD_CALM_DISTANT",
-        "ac": "AT_STILLNESS_LOOKAWAY_01",
-        "lookId": "LOOK_YEORI_STREET",
-        "du": 4,
-        "audio": {
-          "bgm": "",
-          "voice": "",
-          "sfx": "",
-          "ambience": ""
-        },
-        "kr": {
-          "sp": "밤, 상점 쇼윈도 너머 — 반사와 유리 얼룩, 따뜻한 실내광과 차가운 거리 반사가 섞임",
-          "ch": "서여리 — CUT1과 동일 의상",
-          "sh": "창문 너머로 보이는 미디엄 클로즈업, 85mm 압축, 얕은 심도",
-          "ca": "핸드헬드, 고정된 거리 유지",
-          "ac": "불 켜진 상점 안에 서 있고, 흐릿한 다른 손님이 뒤로 지나간다, 가만히 옆을 응시",
-          "md": "차분하고 거리감 있는 분위기"
-        }
-      },
+      "subtitle": "",
+      "pipTarget": "",
+      "graphicTool": "",
       "overrides": {
+        "dialogue": {
+          "value": "",
+          "at": "2026-11-21T03:20:29.957Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        },
         "narration": {
-          "value": "(나레이션) 밥 먹었냐는 말은~... 너가 신경 쓰인다는 뜻이에요.",
-          "at": "2026-11-17T14:56:17.021Z",
+          "value": "",
+          "at": "2026-11-21T03:20:29.957Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        },
+        "imagePrompt": {
+          "value": "",
+          "at": "2026-11-21T03:20:29.957Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        },
+        "duration": {
+          "value": 5,
+          "at": "2026-11-21T03:20:29.957Z",
           "reason": "스튜디오 화면에서 직접 수정"
         }
       }
@@ -13784,308 +13978,114 @@
     {
       "id": "cut-5",
       "no": 5,
-      "cutTitle": "고가 철교 위 기차 (전개)",
-      "lipsync": false,
-      "scene": "EXT. 고가 철교 - 석양 — 지하철이 좌에서 우로 지나가는 무인 컷어웨이, 캐릭터 미등장.",
-      "action": "지하철이 실시간으로 좌→우 통과, 강한 자연스러운 모션 블러",
+      "scene": "",
+      "action": "",
       "character": "서여리",
       "dialogue": "",
       "narration": "",
-      "subtitle": "",
-      "imagePrompt": "캐릭터 없는 환경 컷 — 신규 레퍼런스 불필요, 아래 VP를 바로 Veo에 투입.",
-      "videoPrompt": "",
-      "duration": 4,
-      "shotType": "FULLBODY",
+      "imagePrompt": "",
+      "duration": 5,
       "cutType": "YEORI",
       "cutMark": "NORMAL",
-      "beat": "안정",
-      "masterCode": {
-        "sp": "EXT.NYC_ELEVATED_RAIL_BRIDGE.TZ_SUNSET",
-        "pl": "YR_VD",
-        "ch": "없음",
-        "sh": "SH_WS",
-        "ca": "CA_LOCKED_TRIPOD_MICROSHAKE",
-        "md": "MD_CALM_TRANSIT",
-        "ac": "AT_TRAIN_PASS_01",
-        "lookId": "없음",
-        "du": 4,
-        "audio": {
-          "bgm": "",
-          "voice": "",
-          "sfx": "",
-          "ambience": ""
+      "subtitle": "",
+      "pipTarget": "",
+      "graphicTool": "",
+      "overrides": {
+        "dialogue": {
+          "value": "",
+          "at": "2026-11-21T03:20:29.957Z",
+          "reason": "스튜디오 화면에서 직접 수정"
         },
-        "kr": {
-          "sp": "석양의 철제 고가 철교, 전경에 두꺼운 철제 기둥",
-          "ch": "없음 (무인 컷어웨이)",
-          "sh": "와이드샷, 전경에 기둥을 두고 지나가는 기차",
-          "ca": "삼각대 고정 느낌 + 미세한 핸드헬드 진동",
-          "ac": "지하철이 실시간으로 좌→우 통과, 강한 자연스러운 모션 블러",
-          "md": "차분한 통과의 순간, 주황빛 석양과 차가운 그림자 대비"
+        "narration": {
+          "value": "",
+          "at": "2026-11-21T03:20:29.957Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        },
+        "imagePrompt": {
+          "value": "",
+          "at": "2026-11-21T03:20:29.957Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        },
+        "duration": {
+          "value": 5,
+          "at": "2026-11-21T03:20:29.957Z",
+          "reason": "스튜디오 화면에서 직접 수정"
         }
       }
     },
     {
       "id": "cut-6",
       "no": 6,
-      "cutTitle": "매표소 창구 속 A (전개)",
-      "lipsync": false,
-      "scene": "INT. 매표소 창구 - 밤 — 긁힌 유리 너머로 어깨 위부터 보이는 서여리, 지폐를 세는 손짓.",
-      "action": "작은 지폐 뭉치를 손으로 세고 있다, 손과 눈만 움직인다",
+      "scene": "",
+      "action": "",
       "character": "서여리",
       "dialogue": "",
       "narration": "",
-      "subtitle": "",
-      "imagePrompt": "기존 업로드 전신/클로즈업 참조 이미지를 image-to-video 입력으로 사용 — 별도 스틸 생성 없음.",
-      "videoPrompt": "",
-      "duration": 4,
-      "shotType": "CLOSEUP",
+      "imagePrompt": "",
+      "duration": 5,
       "cutType": "YEORI",
       "cutMark": "NORMAL",
-      "beat": "긴장",
-      "masterCode": {
-        "sp": "INT.NYC_TICKET_BOOTH.TZ_NT",
-        "pl": "YR_VD",
-        "ch": "서여리",
-        "sh": "SH_MCU",
-        "ca": "CA_HANDHELD_SUBTLE_SHAKE",
-        "md": "MD_COOL_FLUORESCENT",
-        "ac": "AT_COUNT_CASH_01",
-        "lookId": "LOOK_YEORI_STREET",
-        "du": 4,
-        "audio": {
-          "bgm": "",
-          "voice": "",
-          "sfx": "",
-          "ambience": ""
+      "subtitle": "",
+      "pipTarget": "",
+      "graphicTool": "",
+      "overrides": {
+        "dialogue": {
+          "value": "",
+          "at": "2026-11-21T03:20:29.957Z",
+          "reason": "스튜디오 화면에서 직접 수정"
         },
-        "kr": {
-          "sp": "밤, 매표소 창구 — 긁힌 유리, 형광등 아래 차가운 청록색 톤, 유리에 테이프로 붙은 공지문·종이들",
-          "ch": "서여리 — CUT1과 동일 의상, 어깨 위부터 보이는 구도",
-          "sh": "미디엄 클로즈업, 얕은 심도",
-          "ca": "핸드헬드, 미세한 흔들림",
-          "ac": "작은 지폐 뭉치를 손으로 세고 있다, 손과 눈만 움직인다",
-          "md": "형광등 아래 차가운 분위기"
+        "narration": {
+          "value": "",
+          "at": "2026-11-21T03:20:29.957Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        },
+        "imagePrompt": {
+          "value": "",
+          "at": "2026-11-21T03:20:29.957Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        },
+        "duration": {
+          "value": 5,
+          "at": "2026-11-21T03:20:29.957Z",
+          "reason": "스튜디오 화면에서 직접 수정"
         }
       }
     },
     {
       "id": "cut-7",
       "no": 7,
-      "cutTitle": "지하철 승강장 (고조)",
-      "lipsync": false,
-      "scene": "INT. 지하철 승강장 - 야간 조명 — 전속력으로 지나가는 열차 앞에 서 있는 한지아, 고조 구간 첫 샷.",
-      "action": "승강장 끝에 서서 트랙을 바라보며, 전속력 열차가 눈앞을 지나간다 — 모션블러, 형광등 스트리킹, 열차 바람에 재킷 끝자락이 흔들린다",
+      "scene": "",
+      "action": "",
       "character": "서여리",
       "dialogue": "",
       "narration": "",
-      "subtitle": "",
-      "imagePrompt": "기존 업로드 전신 참조 이미지를 image-to-video 입력으로 사용 — 별도 스틸 생성 없음.",
-      "videoPrompt": "",
-      "duration": 4,
-      "shotType": "FULLBODY",
+      "imagePrompt": "",
+      "duration": 5,
       "cutType": "YEORI",
       "cutMark": "NORMAL",
-      "beat": "고조",
-      "masterCode": {
-        "sp": "INT.NYC_SUBWAY_PLATFORM.TZ_NT",
-        "pl": "HJ_VD",
-        "ch": "한지아",
-        "sh": "SH_WS",
-        "ca": "CA_HANDHELD_LOWANGLE_35MM_SHAKE",
-        "md": "MD_INTENSE_RUSH",
-        "ac": "AT_TRAIN_RUSH_PASS_01",
-        "lookId": "LOOK_YEORI_STREET",
-        "du": 4,
-        "audio": {
-          "bgm": "",
-          "voice": "",
-          "sfx": "",
-          "ambience": ""
-        },
-        "kr": {
-          "sp": "지하철 승강장, 가혹한 형광 조명",
-          "ch": "한지아 — CUT3과 동일 의상",
-          "sh": "로우앵글 와이드샷, 35mm",
-          "ca": "핸드헬드, 강한 흔들림",
-          "ac": "승강장 끝에 서서 트랙을 바라보며, 전속력 열차가 눈앞을 지나간다 — 모션블러, 형광등 스트리킹, 열차 바람에 재킷 끝자락이 흔들린다",
-          "md": "강렬하고 압도적인 고조감"
-        }
-      }
-    },
-    {
-      "id": "cut-8",
-      "no": 8,
-      "cutTitle": "붉은 조명 게임장 속 B (고조, 삽입)",
-      "lipsync": false,
-      "scene": "INT. 게임장 - 붉은 조명 — 기계 사이로 얼핏 보이는 한지아, 고조 구간 삽입 샷(교차편집용).",
-      "action": "반사에 일부 가려진 채 화면 밖 무언가를 바라본다",
-      "character": "서여리",
-      "dialogue": "",
-      "narration": "",
       "subtitle": "",
-      "imagePrompt": "기존 업로드 전신/클로즈업 참조 이미지를 image-to-video 입력으로 사용 — 별도 스틸 생성 없음. Barefoot or socks only, no shoes worn (indoor home setting).",
-      "videoPrompt": "",
-      "duration": 4,
-      "shotType": "CLOSEUP",
-      "cutType": "YEORI",
-      "cutMark": "NORMAL",
-      "beat": "고조",
-      "masterCode": {
-        "sp": "INT.NYC_ARCADE_REDLIGHT.TZ_NT",
-        "pl": "HJ_VD",
-        "ch": "한지아",
-        "sh": "SH_MCU",
-        "ca": "CA_HANDHELD_DRIFT_SHALLOW_DOF",
-        "md": "MD_NEUTRAL_MYSTERIOUS",
-        "ac": "AT_GLIMPSE_LOOKOFF_01",
-        "lookId": "LOOK_JIA_STREET",
-        "du": 4,
-        "audio": {
-          "bgm": "",
-          "voice": "",
-          "sfx": "",
-          "ambience": ""
+      "pipTarget": "",
+      "graphicTool": "",
+      "overrides": {
+        "dialogue": {
+          "value": "",
+          "at": "2026-11-21T03:20:29.957Z",
+          "reason": "스튜디오 화면에서 직접 수정"
         },
-        "kr": {
-          "sp": "붉은 조명이 가득한 어두운 게임장, 배경에 빛나는 기계들",
-          "ch": "한지아 — CUT3과 동일 의상",
-          "sh": "미디엄 클로즈업, 기계 두 대 사이로 일부만 보이는 구도",
-          "ca": "핸드헬드 드리프트, 얕은 심도, 레드/시안 색 대비",
-          "ac": "반사에 일부 가려진 채 화면 밖 무언가를 바라본다",
-          "md": "무표정, 화면 불빛이 얼굴을 비춤"
-        }
-      }
-    },
-    {
-      "id": "cut-9",
-      "no": 9,
-      "cutTitle": "스팀 인도 (고조 직후, 여운)",
-      "lipsync": false,
-      "scene": "EXT. 맨해튼 인도 - 블루아워 — 고조 직후 숨 고르는 여운 샷, 캐릭터 미등장(행인 1명만 지나감). 가로등 포함해 CUT10과 밝기 균형 맞춤(2026-11-20 점검).",
-      "action": "인도를 따라 걷는 낮은 핸드헬드 이동, 행인이 카메라에서 멀어져 간다",
-      "character": "서여리",
-      "dialogue": "",
-      "narration": "",
-      "subtitle": "",
-      "imagePrompt": "캐릭터 없는 환경 컷 — 신규 레퍼런스 불필요, 아래 VP를 바로 Veo에 투입.",
-      "videoPrompt": "",
-      "duration": 4,
-      "shotType": "FULLBODY",
-      "cutType": "YEORI",
-      "cutMark": "NORMAL",
-      "beat": "안정",
-      "masterCode": {
-        "sp": "EXT.NYC_SIDEWALK_STEAM.TZ_BLUEHOUR",
-        "pl": "YR_VD",
-        "ch": "없음",
-        "sh": "SH_WS",
-        "ca": "CA_HANDHELD_LOW_MODERATE_SHAKE",
-        "md": "MD_CALM_AFTERGLOW",
-        "ac": "AT_WALK_AWAY_01",
-        "lookId": "없음",
-        "du": 4,
-        "audio": {
-          "bgm": "",
-          "voice": "",
-          "sfx": "",
-          "ambience": ""
+        "narration": {
+          "value": "",
+          "at": "2026-11-21T03:20:29.957Z",
+          "reason": "스튜디오 화면에서 직접 수정"
         },
-        "kr": {
-          "sp": "블루아워의 맨해튼 인도, 거리 환기구에서 증기가 피어오름, 왼쪽 가장자리에 노란 택시, 거리의 가로등이 이미 켜져 있어 전체 밝기는 다음 엔딩 컷(CUT10)과 비슷한 수준 유지",
-          "ch": "없음 (화면 안쪽으로 멀어지는 행인 1명만 등장)",
-          "sh": "낮은 핸드헬드 와이드샷, 딥포커스",
-          "ca": "핸드헬드, 중간 정도 흔들림",
-          "ac": "인도를 따라 걷는 낮은 핸드헬드 이동, 행인이 카메라에서 멀어져 간다",
-          "md": "차분한 여운 — 차가운 파란 하늘 톤이지만 가로등 덕분에 노출 레벨 자체는 어둡지 않음, 핵심은 밝기 차이가 아니라 따뜻한 불빛과 차가운 하늘의 색 대비"
-        }
-      }
-    },
-    {
-      "id": "cut-10",
-      "no": 10,
-      "cutTitle": "엔딩, A 정면 응시",
-      "lipsync": false,
-      "scene": "EXT. 뉴욕 인도 - 해질녘 — 3/4 앵글로 서 있던 서여리가 2초경 처음으로 시선을 들어 카메라를 정면으로 응시하는 엔딩 샷. 음악이 소멸하는 구간.",
-      "action": "정지 상태에서 시선만 천천히 들어 카메라를 직시",
-      "character": "서여리",
-      "dialogue": "",
-      "narration": "",
-      "subtitle": "",
-      "imagePrompt": "기존 업로드 전신/클로즈업 참조 이미지를 image-to-video 입력으로 사용 — 별도 스틸 생성 없음.",
-      "videoPrompt": "4 seconds, single continuous shot, real-time, no cuts, no slow motion.\n\nA young East Asian woman with dark brown hair in a high top-knot bun stands on a New York sidewalk at dusk, wearing an oversized charcoal-gray bomber jacket worn open over a cropped navy t-shirt, plain silver over-ear headphones on her head. She is positioned at a three-quarter angle to the camera, not facing it directly. Behind her, red and white neon signage glows softly out of focus, blurred building facades fading into the evening light.\n\nThe camera is handheld and unstable, real shoulder-mounted shake, never smooth or gimbal-like, close on her face with a shallow depth of field (roughly 85mm-equivalent compression) so the background dissolves into soft color while she stays sharp.\n\nFor the first two seconds her gaze is cast down and to the side, expression flat and unreadable. Around the two-second mark, her eyes drift up and lock onto the lens, a slow, unforced shift, not a performed turn. Her head angle never changes; only her eyes move.\n\nLighting is dusk streetlight mixed with the warm and cool glow of the signage behind her. Sound is fully diegetic, distant traffic and ambient city noise, no music.\nNo text, logos, or graphics anywhere in frame.",
-      "duration": 4,
-      "shotType": "CLOSEUP",
-      "cutType": "YEORI",
-      "cutMark": "NORMAL",
-      "beat": "결말",
-      "masterCode": {
-        "sp": "EXT.NYC_SIDEWALK_NEON.TZ_DUSK",
-        "pl": "YR_VD",
-        "ch": "서여리",
-        "sh": "SH_CU",
-        "ca": "CA_HANDHELD_SHOULDER_85MM",
-        "md": "MD_CALM_TO_DIRECT",
-        "ac": "AT_EYES_LOCK_LENS_01",
-        "lookId": "LOOK_YEORI_STREET",
-        "du": 4,
-        "audio": {
-          "bgm": "",
-          "voice": "",
-          "sfx": "",
-          "ambience": ""
+        "imagePrompt": {
+          "value": "",
+          "at": "2026-11-21T03:20:29.957Z",
+          "reason": "스튜디오 화면에서 직접 수정"
         },
-        "kr": {
-          "sp": "해질녘 뉴욕 인도, 배경에 붉고 흰 네온 간판이 아웃포커스로 은은하게 빛남",
-          "ch": "서여리 — 차콜그레이 보머재킷(오픈)+네이비 크롭 티셔츠+은색 오버이어 헤드폰, 3/4 앵글로 서 있음(정면 아님)",
-          "sh": "얼굴 클로즈업, 85mm급 압축, 얕은 심도로 배경이 색으로 녹아듦",
-          "ca": "핸드헬드, 어깨에 멘 듯한 불안정함, 짐벌처럼 매끄럽지 않음",
-          "ac": "정지 상태에서 시선만 천천히 들어 카메라를 직시",
-          "md": "처음 2초는 무표정·시선 아래, 2초경부터 서서히 시선이 올라와 렌즈에 고정 — 연기처럼 보이지 않게 자연스러운 전환, 고개 각도는 그대로 두고 눈만 움직임"
-        }
-      }
-    },
-    {
-      "id": "cut-11",
-      "no": 11,
-      "cutTitle": "엔딩, 같은 횡단보도에서 스쳐 지나감 (코다, 신규)",
-      "lipsync": false,
-      "scene": "EXT. 미드타운 맨해튼 횡단보도 - 해질녘 — CUT1과 같은 횡단보도에서 서여리가 왼쪽, 한지아가 오른쪽에서 들어와 중앙에서 서로 알아보지 못한 채 스쳐 지나가는 엔딩 교차 샷 (사용자 제안, 2026-11-20 추가).",
-      "action": "A는 왼쪽에서, B는 오른쪽에서 들어와 중앙에서 스쳐 지나간 뒤 각자의 길을 계속 간다",
-      "character": "서여리",
-      "dialogue": "",
-      "narration": "",
-      "subtitle": "",
-      "imagePrompt": "기존 업로드 전신 참조 이미지(A+B 모두)를 image-to-video 입력으로 사용 — 별도 스틸 생성 없음.",
-      "videoPrompt": "",
-      "duration": 4,
-      "shotType": "FULLBODY",
-      "cutType": "YEORI",
-      "cutMark": "NORMAL",
-      "beat": "결말",
-      "masterCode": {
-        "sp": "EXT.NYC_MIDTOWN_CROSSWALK.TZ_DUSK",
-        "pl": "YR_VD, HJ_VD",
-        "ch": "서여리, 한지아",
-        "sh": "SH_WS",
-        "ca": "CA_LOCKED_TRIPOD_MICROSHAKE",
-        "md": "MD_NO_ACKNOWLEDGE_PASS",
-        "ac": "AT_CROSS_PASS_01",
-        "lookId": "LOOK_YEORI_STREET, LOOK_JIA_STREET",
-        "du": 4,
-        "audio": {
-          "bgm": "",
-          "voice": "",
-          "sfx": "",
-          "ambience": ""
-        },
-        "kr": {
-          "sp": "해질녘 같은 미드타운 횡단보도(CUT1과 동일 장소), 네온 간판이 아웃포커스로 은은하게 빛남",
-          "ch": "서여리(왼쪽에서 등장, CUT1·2와 동일 의상) + 한지아(오른쪽에서 등장, CUT3·7·8과 동일 의상)",
-          "sh": "고정 와이드샷, 딥포커스",
-          "ca": "삼각대 고정 느낌 + 미세한 핸드헬드 진동",
-          "ac": "A는 왼쪽에서, B는 오른쪽에서 들어와 중앙에서 스쳐 지나간 뒤 각자의 길을 계속 간다",
-          "md": "서로를 알아보지 못한 채 무심하게 스쳐 지나가는 분위기, 둘 다 카메라를 보지 않음"
+        "duration": {
+          "value": 5,
+          "at": "2026-11-21T03:20:29.957Z",
+          "reason": "스튜디오 화면에서 직접 수정"
         }
       }
     }
@@ -14152,7 +14152,7 @@
     "shadowColor": "#000000",
     "bold": true,
     "textY": 70,
-    "ratio": "9:16",
+    "ratio": "16:9",
     "bgImageUrl": "",
     "posterLayers": []
   },
@@ -14160,8 +14160,7 @@
     "youtube": {
       "title": "",
       "description": "",
-      "tags": "",
-      "titleEn": ""
+      "tags": ""
     },
     "instagram": {
       "title": "",
@@ -14214,149 +14213,16 @@
   "projectName": "새 프로젝트",
   "savedAt": "2026-11-21T02:06:12.310Z",
   "videoTabState": {
-    "videoClips": {
-      "cut-1": [],
-      "cut-3": [],
-      "cut-4": [],
-      "cut-2": []
-    },
-    "g4Approved": {
-      "cut-1": true,
-      "cut-2": true,
-      "cut-3": true,
-      "cut-4": true
-    },
-    "selectedCutId": "cut-3",
+    "videoClips": {},
+    "g4Approved": {},
+    "selectedCutId": null,
     "subtitles": {}
   },
   "ttsTabState": {
     "audioUrls": {},
     "audioTexts": {},
-    "g3Confirmed": {
-      "cut-2": true
-    },
-    "focusCutId": null,
-    "voiceTabs": {
-      "cut-2": [
-        {
-          "id": "v1",
-          "label": "목소리 1",
-          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
-        }
-      ],
-      "cut-3": [
-        {
-          "id": "v1",
-          "label": "목소리 1",
-          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
-        }
-      ],
-      "cut-4": [
-        {
-          "id": "v1",
-          "label": "목소리 1",
-          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
-        }
-      ],
-      "cut-1": [
-        {
-          "id": "v1",
-          "label": "목소리 1",
-          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
-        }
-      ]
-    },
-    "tracks": {
-      "cut-2__v1": [
-        {
-          "id": "track_1794994126097_2nop",
-          "type": "dialogue",
-          "text": "아직… 왜?",
-          "speaker": null,
-          "url": null,
-          "voiceId": "",
-          "settings": {
-            "speed": 0.95,
-            "stability": 30,
-            "similarity": 75
-          }
-        },
-        {
-          "id": "track_1794994126098_jzsg",
-          "type": "narration",
-          "text": "걱정된다는 뜻으로 하는 말이에요.",
-          "speaker": null,
-          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R10/03_audio/tts-previews/cut_02_track_1794994126098_jzsg.mp3?t=1794994160683",
-          "voiceId": "",
-          "settings": {
-            "speed": 0.85,
-            "stability": 53,
-            "similarity": 75
-          }
-        }
-      ],
-      "cut-3__v1": [
-        {
-          "id": "track_1794994933818_sf9r",
-          "type": "dialogue",
-          "text": "…진짜 왔어?",
-          "speaker": "여리",
-          "url": null,
-          "voiceId": "",
-          "settings": {
-            "speed": 0.95,
-            "stability": 30,
-            "similarity": 75
-          }
-        },
-        {
-          "id": "track_1794994933818_c2xb",
-          "type": "dialogue",
-          "text": "그럴 줄 알았어. 일단 먹어.",
-          "speaker": "지아",
-          "url": null,
-          "voiceId": "",
-          "settings": {
-            "speed": 0.95,
-            "stability": 30,
-            "similarity": 75
-          }
-        }
-      ],
-      "cut-4__v1": [
-        {
-          "id": "track_1794995536156_grq0",
-          "type": "narration",
-          "text": "밥 먹었냐는 말은~... 너가 신경 쓰인다는 뜻이에요.",
-          "speaker": null,
-          "url": null,
-          "voiceId": "",
-          "settings": {
-            "speed": 0.85,
-            "stability": 55,
-            "similarity": 75
-          }
-        }
-      ],
-      "cut-1__v1": [
-        {
-          "id": "track_1794995557271_6m76",
-          "type": "narration",
-          "text": "밥 먹었어?는 진짜 밥 질문이 아니에요.",
-          "speaker": null,
-          "url": null,
-          "voiceId": "",
-          "settings": {
-            "speed": 0.85,
-            "stability": 55,
-            "similarity": 75
-          }
-        }
-      ]
-    },
-    "mergedUrls": {
-      "cut-2__v1": "blob:http://localhost:5173/5aa7df5c-99fb-4e6b-a3a6-d08a690d59cf"
-    }
+    "g3Confirmed": {},
+    "focusCutId": null
   },
   "voiceInsertState": {
     "tracks": {}
