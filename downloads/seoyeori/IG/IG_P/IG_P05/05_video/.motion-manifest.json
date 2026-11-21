@@ -1,58 +1,58 @@
 {
   "1": {
     "method": "graphic",
-    "selfText": false,
+    "selfText": true,
     "motion": "video-bg",
     "baked": true,
     "duration": 8,
-    "producedAt": "2026-11-21T09:01:15.266Z"
+    "producedAt": "2026-11-21T11:23:42.715Z"
   },
   "2": {
     "method": "graphic",
-    "selfText": false,
+    "selfText": true,
     "motion": "self",
     "baked": true,
     "duration": 5,
-    "producedAt": "2026-11-21T10:24:40.270Z"
+    "producedAt": "2026-11-21T11:23:46.927Z"
   },
   "3": {
     "method": "graphic",
-    "selfText": false,
+    "selfText": true,
     "motion": "self",
     "baked": true,
     "duration": 5,
-    "producedAt": "2026-11-21T10:24:52.783Z"
+    "producedAt": "2026-11-21T11:23:57.642Z"
   },
   "4": {
     "method": "graphic",
-    "selfText": false,
+    "selfText": true,
     "motion": "self",
     "baked": true,
     "duration": 5,
-    "producedAt": "2026-11-21T06:09:44.469Z"
+    "producedAt": "2026-11-21T11:24:01.609Z"
   },
   "5": {
     "method": "graphic",
-    "selfText": false,
+    "selfText": true,
     "motion": "self",
     "baked": true,
     "duration": 5,
-    "producedAt": "2026-11-21T06:10:03.732Z"
+    "producedAt": "2026-11-21T11:24:11.381Z"
   },
   "6": {
     "method": "graphic",
-    "selfText": false,
+    "selfText": true,
     "motion": "self",
     "baked": true,
     "duration": 5,
-    "producedAt": "2026-11-21T06:10:22.306Z"
+    "producedAt": "2026-11-21T11:24:15.275Z"
   },
   "7": {
     "method": "graphic",
-    "selfText": false,
+    "selfText": true,
     "motion": "self",
     "baked": true,
     "duration": 5,
-    "producedAt": "2026-11-21T06:10:41.266Z"
+    "producedAt": "2026-11-21T11:24:22.644Z"
   }
 }

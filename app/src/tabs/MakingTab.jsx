@@ -8,7 +8,7 @@ import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import ReelSfxCell from '../components/ReelSfxCell'
 import s from './MakingTab.module.css'
-import { epMediaUrl, cutMediaUrl, videoUrl } from '../lib/mediaPaths'
+import { epMediaUrl, cutMediaUrl } from '../lib/mediaPaths'
 import { elSoundEffect, saveGeneratedSfx } from '../lib/api'
 
 const YEORI_SERVER = 'http://localhost:3001'
@@ -4598,7 +4598,6 @@ function GraphicCardGenerator({ cut, epNum, episode, onGenerated }) {
   // 접힌 상태에서도 "방금 뭐가 만들어졌는지" 바로 보이게 — 생성 패널과 무관하게 항상 보임.
   const [resultRefresh, setResultRefresh] = useState(0)
   const [resultThumbOk, setResultThumbOk] = useState(true)
-  const [showResultVideo, setShowResultVideo] = useState(false)
   const [open, setOpen] = useState(false)
   const [templates, setTemplates] = useState([])
   const [selectedType, setSelectedType] = useState('')
@@ -4891,7 +4890,6 @@ function GraphicCardGenerator({ cut, epNum, episode, onGenerated }) {
 
   // 접힌 상태에서도 보이는 "지금 제작된 결과" 미리보기 — 생성 패널을 열지 않아도 바로 확인 가능.
   const resultThumbSrc = episode ? `${cutMediaUrl(episode, 'video', cut.no, 'png', '_graphic')}?t=${resultRefresh}` : ''
-  const resultVideoSrc = episode ? `${videoUrl(episode, cut.no)}?t=${resultRefresh}` : ''
 
   return (
     <>
@@ -4904,21 +4902,15 @@ function GraphicCardGenerator({ cut, epNum, episode, onGenerated }) {
         </button>
 
         {episode && resultThumbOk && (
-          <div
-            onClick={() => setShowResultVideo(v => !v)}
-            title="클릭하면 영상으로 재생/정지"
-            style={{ position: 'relative', width: 64, height: 114, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border)', cursor: 'pointer', flexShrink: 0, background: '#000' }}
-          >
-            {showResultVideo ? (
-              <video src={resultVideoSrc} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : (
-              <img src={resultThumbSrc} alt="제작 결과" onError={() => setResultThumbOk(false)}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            )}
-            <span style={{ position: 'absolute', bottom: 2, right: 4, fontSize: 11, color: '#fff', textShadow: '0 0 3px #000' }}>
-              {showResultVideo ? '⏸' : '▶'}
-            </span>
-          </div>
+          // 정지 이미지만 보여준다 — 영상 토글(초기 버전)은 등장 애니메이션이 있는 컷에서
+          // 재생 시작 직후 흐릿한 중간 프레임에 멈춰 "깨진 것처럼" 보이는 문제가 있었다
+          // (2026-11-21 실측, 스크린샷으로 확인). 실제 영상 재생은 바로 아래 "컷 리뷰"
+          // 패널의 기존 제작 결과 플레이어(이미 잘 작동함)로 충분하다.
+          <img
+            src={resultThumbSrc} alt="제작 결과" onError={() => setResultThumbOk(false)}
+            title="제작 결과(정지 화면) — 재생은 아래 컷 리뷰의 영상 플레이어 참고"
+            style={{ width: 64, height: 114, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border)', flexShrink: 0, background: '#000' }}
+          />
         )}
         {episode && !resultThumbOk && (
           <span style={{ fontSize: 12, color: 'var(--text-dim)' }}>아직 제작된 결과 없음</span>

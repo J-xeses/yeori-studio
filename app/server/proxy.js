@@ -5254,8 +5254,12 @@ async function runGraphicCapture({ html, cutNo, epNum, duration, motion, outputP
         }, tMs)
         await page.screenshot({ path: path.join(framesDir, `f_${String(i).padStart(5, '0')}.png`) })
       }
-      // 첫 프레임을 대표 스틸로도 남긴다(썸네일 호환)
-      try { fs.copyFileSync(path.join(framesDir, 'f_00000.png'), imagePath) } catch { /* noop */ }
+      // 대표 스틸(썸네일) — 첫 프레임(0번)은 등장 애니메이션(페이드인) 시작 전이라 텍스트카드류는
+      // 제목·부제가 전부 안 보이는 빈 화면이었다(2026-11-21 실측: 메이킹 탭에 썸네일을 항상
+      // 보이게 했더니 그 빈 화면이 "썸네일이 작동 안 한다"는 버그 리포트로 처음 드러남 — 전부터
+      // 있던 문제였는데 아무도 이 스틸을 눈에 띄게 보여준 적이 없어서 안 보였던 것). 마지막
+      // 프레임(등장 애니메이션이 이미 끝난 정착 상태)을 대신 쓴다.
+      try { fs.copyFileSync(path.join(framesDir, `f_${String(total - 1).padStart(5, '0')}.png`), imagePath) } catch { /* noop */ }
     } else {
       // 등장 애니메이션이 있으면 끝난 상태로 고정해서 찍는다(없으면 no-op, 안전).
       try { await page.evaluate(() => { document.getAnimations().forEach(a => { try { a.finish() } catch (e) { /* noop */ } }) }) } catch { /* noop */ }
@@ -11158,7 +11162,15 @@ async function makeGraphicCutForMcp({ epNum, cutNo, htmlFile, motion, bgVideoPat
     html = fillTemplateForMcp(cut, cutDims(ep.episode || {}))
   }
 
-  return runGraphicCapture({ html, cutNo: cut.no, epNum, duration: cut.duration, motion: motion || cut.motion, selfText: !effectiveHtmlFile, bgVideoPath, heavyBackground })
+  // selfText — "화면 글자가 곧 자막"인지. 예전엔 "htmlFile이 아예 없을 때만"으로 판정했는데,
+  // GTPL/수동 템플릿 경로는 항상 cut_NN_graphic.html로 저장해서 넘기므로(resolveGraphicFromGtpl·
+  // /api/generate-graphic-html) 이 조건이 거의 항상 false가 되어, 우리 템플릿이 만든 카드까지
+  // "화면 글자=자막 아님"으로 잘못 기록되고 있었다 — 릴스 최종화가 이미 화면에 큼직하게 박힌
+  // 제목/부제 위에 같은 문구를 자막으로 또 구워서 2중 표시되는 버그로 실측됨(2026-11-21).
+  // 우리 시스템이 직접 생성해 저장한 파일은 전부 "cut_NN_graphic.html" 패턴이고(사람이 올린
+  // 커스텀 목업은 다른 파일명), 그 경우도 true여야 한다.
+  const selfText = !effectiveHtmlFile || /_graphic\.html?$/i.test(String(effectiveHtmlFile))
+  return runGraphicCapture({ html, cutNo: cut.no, epNum, duration: cut.duration, motion: motion || cut.motion, selfText, bgVideoPath, heavyBackground })
 }
 
 // ── BROLL "CLIP:" — 웹 영상의 한 구간을 screen-scenario 화면녹화로 컷 만들기 ──────
