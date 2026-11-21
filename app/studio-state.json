@@ -1,5 +1,5 @@
 {
-  "activeTab": "making",
+  "activeTab": "publishing",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -14554,31 +14554,49 @@
     "isRendering": false
   },
   "thumbnail": {
-    "text": "",
+    "text": "한국인 ‘밥 먹자’는 다 거짓말?",
     "fontSize": 48,
     "color": "#ffffff",
     "shadowColor": "#000000",
     "bold": true,
     "textY": 70,
-    "ratio": "16:9",
+    "ratio": "9:16",
     "bgImageUrl": "",
     "posterLayers": []
   },
   "publishing": {
     "youtube": {
-      "title": "",
-      "description": "",
-      "tags": ""
+      "title": "일상공감 한국어 5개 | 서울에서 매일 듣는 진짜 표현",
+      "description": "일상공감 100%! 서울에 살면 하루에도 몇 번씩 듣게 되는 한국어 표현 5가지를 소개해요. 단순한 단어가 아니라 그 안에 담긴 감정표현까지 함께 알아보면, 한국 문화가 훨씬 가깝게 느껴질 거예요.\n\n'밥 먹었어?'가 사실 '잘 지내?'라는 뜻이라는 거 알고 계셨나요? 한국인의 감정표현 방식은 말 한마디에 담긴 온기에서 시작됩니다. 서울 여행이나 한국어 공부를 준비 중이라면 꼭 저장해 두세요 📌\n\n이런 일상공감 한국어 표현들이 궁금하다면 서여리 채널을 구독해보세요!\n\n#서울 #한국어 #한국일상",
+      "tags": "일상공감, 감정표현, 한국어, 서울여행, 한국어공부, 한국문화, 서울일상, 한국어표현, 대박, 고생했어요, 잘먹겠습니다, 밥먹었어, Korean phrases, Seoul, 서여리, 한국어일상, 쇼츠",
+      "titleEn": "5 Korean Phrases That Reveal How Koreans Really Feel",
+      "descriptionEn": "Ever wonder why Koreans ask 'Did you eat?' instead of 'How are you?' These 5 everyday Korean phrases are the key to understanding real Korean emotions and the culture behind them — something textbooks never teach you.\n\nFrom 'daebak!' to 'Let's eat sometime,' each phrase carries a whole feeling that connects to everyday Korean life. Once you get these emotional expressions, you'll see Seoul — and Korean people — in a completely new way.\n\nIf you're heading to Seoul or diving into Korean, save this video and follow Seoyeori for more real Korean life content 📌\n\n#Korean #Seoul #LearnKorean",
+      "tagsEn": "Korean phrases, everyday Korean, Korean culture, Seoul travel, learn Korean, Korean expressions, Korean emotions, daebak, Korean life, Seoyeori, Korean for beginners, Seoul trip, Korean language, Korean vlog, real Korean",
+      "titleJa": "ソウルで毎日聞く韓国語フレーズ5選｜感情表現がわかると韓国がもっと好きになる",
+      "descriptionJa": "「ご飯食べた?」が「元気?」の代わりに使われるって知ってましたか？ソウルの日常に溶け込んだ感情表現を知ることで、韓国人の気持ちや文化がぐっと身近になります。\n\n教科書には載っていない、リアルな日常共感フレーズを5つ厳選しました。「대박(テバク)」や「고생했어요」など、ひとつひとつの言葉に込められた感情表現を理解すると、ドラマや旅行がもっと楽しくなりますよ 🇰🇷\n\n韓国語の日常共感フレーズをもっと知りたい方は、ぜひチャンネル登録&フォローしてください📌\n\n#韓国語 #ソウル旅行 #韓国文化",
+      "tagsJa": "韓国語フレーズ, 日常共感, 感情表現, ソウル旅行, 韓国語勉強, 韓国文化, 韓国日常, テバク, 韓国語表現, 韓国旅行, ソウル, 서여리, Seoyeori, 韓国語初心者, 旅行韓国語"
     },
     "instagram": {
-      "title": "",
-      "description": "",
-      "tags": ""
+      "title": "서울에서 매일 듣는 한국어 5개 🇰🇷",
+      "description": "서울 살면 하루에 꼭 한 번은 듣게 되는 표현들이에요 😊\n\n'밥 먹었어?' 한 마디에 담긴 따뜻한 감정표현, 느껴지시나요?\n이런 일상공감 표현들을 알면 한국이 훨씬 더 친근해져요 🫶\n\n✔ 밥 먹었어? → 나 너 걱정돼\n✔ 잘 먹겠습니다 → 식사 전 감사 인사\n✔ 고생했어요 → 수고했어, 고마워\n✔ 밥 한번 먹자 → 사실은 작별 인사\n✔ 대박 → 완전 대박!!\n\n한국어 속 진짜 감정표현이 담긴 일상공감 콘텐츠, 더 보고 싶다면 팔로우 👉 @seoyeori\n\n서울 여행 전에 꼭 저장해두세요 📌",
+      "tags": "#일상공감 #감정표현 #한국어 #서울여행 #한국어공부 #한국문화 #서울일상 #대박 #한국어표현 #한국여행 #서여리 #KoreanLife #Seoul #LearnKorean #KoreanCulture #한국어스터디 #여행한국 #쇼츠",
+      "titleEn": "5 Korean phrases locals actually use every day 🇰🇷",
+      "descriptionEn": "Forget the textbook Korean — these are the phrases you'll *actually* hear walking around Seoul 😊\n\nWhat makes Korean so fascinating is how much emotion is packed into everyday expressions. 'Did you eat?' isn't really about food — it's how Koreans say 'I care about you.' That kind of emotional depth in daily speech is what makes the culture so warm 🫶\n\n✔ 밥 먹었어? → Did you eat? = I care about you\n✔ 잘 먹겠습니다 → Said before every meal\n✔ 고생했어요 → You worked hard, thank you\n✔ 밥 한번 먹자 → 'Let's eat' = casual goodbye\n✔ 대박 → OMG / No way / Amazing!!\n\nSave this before your Seoul trip 📌 Follow @seoyeori for more real Korean life.",
+      "tagsEn": "#KoreanPhrases #LearnKorean #SeoulTravel #KoreanCulture #KoreanLife #EverydayKorean #Seoul #KoreanExpressions #Daebak #KoreanForBeginners #Seoyeori #KoreanEmotions #VisitSeoul #StudyKorean #Reels",
+      "titleJa": "ソウルで毎日聞く韓国語、5つ知ってる？🇰🇷",
+      "descriptionJa": "韓国に行くなら絶対知っておきたい、リアルな日常フレーズをまとめました😊\n\n「ご飯食べた?」って聞かれたら、それは食事の話じゃなくて「大丈夫?気にかけてるよ」って意味なんです。こういう感情表現が自然にわかるようになると、韓国人との会話がぐっと温かくなります🫶 日常共感フレーズを知るだけで、ソウルの見え方が変わりますよ。\n\n✔ 밥 먹었어? → ご飯食べた？＝気にかけてるよ\n✔ 잘 먹겠습니다 → いただきます\n✔ 고생했어요 → お疲れ様、ありがとう\n✔ 밥 한번 먹자 → 「また食べよ」＝じゃあね\n✔ 대박 → マジで！すごい！\n\nソウル旅行の前に保存しておいて📌 @seoyeori をフォローして日常共感の韓国語をもっとチェック！",
+      "tagsJa": "#日常共感 #感情表現 #韓国語 #ソウル旅行 #韓国語勉強 #韓国文化 #韓国日常 #テバク #韓国語フレーズ #韓国旅行 #ソウル #Seoyeori #서여리 #韓国語初心者 #旅行韓国語 #リール"
     },
     "tiktok": {
-      "title": "",
-      "description": "",
-      "tags": ""
+      "title": "서울에서 매일 듣는 한국어 5개 🗣️🇰🇷",
+      "description": "이 표현들 모르면 서울 여행 손해 ㄹㅇ 😂 '밥 먹었어?'가 그냥 밥 얘기가 아니라는 거, 이제 아셨죠? 한국어 속 진짜 감정표현과 일상공감 표현들을 한방에 정리해드렸어요! 저장하고 써먹어 보세요 📌",
+      "tags": "#일상공감 #감정표현 #한국어 #서울 #한국어공부 #대박 #서울여행 #한국문화 #KoreanLife #LearnKorean #서여리 #한국어표현 #틱톡한국어 #서울일상 #한국여행준비",
+      "titleEn": "Korean phrases that will actually make sense in Seoul 🇰🇷",
+      "descriptionEn": "POV: You just landed in Seoul and everyone keeps asking if you ate 😂 Here are 5 real Korean expressions — and the emotions hidden inside them. Save this, you'll need it! 📌",
+      "tagsEn": "#LearnKorean #KoreanPhrases #SeoulTravel #KoreanCulture #Daebak #KoreanLife #KoreanExpressions #Seoul #EverydayKorean #Seoyeori #KoreanEmotions #VisitSeoul #KoreanTikTok #StudyKorean #TravelKorea",
+      "titleJa": "ソウルで絶対使う韓国語フレーズ5選🗣️🇰🇷",
+      "descriptionJa": "「ご飯食べた?」が実は「元気?」って意味だったの、知らなかった人🙋 韓国語って感情表現がぎゅっと詰まってて面白いんです！ソウル旅行前にこれだけは覚えて行って📌",
+      "tagsJa": "#日常共感 #感情表現 #韓国語 #ソウル旅行 #韓国語勉強 #テバク #韓国文化 #韓国日常 #Seoyeori #韓国語フレーズ #ソウル #韓国旅行準備 #韓国語初心者 #TikTok韓国語 #旅行韓国語"
     }
   },
   "channelKeywords": [
