@@ -4580,6 +4580,17 @@ export default function MakingTab() {
 // (app/server/lib/graphicTemplates.js + proxy.js). 생성한 HTML은 01_script/에
 // cut_NN_graphic.html로 저장되고, htmlFile로 넘기면 기존 /api/make-graphic-cut·
 // list-episode-html이 그대로 찾아 읽는다(커스텀 목업과 동일한 폴더 규칙).
+// layout/colors 키 → 메이킹 탭에 보여줄 한글 라벨. 새 템플릿에 새 레이아웃 키가
+// 생기면(graphicTemplates.js) 여기 없는 키는 그냥 원래 키 이름으로 표시된다(안 깨짐).
+const GRAPHIC_LAYOUT_LABELS = {
+  titleFontSize: '제목 크기(px)', titleLetterSpacing: '제목 자간(px)',
+  titleMarginBottom: '제목-부제 간격(px)', titleMaxWidthPercent: '제목 최대폭(%)',
+  subtitleFontSize: '부제 크기(px)', subtitleLetterSpacing: '부제 자간(px)', subtitleMaxWidthPercent: '부제 최대폭(%)',
+  infoFontSize: '하단문구 크기(px)', infoBottomPercent: '하단문구 위치(%, 아래에서부터)', infoLetterSpacing: '하단문구 자간(px)',
+  accentWidth: '포인트라인 길이(px)', accentHeight: '포인트라인 두께(px)', accentMarginBottom: '포인트라인 간격(px)',
+}
+const GRAPHIC_COLOR_LABELS = { bg: '배경', main: '제목', sub: '부제 · 보조문구', accent: '포인트' }
+
 function GraphicCardGenerator({ cut, epNum, onGenerated }) {
   const [open, setOpen] = useState(false)
   const [templates, setTemplates] = useState([])
@@ -4591,6 +4602,27 @@ function GraphicCardGenerator({ cut, epNum, onGenerated }) {
   const [recommendedMd, setRecommendedMd] = useState('')
   const [aiMode, setAiMode] = useState(false)   // 서브라인 3-1: Claude 로 맞춤 HTML
   const [retryNote, setRetryNote] = useState('')
+
+  // ── 디자인 세부 설정(크기·위치·색상) — /api/graphic-template-settings ──
+  const [designOpen, setDesignOpen] = useState(false)
+  const [design, setDesign] = useState(null)       // { layout, colors } — 서버에서 받은 현재 효과값
+  const [designLoading, setDesignLoading] = useState(false)
+  const [designSaving, setDesignSaving] = useState(false)
+  const [designError, setDesignError] = useState('')
+  const [previewHtml, setPreviewHtml] = useState('')
+  const [previewLoading, setPreviewLoading] = useState(false)
+
+  // ── 배경 꾸미기(이미지/영상 · 검색/업로드/URL) — /api/graphic-cut-background, /api/source-search ──
+  const [bgOpen, setBgOpen] = useState(false)
+  const [bgCurrent, setBgCurrent] = useState(null)      // { type, imageUrl|videoUrl, source, attribution } | null
+  const [bgAssetType, setBgAssetType] = useState('image') // 'image' | 'video' — 지금 고르려는 배경 종류
+  const [bgMode, setBgMode] = useState('search')        // 'search' | 'upload' | 'url'
+  const [bgQuery, setBgQuery] = useState('')
+  const [bgResults, setBgResults] = useState([])
+  const [bgSearching, setBgSearching] = useState(false)
+  const [bgUrlInput, setBgUrlInput] = useState('')
+  const [bgBusy, setBgBusy] = useState(false)
+  const [bgError, setBgError] = useState('')
 
   // 이 컷의 대사/장면 텍스트 — 이 코드베이스엔 별도 caption 필드가 없어
   // 다른 곳(예: 2288행)과 동일한 우선순위로 narration/dialogue/scene에서 뽑는다.
@@ -4633,6 +4665,166 @@ function GraphicCardGenerator({ cut, epNum, onGenerated }) {
     }))
     if (scriptGtpl && /^ai\b/i.test(scriptGtpl)) setAiMode(true)
   }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 모달 열 때 이 컷에 저장된 배경 이미지(있으면)를 불러온다 — 템플릿/스타일과 무관(컷 단위).
+  useEffect(() => {
+    if (!open) return
+    setBgError('')
+    fetch(`${YEORI_SERVER}/api/graphic-cut-background?epNum=${epNum}&cutNo=${cut.no}`)
+      .then(r => r.json())
+      .then(data => setBgCurrent(data.background || null))
+      .catch(err => setBgError(err.message))
+  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleBgSearch = async () => {
+    if (!bgQuery.trim()) return
+    setBgSearching(true); setBgError('')
+    try {
+      const res = await fetch(`${YEORI_SERVER}/api/source-search?type=${bgAssetType}&orientation=portrait&perPage=12&q=${encodeURIComponent(bgQuery.trim())}`)
+      const data = await res.json()
+      if (!res.ok || data.error) throw new Error(data.error || '검색 실패')
+      setBgResults(data.results || [])
+    } catch (err) {
+      setBgError(err.message)
+    } finally {
+      setBgSearching(false)
+    }
+  }
+
+  // 배경은 컷 단위라 고르는 즉시 저장한다(디자인 설정의 "저장" 버튼과 달리, 되돌릴 일이
+  // 적고 다른 컷에 영향이 없어 확인 단계를 둘 이유가 없음 — "제거"로 바로 취소 가능).
+  // 영상 배경은 서버가 저장 시점에 로컬로 받아두므로(ffmpeg 합성용), 다운로드가 끝날 때까지
+  // 몇 초 걸릴 수 있다.
+  const saveBg = async (payload) => {
+    setBgBusy(true); setBgError('')
+    try {
+      const res = await fetch(`${YEORI_SERVER}/api/graphic-cut-background`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ epNum, cutNo: cut.no, ...payload }),
+      })
+      const data = await res.json()
+      if (!res.ok || data.error) throw new Error(data.error || '저장 실패')
+      setBgCurrent(data.background)
+      setPreviewHtml('')
+    } catch (err) {
+      setBgError(err.message)
+    } finally {
+      setBgBusy(false)
+    }
+  }
+
+  const handleBgPick = (result) => {
+    if (bgAssetType === 'video') {
+      saveBg({ type: 'video', videoUrl: result.downloadUrl, source: 'pexels', attribution: result.photographer || 'Pexels' })
+    } else {
+      saveBg({ type: 'image', imageUrl: result.downloadUrl, source: 'pexels', attribution: result.photographer || 'Pexels' })
+    }
+  }
+  const handleBgUrlApply = () => {
+    if (!bgUrlInput.trim()) return
+    if (bgAssetType === 'video') saveBg({ type: 'video', videoUrl: bgUrlInput.trim(), source: 'url', attribution: '' })
+    else saveBg({ type: 'image', imageUrl: bgUrlInput.trim(), source: 'url', attribution: '' })
+  }
+  const handleBgRemove = () => saveBg(bgCurrent?.type === 'video' ? { videoUrl: null } : { imageUrl: null })
+
+  const handleBgUpload = async (file) => {
+    if (!file) return
+    setBgBusy(true); setBgError('')
+    try {
+      const ext = (file.name.split('.').pop() || (bgAssetType === 'video' ? 'mp4' : 'jpg')).toLowerCase()
+      const res = await fetch(`${YEORI_SERVER}/api/upload-graphic-background?epNum=${epNum}&cutNo=${cut.no}&ext=${ext}`, {
+        method: 'POST', body: file,
+      })
+      const data = await res.json()
+      if (!res.ok || data.error) throw new Error(data.error || '업로드 실패')
+      if (bgAssetType === 'video') await saveBg({ type: 'video', videoUrl: data.url, source: 'upload', attribution: file.name })
+      else await saveBg({ type: 'image', imageUrl: data.url, source: 'upload', attribution: file.name })
+    } catch (err) {
+      setBgError(err.message)
+      setBgBusy(false)
+    }
+  }
+
+  // 템플릿+스타일이 정해지면 지금 효과값(기본값+저장된 덮어쓰기 병합)을 받아온다.
+  useEffect(() => {
+    if (aiMode || !selectedType || !selectedStyle) return
+    setDesignLoading(true)
+    setDesignError('')
+    setPreviewHtml('')
+    fetch(`${YEORI_SERVER}/api/graphic-template-settings?type=${encodeURIComponent(selectedType)}&style=${encodeURIComponent(selectedStyle)}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) throw new Error(data.error)
+        setDesign({ layout: data.layout || {}, colors: data.colors || {} })
+      })
+      .catch(err => setDesignError(err.message))
+      .finally(() => setDesignLoading(false))
+  }, [aiMode, selectedType, selectedStyle])
+
+  const updateDesign = (group, key, value) => {
+    setDesign(prev => ({ ...prev, [group]: { ...(prev?.[group] || {}), [key]: value } }))
+  }
+
+  const handleSaveDesign = async () => {
+    setDesignSaving(true)
+    setDesignError('')
+    try {
+      const res = await fetch(`${YEORI_SERVER}/api/graphic-template-settings`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: selectedType, style: selectedStyle, layout: design?.layout, colors: design?.colors }),
+      })
+      const data = await res.json()
+      if (!res.ok || data.error) throw new Error(data.error || '저장 실패')
+      setDesign({ layout: data.layout, colors: data.colors })
+    } catch (err) {
+      setDesignError(err.message)
+    } finally {
+      setDesignSaving(false)
+    }
+  }
+
+  const handleResetDesign = async () => {
+    setDesignSaving(true)
+    setDesignError('')
+    try {
+      const res = await fetch(`${YEORI_SERVER}/api/graphic-template-settings/reset`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: selectedType, style: selectedStyle }),
+      })
+      const data = await res.json()
+      if (!res.ok || data.error) throw new Error(data.error || '초기화 실패')
+      setDesign({ layout: data.layout, colors: data.colors })
+      setPreviewHtml('')
+    } catch (err) {
+      setDesignError(err.message)
+    } finally {
+      setDesignSaving(false)
+    }
+  }
+
+  // 실제 캡처(Puppeteer) 없이 지금 입력된 내용+디자인 설정으로 HTML만 렌더해서 iframe에 보여준다.
+  const handlePreview = async () => {
+    setPreviewLoading(true)
+    setDesignError('')
+    try {
+      const merged = {
+        title: fields.title || cutText, subtitle: fields.subtitle || '', info: fields.info || '',
+        ...(bgCurrent?.type === 'video' && bgCurrent?.videoUrl ? { backgroundVideo: bgCurrent.videoUrl } : {}),
+        ...(bgCurrent?.type !== 'video' && bgCurrent?.imageUrl ? { backgroundImage: bgCurrent.imageUrl } : {}),
+      }
+      const res = await fetch(`${YEORI_SERVER}/api/graphic-template-preview`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: selectedType, style: selectedStyle, fields: merged, duration: cutDuration(cut) }),
+      })
+      const data = await res.json()
+      if (!res.ok || data.error) throw new Error(data.error || '미리보기 실패')
+      setPreviewHtml(data.html)
+    } catch (err) {
+      setDesignError(err.message)
+    } finally {
+      setPreviewLoading(false)
+    }
+  }
 
   const handleGenerate = async () => {
     setGenerating(true)
@@ -4793,6 +4985,203 @@ function GraphicCardGenerator({ cut, epNum, onGenerated }) {
                       }}
                     />
                   ))}
+                </div>
+
+                {/* 배경 꾸미기(이미지/영상 · 검색/업로드/URL) — 컷 단위 */}
+                <div style={{ border: '1px solid var(--border)', borderRadius: 10, marginBottom: 14, overflow: 'hidden' }}>
+                  <button
+                    onClick={() => setBgOpen(v => !v)}
+                    style={{
+                      width: '100%', textAlign: 'left', padding: '10px 14px',
+                      background: 'var(--bg-input)', border: 'none', color: 'var(--text)',
+                      fontSize: 13, cursor: 'pointer', display: 'flex', justifyContent: 'space-between',
+                    }}
+                  >
+                    <span>🖼️ 배경 꾸미기{bgCurrent ? ` — 설정됨(${bgCurrent.type === 'video' ? '영상' : '이미지'} · ${bgCurrent.source})` : ' — 없음(단색)'}</span>
+                    <span>{bgOpen ? '▲' : '▼'}</span>
+                  </button>
+                  {bgOpen && (
+                    <div style={{ padding: 14 }}>
+                      {bgError && <div className={s.resultError} style={{ marginBottom: 10 }}>❌ {bgError}</div>}
+
+                      {bgCurrent && (bgCurrent.imageUrl || bgCurrent.videoUrl) && (
+                        <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 14 }}>
+                          {bgCurrent.type === 'video'
+                            ? <video src={bgCurrent.videoUrl} muted autoPlay loop playsInline style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border)' }} />
+                            : <img src={bgCurrent.imageUrl} alt="배경" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border)' }} />}
+                          <div style={{ fontSize: 12, color: 'var(--text-dim)', flex: 1 }}>
+                            {bgCurrent.type === 'video' ? '영상' : '이미지'} · {bgCurrent.source === 'pexels' ? `Pexels · ${bgCurrent.attribution}` : bgCurrent.source === 'upload' ? `업로드 · ${bgCurrent.attribution}` : 'URL 지정'}
+                          </div>
+                          <button onClick={handleBgRemove} disabled={bgBusy} className={s.previewBtn} style={{ fontSize: 12 }}>제거</button>
+                        </div>
+                      )}
+
+                      <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+                        {[['image', '🖼 이미지'], ['video', '🎞 영상']].map(([t, label]) => (
+                          <button key={t} onClick={() => { setBgAssetType(t); setBgResults([]) }} className={s.previewBtn}
+                            style={{ flex: 1, fontSize: 12, fontWeight: 700, borderColor: bgAssetType === t ? 'var(--blue)' : 'var(--border)', background: bgAssetType === t ? 'rgba(59,130,246,.18)' : 'transparent' }}>
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+
+                      <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+                        {[['search', '🔍 검색'], ['upload', '📁 업로드'], ['url', '🔗 URL']].map(([m, label]) => (
+                          <button key={m} onClick={() => setBgMode(m)} className={s.previewBtn}
+                            style={{ flex: 1, fontSize: 12, borderColor: bgMode === m ? 'var(--accent)' : 'var(--border)', background: bgMode === m ? 'var(--accent-glow)' : 'transparent' }}>
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+
+                      {bgMode === 'search' && (
+                        <>
+                          <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+                            <input
+                              value={bgQuery} onChange={e => setBgQuery(e.target.value)}
+                              onKeyDown={e => e.key === 'Enter' && handleBgSearch()}
+                              placeholder="예: seoul night street, cafe window"
+                              style={{ flex: 1, background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px', color: 'var(--text)', fontSize: 13 }}
+                            />
+                            <button onClick={handleBgSearch} disabled={bgSearching} className={s.previewBtn}>
+                              {bgSearching ? '검색 중…' : '검색'}
+                            </button>
+                          </div>
+                          <div style={{ fontSize: 11, color: 'var(--text-dim)', marginBottom: 8 }}>
+                            Pexels 무료 스톡 {bgAssetType === 'video' ? '영상' : '사진'} 검색(영어 검색어 권장)
+                          </div>
+                          {bgResults.length > 0 && (
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, maxHeight: 220, overflowY: 'auto' }}>
+                              {bgResults.map(r => (
+                                <div key={r.id} style={{ position: 'relative' }}>
+                                  <img
+                                    src={r.thumbnail} alt={r.title} title={r.title}
+                                    onClick={() => !bgBusy && handleBgPick(r)}
+                                    style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: 6, cursor: 'pointer', border: '2px solid transparent' }}
+                                    onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent)'}
+                                    onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}
+                                  />
+                                  {r.type === 'video' && <span style={{ position: 'absolute', bottom: 2, right: 4, fontSize: 14 }}>▶️</span>}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </>
+                      )}
+
+                      {bgMode === 'upload' && (
+                        <input
+                          type="file" accept={bgAssetType === 'video' ? 'video/*' : 'image/*'}
+                          disabled={bgBusy}
+                          onChange={e => handleBgUpload(e.target.files?.[0])}
+                          style={{ fontSize: 13, color: 'var(--text)' }}
+                        />
+                      )}
+
+                      {bgMode === 'url' && (
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <input
+                            value={bgUrlInput} onChange={e => setBgUrlInput(e.target.value)}
+                            placeholder={bgAssetType === 'video' ? 'https://… 영상 URL(mp4)' : 'https://… 이미지 URL'}
+                            style={{ flex: 1, background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px', color: 'var(--text)', fontSize: 13 }}
+                          />
+                          <button onClick={handleBgUrlApply} disabled={bgBusy} className={s.previewBtn}>적용</button>
+                        </div>
+                      )}
+                      {bgAssetType === 'video' && (
+                        <div style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 8 }}>
+                          영상 배경은 저장 시 서버가 로컬로 내려받아 둔다(ffmpeg 합성용) — 검색/업로드 직후 몇 초 걸릴 수 있음.
+                          등장 애니메이션(페이드인) 없이 바로 보이는 상태로 합성된다.
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* 디자인 세부 설정(크기·위치·색상) */}
+                <div style={{ border: '1px solid var(--border)', borderRadius: 10, marginBottom: 20, overflow: 'hidden' }}>
+                  <button
+                    onClick={() => setDesignOpen(v => !v)}
+                    style={{
+                      width: '100%', textAlign: 'left', padding: '10px 14px',
+                      background: 'var(--bg-input)', border: 'none', color: 'var(--text)',
+                      fontSize: 13, cursor: 'pointer', display: 'flex', justifyContent: 'space-between',
+                    }}
+                  >
+                    <span>⚙️ 디자인 세부 설정(크기·위치·색상){designLoading ? ' — 불러오는 중…' : ''}</span>
+                    <span>{designOpen ? '▲' : '▼'}</span>
+                  </button>
+                  {designOpen && (
+                    <div style={{ padding: 14 }}>
+                      {designError && <div className={s.resultError} style={{ marginBottom: 10 }}>❌ {designError}</div>}
+                      {design && (
+                        <>
+                          <div style={{ fontSize: 12, color: 'var(--accent-light)', marginBottom: 6 }}>색상</div>
+                          <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 14 }}>
+                            {Object.entries(design.colors || {}).map(([key, val]) => (
+                              <label key={key} style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, color: 'var(--text-dim)' }}>
+                                {GRAPHIC_COLOR_LABELS[key] || key}
+                                <input
+                                  type="color"
+                                  value={/^#[0-9a-f]{6}$/i.test(val) ? val : '#000000'}
+                                  onChange={e => updateDesign('colors', key, e.target.value)}
+                                  style={{ width: 44, height: 28, padding: 0, border: '1px solid var(--border)', borderRadius: 4, background: 'none' }}
+                                />
+                              </label>
+                            ))}
+                          </div>
+
+                          <div style={{ fontSize: 12, color: 'var(--accent-light)', marginBottom: 6 }}>크기 · 위치</div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+                            {Object.entries(design.layout || {}).map(([key, val]) => (
+                              <label key={key} style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, color: 'var(--text-dim)' }}>
+                                {GRAPHIC_LAYOUT_LABELS[key] || key}
+                                <input
+                                  type="number"
+                                  value={val}
+                                  onChange={e => updateDesign('layout', key, Number(e.target.value))}
+                                  style={{
+                                    background: 'var(--bg-input)', border: '1px solid var(--border)',
+                                    borderRadius: 6, padding: '6px 8px', color: 'var(--text)', fontSize: 13,
+                                  }}
+                                />
+                              </label>
+                            ))}
+                          </div>
+
+                          <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
+                            <button onClick={handlePreview} disabled={previewLoading} className={s.previewBtn}>
+                              {previewLoading ? '렌더링 중…' : '👁 미리보기'}
+                            </button>
+                            <button onClick={handleSaveDesign} disabled={designSaving} className={s.previewBtn}>
+                              {designSaving ? '저장 중…' : '💾 이 스타일에 저장'}
+                            </button>
+                            <button onClick={handleResetDesign} disabled={designSaving} className={s.previewBtn}>
+                              ↺ 기본값으로
+                            </button>
+                          </div>
+
+                          {previewHtml && (
+                            <div style={{
+                              width: '100%', maxWidth: 260, aspectRatio: '9/16',
+                              overflow: 'hidden', borderRadius: 10, border: '1px solid var(--border)',
+                              background: '#000',
+                            }}>
+                              <iframe
+                                title="graphic-preview"
+                                srcDoc={previewHtml}
+                                style={{ width: 1080, height: 1920, border: 'none', transform: 'scale(0.2407)', transformOrigin: 'top left' }}
+                              />
+                            </div>
+                          )}
+                          <div style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 8 }}>
+                            "저장"은 이 템플릿·스타일 조합({selectedType}/{selectedStyle})에 적용되고, 대본의
+                            <code> GTPL: {selectedType}/{selectedStyle}</code>를 쓰는 다른 컷에도 똑같이 반영됩니다.
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
               </>
             )}

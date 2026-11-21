@@ -114,54 +114,120 @@ ${[10,22,34,46,58,70,82,94].map((l,i)=>`
       }
     },
     fields: ['title', 'subtitle', 'info'],
-    generate: (fields, colors, duration, dims = { w: 1920, h: 1080 }) => `
+    // 크기·위치 조절용 설정값 — 숫자만 바꿔서 저장하면 다음 run-making(서버 재시작 포함)에
+    // 그대로 반영된다. 색상은 위 styles.<style名>.colors 에서 따로 조절.
+    layout: {
+      titleFontSize: 88,          // 제목 글자 크기(px)
+      titleLetterSpacing: 4,      // 제목 자간(px)
+      titleMarginBottom: 32,      // 제목-부제 사이 간격(px)
+      titleMaxWidthPercent: 86,   // 제목이 화면 가로의 몇 %까지 차지하면 줄바꿈할지(세로 카드에서 잘림 방지)
+      subtitleFontSize: 44,       // 부제 글자 크기(px)
+      subtitleLetterSpacing: 3,   // 부제 자간(px)
+      subtitleMaxWidthPercent: 86,
+      infoFontSize: 28,           // 하단 보조문구 글자 크기(px)
+      infoBottomPercent: 10,      // 하단 보조문구 위치(화면 아래에서 몇 % 지점)
+      infoLetterSpacing: 2,
+      accentWidth: 80,            // 제목 위 포인트 라인 길이(px)
+      accentHeight: 6,            // 포인트 라인 두께(px)
+      accentMarginBottom: 48,     // 포인트 라인-제목 사이 간격(px)
+      overlayOpacity: 0.45,       // 배경(이미지/영상) 위 어둡게 깔아 글자 잘 보이게 하는 정도(0~1, 배경 없으면 무관)
+    },
+    generate: (fields, colors, duration, dims = { w: 1920, h: 1080 }, layout = {}) => {
+      const L = {
+        titleFontSize: 88, titleLetterSpacing: 4, titleMarginBottom: 32, titleMaxWidthPercent: 86,
+        subtitleFontSize: 44, subtitleLetterSpacing: 3, subtitleMaxWidthPercent: 86,
+        infoFontSize: 28, infoBottomPercent: 10, infoLetterSpacing: 2,
+        accentWidth: 80, accentHeight: 6, accentMarginBottom: 48, overlayOpacity: 0.45,
+        transparentBackground: false,   // true면 html/body를 투명 처리 — 영상 배경을 ffmpeg로
+                                         // 바깥에서 합성할 때(proxy.js renderGraphicOverVideo) 캡처용으로만 씀
+        ...layout,
+      }
+      // 배경 이미지(검색/업로드/URL로 고른 컷별 배경, proxy.js가 fields.backgroundImage로 주입)가
+      // 있으면 그 위에 반투명 어둡게 깔고 그 위에 글자를 얹는다. 없으면 기존처럼 단색/그라디언트.
+      const bgUrl = String(fields.backgroundImage || '').trim()
+      const cssSafeUrl = bgUrl.replace(/['"\\]/g, '')
+      // 배경 영상 — 실제 최종 영상은 proxy.js가 ffmpeg로 합성(아래 .video-bg 엘리먼트는 안 그림,
+      // transparentBackground 캡처 모드로 글자만 투명 PNG로 뽑아감). 여기 <video> 태그는
+      // 메이킹 탭 미리보기(iframe)에서만 실제로 재생되어 "화면에 바로 반영"되는 걸 보여준다.
+      const bgVideoUrl = String(fields.backgroundVideo || '').trim()
+      const cssSafeVideoUrl = bgVideoUrl.replace(/['"\\]/g, '')
+      const hasDim = bgUrl || bgVideoUrl || L.transparentBackground
+      return `
 <!DOCTYPE html><html><head><meta charset="UTF-8">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-body {
+html, body {
   width:${dims.w}px; height:${dims.h}px;
-  background:${colors.bg.startsWith('#6')?`linear-gradient(135deg,${colors.bg},#764ba2)`:colors.bg};
-  display:flex; flex-direction:column;
-  align-items:center; justify-content:center;
+  position:relative; overflow:hidden;
+  background:${L.transparentBackground ? 'transparent' : (colors.bg.startsWith('#6')?`linear-gradient(135deg,${colors.bg},#764ba2)`:colors.bg)};
   font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;
 }
+.bg-image {
+  position:absolute; inset:0;
+  background-image:url('${cssSafeUrl}');
+  background-size:cover; background-position:center;
+}
+.bg-video {
+  position:absolute; inset:0;
+  width:100%; height:100%; object-fit:cover;
+}
+.bg-overlay {
+  position:absolute; inset:0;
+  background:rgba(0,0,0,${L.overlayOpacity});
+}
+.content {
+  position:relative; width:100%; height:100%;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+}
 .accent-line {
-  width:80px; height:6px;
+  width:${L.accentWidth}px; height:${L.accentHeight}px;
   background:${colors.accent};
-  margin-bottom:48px;
+  margin-bottom:${L.accentMarginBottom}px;
   animation:expand 1s ease forwards;
 }
 @keyframes expand {
-  from { width:0; } to { width:80px; }
+  from { width:0; } to { width:${L.accentWidth}px; }
 }
 .title {
-  font-size:88px; font-weight:900;
+  font-size:${L.titleFontSize}px; font-weight:900;
   color:${colors.main}; text-align:center;
-  line-height:1.2; letter-spacing:4px;
-  margin-bottom:32px;
+  line-height:1.2; letter-spacing:${L.titleLetterSpacing}px;
+  margin-bottom:${L.titleMarginBottom}px;
+  max-width:${L.titleMaxWidthPercent}%;
   animation:fadeIn 0.8s ease forwards;
 }
 .subtitle {
-  font-size:44px; color:${colors.sub};
-  text-align:center; letter-spacing:3px;
+  font-size:${L.subtitleFontSize}px; color:${colors.sub};
+  text-align:center; letter-spacing:${L.subtitleLetterSpacing}px;
+  max-width:${L.subtitleMaxWidthPercent}%;
   animation:fadeIn 0.8s ease forwards;
   animation-delay:0.4s; opacity:0;
 }
 .info {
-  position:absolute; bottom:10%;
-  font-size:28px; color:${colors.sub};
-  opacity:0.7; letter-spacing:2px;
+  position:absolute; bottom:${L.infoBottomPercent}%;
+  font-size:${L.infoFontSize}px; color:${colors.sub};
+  opacity:0.7; letter-spacing:${L.infoLetterSpacing}px;
 }
 @keyframes fadeIn {
   from { opacity:0; transform:translateY(20px); }
   to { opacity:1; transform:translateY(0); }
 }
 </style></head><body>
+${L.transparentBackground
+  ? ''   // 캡처 전용 — 배경은 ffmpeg가 바깥에서 입힌다, 여기선 글자+어둡게만 투명 PNG로
+  : bgVideoUrl
+    ? `<video class="bg-video" src="${cssSafeVideoUrl}" autoplay loop muted playsinline></video>`
+    : bgUrl ? '<div class="bg-image"></div>' : ''}
+${hasDim ? '<div class="bg-overlay"></div>' : ''}
+<div class="content">
 <div class="accent-line"></div>
 <div class="title">${fields.title||''}</div>
 <div class="subtitle">${fields.subtitle||''}</div>
 <div class="info">${fields.info||''}</div>
+</div>
 </body></html>`
+    },
   },
 
   'stat-card': {
@@ -481,14 +547,18 @@ const MD_RECOMMEND = {
   'MD_INT': { type: 'stat-card', style: 'infographic' },   // 몰입·진지함 — 분석적으로
 };
 
-export function generateHTML(type, style, fields, duration = 10, dims = { w: 1920, h: 1080 }) {
+// overrides = { layout, colors } — 메이킹 탭에서 사람이 저장한 덮어쓰기 값(proxy.js의
+// effectiveTemplateConfig가 만들어 넘겨줌). 생략하면 템플릿 기본값 그대로.
+export function generateHTML(type, style, fields, duration = 10, dims = { w: 1920, h: 1080 }, overrides = {}) {
   const tmpl = TEMPLATES[type];
   if (!tmpl) throw new Error(`Unknown template: ${type}`);
   // 스타일 생략 시 그 템플릿의 첫 스타일로 (GTPL: "relation" 처럼 스타일 안 적어도 됨)
   const styleKey = style && tmpl.styles[style] ? style : Object.keys(tmpl.styles)[0];
   const styleConf = tmpl.styles[styleKey];
   if (!styleConf) throw new Error(`Unknown style: ${style}`);
-  return tmpl.generate(fields || {}, styleConf.colors, duration, dims);
+  const colors = { ...styleConf.colors, ...(overrides.colors || {}) };
+  const layout = { ...(tmpl.layout || {}), ...(overrides.layout || {}) };
+  return tmpl.generate(fields || {}, colors, duration, dims, layout);
 }
 
 export function getRecommendation(mdCode) {

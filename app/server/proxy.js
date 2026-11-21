@@ -29,7 +29,7 @@ import { getUsedCount, recordUsage } from './lib/creditUsage.js'
 import { appendAttempt as appendAcademyAttempt, promoteAttempt as promoteAcademyAttempt, summarize as summarizeAcademy, readAttempts as readAcademyAttempts } from './lib/academyLog.js'
 import { recordPaidUsage, summarizeMonth, checkBudget, setUsdKrw } from './lib/paidUsage.js'
 import { generateVeoVideo, VEO_MODELS, VEO_DEFAULT_TIER, VEO_ALLOWED_DURATIONS } from './lib/veoApi.js'
-import { generateHTML, getRecommendation, getTemplateList } from './lib/graphicTemplates.js'
+import { generateHTML, getRecommendation, getTemplateList, TEMPLATES } from './lib/graphicTemplates.js'
 import { parseGtpl, isGtplValid, fieldsFromCut, buildGraphicPrompt, validateGraphicHtml, buildImageSequenceHtml } from './lib/graphicGen.js'
 import { syncLatestStatusToNotion } from './lib/statusMirror.js'
 import { postLeaderLog } from './lib/leaderLog.js'
@@ -4496,6 +4496,16 @@ app.get('/api/source-search', async (req, res) => {
   }
 })
 
+// 원격 URL → 로컬 파일로 받기(공용). /api/source-download와 아래 배경 영상 저장이 같이 쓴다.
+async function downloadUrlToFile(url, destPath) {
+  const r = await fetch(url)
+  if (!r.ok) throw new Error(`다운로드 실패: HTTP ${r.status}`)
+  const buf = Buffer.from(await r.arrayBuffer())
+  fs.mkdirSync(path.dirname(destPath), { recursive: true })
+  fs.writeFileSync(destPath, buf)
+  return buf.length
+}
+
 // POST /api/source-download — 검색 결과의 실제 파일을 서버로 다운로드해 컷 작업용
 // 소스 폴더에 저장. Pexels CDN 파일 자체는 인증 없이 받을 수 있다(API 키는 검색에만 필요).
 app.post('/api/source-download', async (req, res) => {
@@ -4506,15 +4516,10 @@ app.post('/api/source-download', async (req, res) => {
   const safeFilename = String(filename).replace(/[/\\:*?"<>|]/g, '_')
   // 메이킹 탭 소스 규약: downloads/making/ep{N}/source/{studio|upload|stock}
   const dir = path.join(mp.makingDir(epNum), 'source', 'stock')
-  fs.mkdirSync(dir, { recursive: true })
   const localPath = path.join(dir, safeFilename)
-
   try {
-    const r = await fetch(url)
-    if (!r.ok) throw new Error(`다운로드 실패: HTTP ${r.status}`)
-    const buf = Buffer.from(await r.arrayBuffer())
-    fs.writeFileSync(localPath, buf)
-    res.json({ success: true, localPath, sizeBytes: buf.length })
+    const sizeBytes = await downloadUrlToFile(url, localPath)
+    res.json({ success: true, localPath, sizeBytes })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -5192,7 +5197,7 @@ function graphicMotionVf(motion, dur, W = 1080, H = 1920, fps = 30) {
   return vf
 }
 
-async function runGraphicCapture({ html, cutNo, epNum, duration, motion, outputPath, skipMotionRecord, method = 'graphic', selfText = false }) {
+async function runGraphicCapture({ html, cutNo, epNum, duration, motion, outputPath, skipMotionRecord, method = 'graphic', selfText = false, bgVideoPath = '' }) {
   const dur = parseInt(duration, 10) || 5
   const padded = String(cutNo).padStart(2, '0')
   const animated = ANIMATED_MOTIONS.has(motion)
@@ -5207,6 +5212,16 @@ async function runGraphicCapture({ html, cutNo, epNum, duration, motion, outputP
   const imagePath = outputPath
     ? outputPath.replace(/\.mp4$/i, '.png')
     : path.join(videoDir, `cut_${padded}_graphic.png`)
+
+  // 영상 배경(BROLL/화면녹화 쪽에서 받은 로컬 mp4) 위에 글자를 합성하는 별도 경로 —
+  // 여기 html은 이미 transparentBackground 캡처용(글자+어둡게만)으로 생성돼 있다
+  // (resolveGraphicFromGtpl/generate-graphic-html가 layout.transparentBackground=true로
+  // generateHTML을 호출했음). CSS 애니메이션 프레임 스텝은 하지 않고 등장이 끝난 정지
+  // 상태로 한 번만 투명 PNG로 뽑아 ffmpeg로 배경 영상에 얹는다.
+  if (bgVideoPath) {
+    return renderGraphicOverVideo({ html, bgVideoPath, videoPath, imagePath, dur, CW, CH, epNum, cutNo, method, selfText, skipMotionRecord })
+  }
+
   // motion:'self' 는 HTML 이 스스로 애니메이션하므로 템플릿 CSS 를 주입하지 않는다.
   const pageHtml = (animated && motion !== 'self') ? injectAnimationCss(html, motion, dur) : html
 
@@ -5283,6 +5298,79 @@ async function runGraphicCapture({ html, cutNo, epNum, duration, motion, outputP
   }
 
   return { imagePath, videoPath, animated: !!animated }
+}
+
+// ── 영상 배경 위 텍스트 합성(2026-11-21) — BROLL/화면녹화 쪽에서 받은 로컬 mp4를
+// 배경으로 쓰고, 글자(제목/부제/하단문구+어둡게)는 Puppeteer로 투명 PNG 한 장만 뽑아
+// ffmpeg overlay로 얹는다. PIP 합성(renderPipComposite)과 같은 overlay 패턴이되, 저쪽은
+// 영상 위에 영상(불투명 박스)이고 이쪽은 영상 위에 알파 PNG라는 점이 다르다.
+// 등장 애니메이션(페이드인 등)은 일부러 생략 — 배경 영상 자체가 이미 움직이므로 매
+// 프레임 다시 그릴 필요가 적고(프레임 시퀀스 방식보다 훨씬 가볍다), HTML/ffmpeg 두
+// 타이밍을 맞출 필요도 없어진다. 배경 영상이 컷 길이보다 짧으면 looped, 길면 앞부분만 사용.
+async function renderGraphicOverVideo({ html, bgVideoPath, videoPath, imagePath, dur, CW, CH, epNum, cutNo, method, selfText, skipMotionRecord }) {
+  if (!fs.existsSync(bgVideoPath)) {
+    const e = new Error(`배경 영상 파일을 찾을 수 없습니다: ${bgVideoPath}`); e.statusCode = 400; throw e
+  }
+  const overlayPng = path.join(os.tmpdir(), `gcut_overlay_${cutNo}_${Date.now()}.png`)
+  let browser
+  try {
+    browser = await puppeteer.launch({
+      executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+      headless: true,
+    })
+    const page = await browser.newPage()
+    await page.setViewport({ width: CW, height: CH })
+    await page.setContent(html, { waitUntil: 'networkidle0' })
+    try { await page.evaluate(() => document.fonts && document.fonts.ready) } catch { /* noop */ }
+    // 등장 애니메이션이 있어도 전부 끝난 "정착" 상태로 고정해서 찍는다(정적 오버레이이므로).
+    try { await page.evaluate(() => { document.getAnimations().forEach(a => { try { a.finish() } catch (e) { /* noop */ } }) }) } catch { /* noop */ }
+    await page.screenshot({ path: overlayPng, omitBackground: true })
+  } catch (err) {
+    const e = new Error(`텍스트 오버레이 렌더링 실패: ${err.message}`); e.statusCode = 500; throw e
+  } finally {
+    if (browser) await browser.close()
+  }
+
+  try {
+    const bgDur = await getMediaDuration(bgVideoPath) || dur
+    const needsLoop = bgDur < dur
+    await new Promise((resolve, reject) => {
+      const args = [
+        '-y',
+        ...(needsLoop ? ['-stream_loop', '-1'] : []),
+        '-i', bgVideoPath,
+        '-loop', '1', '-i', overlayPng,
+        '-filter_complex',
+        `[0:v]scale=${CW}:${CH}:force_original_aspect_ratio=increase,crop=${CW}:${CH},setsar=1,fps=30[bg];` +
+        `[1:v]scale=${CW}:${CH}[ov];` +
+        `[bg][ov]overlay=0:0:shortest=1[vout]`,
+        '-map', '[vout]', '-t', String(dur), '-an',
+        '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-r', '30', '-g', '30',
+        '-movflags', '+faststart',
+        videoPath,
+      ]
+      const proc = spawn('ffmpeg', args, { windowsHide: true })
+      let errBuf = ''
+      proc.stderr.on('data', d => { errBuf += d.toString() })
+      proc.on('close', code => code === 0 ? resolve() : reject(new Error(`ffmpeg 종료 코드 ${code}: ${errBuf.slice(-400)}`)))
+      proc.on('error', reject)
+    })
+    // 대표 스틸(썸네일) — 합성 결과 mp4의 첫 프레임을 그대로 추출(기존 관례와 동일).
+    await new Promise((resolve) => {
+      const proc = spawn('ffmpeg', ['-y', '-i', videoPath, '-frames:v', '1', imagePath], { windowsHide: true })
+      proc.on('close', () => resolve())
+      proc.on('error', () => resolve())
+    })
+  } catch (err) {
+    const e = new Error(`영상 배경 합성 실패: ${err.message}`); e.statusCode = 500; throw e
+  } finally {
+    try { fs.unlinkSync(overlayPng) } catch { /* noop */ }
+  }
+
+  if (!skipMotionRecord) {
+    recordCutMotion(epNum, cutNo, { method, selfText: !!selfText, motion: 'video-bg', baked: true, duration: dur })
+  }
+  return { imagePath, videoPath, animated: false }
 }
 
 app.post('/api/graphic-capture', async (req, res) => {
@@ -5458,22 +5546,33 @@ app.post('/api/generate-graphic-html', async (req, res) => {
     const filePath = path.join(dir, fileName)
 
     let genMethod = ''
+    let genBgVideoPath = ''
     if (gtpl) {
       // 통합 경로 — 대본 GTPL: 과 동일 로직(템플릿/ai/ai-template). 저장까지 여기서.
       const cut = { ...(ep.cuts || []).find(c => c.no === Number(cutNo)), no: Number(cutNo), graphicTemplate: gtpl }
       const g = await resolveGraphicFromGtpl({ epNum, cut, retryNote })
       genMethod = g.method
+      genBgVideoPath = g.bgVideoPath || ''
     } else {
       // 레거시 템플릿 경로 — 클라 fields 가 컷 자동채움 위에 덮어씀
       const cut = (ep.cuts || []).find(c => c.no === Number(cutNo)) || {}
-      const merged = { ...fieldsFromCut(cut, type), ...(fields || {}) }
-      const html = generateHTML(type, style, merged, duration, cutDims(ep.episode || {}))
+      const bg = getCutBackground(episodeCode, Number(cutNo))
+      const cfg = effectiveTemplateConfig(type, style)
+      const isVideoBg = bg?.type === 'video' && bg.localPath
+      if (isVideoBg) genBgVideoPath = bg.localPath
+      const merged = { ...fieldsFromCut(cut, type), ...(!isVideoBg && bg?.type !== 'video' && bg?.imageUrl ? { backgroundImage: bg.imageUrl } : {}), ...(fields || {}) }
+      const layoutWithBg = {
+        ...cfg.layout,
+        ...(bg?.overlayOpacity != null ? { overlayOpacity: bg.overlayOpacity } : {}),
+        ...(isVideoBg ? { transparentBackground: true } : {}),
+      }
+      const html = generateHTML(type, style, merged, duration, cutDims(ep.episode || {}), { layout: layoutWithBg, colors: cfg.colors })
       fs.writeFileSync(filePath, html, 'utf-8')
-      genMethod = `template:${type}${style ? '/' + style : ''}`
+      genMethod = `template:${type}${style ? '/' + style : ''}${isVideoBg ? ' · video-bg' : ''}`
     }
 
     if (autoGenerate) {
-      const makeResult = await makeGraphicCutForMcp({ epNum, cutNo, htmlFile: fileName, motion: 'self' })
+      const makeResult = await makeGraphicCutForMcp({ epNum, cutNo, htmlFile: fileName, motion: 'self', bgVideoPath: genBgVideoPath })
       return res.json({ success: true, filePath, fileName, method: genMethod, makeResult })
     }
     res.json({ success: true, filePath, fileName, method: genMethod })
@@ -5501,6 +5600,160 @@ app.post('/api/graphic-ai-preview', async (req, res) => {
 
 app.get('/api/graphic-recommend', (req, res) => {
   res.json(getRecommendation(req.query.md))
+})
+
+// ── 그래픽 카드 디자인 설정(크기·위치·색상) — 메이킹 탭 ⚙️ 패널 ──────────────────
+// GET: 지금 효과적으로 쓰일 값(코드 기본값 + 저장된 덮어쓰기 병합)을 돌려줌(입력창 초기값용).
+app.get('/api/graphic-template-settings', (req, res) => {
+  const { type, style } = req.query || {}
+  if (!type) return res.status(400).json({ error: 'type 필요' })
+  if (!TEMPLATES[type]) return res.status(404).json({ error: `알 수 없는 템플릿: ${type}` })
+  const cfg = effectiveTemplateConfig(type, style)
+  res.json({ type, style: cfg.styleKey, layout: cfg.layout, colors: cfg.colors })
+})
+
+// POST: type+style 조합으로 layout/colors 덮어쓰기를 저장. 파일 기반이라 서버 재시작 없이
+// 다음 생성(run-making 포함)부터 바로 반영된다.
+app.post('/api/graphic-template-settings', (req, res) => {
+  const { type, style, layout, colors } = req.body || {}
+  if (!type) return res.status(400).json({ error: 'type 필요' })
+  const tmpl = TEMPLATES[type]
+  if (!tmpl) return res.status(404).json({ error: `알 수 없는 템플릿: ${type}` })
+  const styleKey = style && tmpl.styles[style] ? style : Object.keys(tmpl.styles)[0]
+  try {
+    const all = loadGraphicSettings()
+    all[type] = all[type] || {}
+    all[type][styleKey] = {
+      layout: { ...(all[type][styleKey]?.layout || {}), ...(layout || {}) },
+      colors: { ...(all[type][styleKey]?.colors || {}), ...(colors || {}) },
+    }
+    saveGraphicSettings(all)
+    const cfg = effectiveTemplateConfig(type, styleKey)
+    res.json({ success: true, type, style: styleKey, layout: cfg.layout, colors: cfg.colors })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// 저장된 덮어쓰기를 그 type+style만 기본값으로 되돌림.
+app.post('/api/graphic-template-settings/reset', (req, res) => {
+  const { type, style } = req.body || {}
+  if (!type) return res.status(400).json({ error: 'type 필요' })
+  const tmpl = TEMPLATES[type]
+  if (!tmpl) return res.status(404).json({ error: `알 수 없는 템플릿: ${type}` })
+  const styleKey = style && tmpl.styles[style] ? style : Object.keys(tmpl.styles)[0]
+  try {
+    const all = loadGraphicSettings()
+    if (all[type]) delete all[type][styleKey]
+    saveGraphicSettings(all)
+    const cfg = effectiveTemplateConfig(type, styleKey)
+    res.json({ success: true, type, style: styleKey, layout: cfg.layout, colors: cfg.colors })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// 실제 영상 캡처 없이 HTML만 즉시 렌더해서 돌려준다(메이킹 탭이 iframe srcDoc으로 바로
+// 보여줌) — 값 하나 바꿀 때마다 Puppeteer 캡처를 기다릴 필요 없이 즉시 미리보기.
+app.post('/api/graphic-template-preview', (req, res) => {
+  try {
+    const { type, style, fields, duration, dims } = req.body || {}
+    if (!type) return res.status(400).json({ error: 'type 필요' })
+    const d = dims && dims.w && dims.h ? dims : { w: 1080, h: 1920 }
+    const html = generateHTML(type, style, fields || {}, duration || 8, d, effectiveTemplateConfig(type, style))
+    res.json({ success: true, html, dims: d })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
+// ── 컷별 배경 이미지 — 메이킹 탭 "🖼 배경 이미지" 패널 ─────────────────────────
+// 이미지 검색 자체는 기존 GET /api/source-search?type=image(Pexels)를 그대로 재사용한다.
+// 여기는 "이 컷엔 어떤 배경을 쓸지" 선택 결과만 저장/조회한다.
+app.get('/api/graphic-cut-background', (req, res) => {
+  const { epNum, cutNo } = req.query || {}
+  if (epNum == null || cutNo == null) return res.status(400).json({ error: 'epNum, cutNo 필요' })
+  try {
+    const { epId, ep } = findEpisodeByNumOrThrow(epNum)
+    const episodeCode = resolveEpisodeCode(ep.episode, epId)
+    res.json({ background: getCutBackground(episodeCode, Number(cutNo)) })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
+app.post('/api/graphic-cut-background', async (req, res) => {
+  // type:'image' → imageUrl(원격 URL도 OK, CSS background-image로 그대로 씀, 다운로드 불필요).
+  // type:'video' → videoUrl 필요. ffmpeg가 실제 파일을 읽어야 해서, 원격 URL이면 로컬로
+  // 받아 downloads/making/ep{N}/background/에 저장하고 그 localPath를 쓴다(매번 네트워크
+  // 의존 없이 재생성 가능하도록). 이미 /downloads/… 로 서빙되는 로컬 URL이면 그대로 재사용.
+  const { epNum, cutNo, type, imageUrl, videoUrl, overlayOpacity, source, attribution } = req.body || {}
+  if (epNum == null || cutNo == null) return res.status(400).json({ error: 'epNum, cutNo 필요' })
+  try {
+    const { epId, ep } = findEpisodeByNumOrThrow(epNum)
+    const episodeCode = resolveEpisodeCode(ep.episode, epId)
+    const all = loadGraphicBackgrounds()
+    all[episodeCode] = all[episodeCode] || {}
+
+    if (imageUrl === null || videoUrl === null) {
+      delete all[episodeCode][`cut_${cutNo}`]
+    } else if (type === 'video') {
+      if (!videoUrl) return res.status(400).json({ error: 'videoUrl 필요' })
+      let localPath
+      const localMatch = String(videoUrl).match(/^https?:\/\/[^/]+\/downloads\/(.+)$/)
+      if (localMatch) {
+        // 이미 이 서버가 서빙 중인 로컬 파일(업로드 결과 등) — 그대로 재사용.
+        localPath = path.join(mp.DOWNLOADS, decodeURIComponent(localMatch[1]))
+      } else {
+        const dir = path.join(mp.makingDir(epNum), 'background')
+        localPath = path.join(dir, `cut_${String(cutNo).padStart(2, '0')}_bg_${Date.now()}.mp4`)
+        await downloadUrlToFile(videoUrl, localPath)
+      }
+      all[episodeCode][`cut_${cutNo}`] = {
+        type: 'video', videoUrl, localPath,
+        ...(overlayOpacity != null ? { overlayOpacity } : {}),
+        source: source || 'url', attribution: attribution || '',
+        savedAt: new Date().toISOString(),
+      }
+    } else {
+      all[episodeCode][`cut_${cutNo}`] = {
+        type: 'image', imageUrl: imageUrl || '',
+        ...(overlayOpacity != null ? { overlayOpacity } : {}),
+        source: source || 'url', attribution: attribution || '',
+        savedAt: new Date().toISOString(),
+      }
+    }
+    saveGraphicBackgrounds(all)
+    res.json({ success: true, background: getCutBackground(episodeCode, Number(cutNo)) })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
+// POST /api/upload-graphic-background?epNum=&cutNo=&ext= — 로컬 파일을 배경으로 업로드.
+// /api/upload-cut-image(2137행)와 같은 raw-stream 패턴. downloads/making/ep{N}/background/에
+// 저장하고 express.static('/downloads')로 바로 서빙되는 URL을 돌려준다(Puppeteer가 캡처 시
+// 같은 로컬 서버에서 그대로 읽는다).
+app.post('/api/upload-graphic-background', (req, res) => {
+  const { epNum, cutNo, ext } = req.query
+  if (!epNum || cutNo == null) return res.status(400).json({ error: 'epNum, cutNo 필요' })
+  const dir = path.join(mp.makingDir(epNum), 'background')
+  fs.mkdirSync(dir, { recursive: true })
+  const safeExt = (String(ext || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '').replace('jpeg', 'jpg')) || 'jpg'
+  const destPath = path.join(dir, `cut_${String(cutNo).padStart(2, '0')}_bg_${Date.now()}.${safeExt}`)
+  const chunks = []
+  req.on('data', c => chunks.push(c))
+  req.on('error', () => res.status(400).json({ error: '업로드 스트림 오류' }))
+  req.on('end', () => {
+    const buf = Buffer.concat(chunks)
+    if (!buf.length) return res.status(400).json({ error: '빈 파일' })
+    try {
+      fs.writeFileSync(destPath, buf)
+      res.json({ success: true, url: `http://localhost:3001${mp.toMediaUrl(destPath)}` })
+    } catch (e) {
+      res.status(500).json({ error: e.message })
+    }
+  })
 })
 
 // ── POST /api/save-audio — WAV blob → MP3 변환 후 저장 ──
@@ -8136,6 +8389,54 @@ const STUDIO_STATE_PATH = path.join(CODE_ROOT, 'studio-state.json')
 const GPOINTS_PATH = mp.statePath('gpoints.json')
 const DEFAULT_YEORI_VOICE_ID = 'RmYuvmCbqOMBJxDLW4k8'
 
+// ── 그래픽 카드 템플릿 디자인 설정(크기·위치·색상) — 메이킹 탭에서 수정 ──────────
+// graphicTemplates.js의 layout/colors는 코드에 박힌 "기본값"이고, 여기(JSON 파일)는
+// 사람이 메이킹 탭에서 저장한 "덮어쓰기 값"이다. 파일로 분리해둔 이유: 코드(server/*.js)는
+// 고쳐도 떠있는 proxy.js 프로세스가 재시작 전까지 반영 안 되지만([[feedback_node_server_needs_restart_after_edit]]
+// 패턴, 2026-11-21 P05 그래픽 작업 중 실측), 이 파일은 매 요청마다 fs.readFileSync로
+// 새로 읽으므로 서버 재시작 없이 바로 반영된다 — "메이킹 탭에서 저장 → 즉시 화면 반영"을
+// 만족시키려면 이 분리가 필수.
+const GRAPHIC_SETTINGS_PATH = mp.statePath('graphicTemplateSettings.json')
+function loadGraphicSettings() {
+  if (!fs.existsSync(GRAPHIC_SETTINGS_PATH)) return {}
+  try { return JSON.parse(fs.readFileSync(GRAPHIC_SETTINGS_PATH, 'utf-8')) } catch { return {} }
+}
+function saveGraphicSettings(data) {
+  fs.mkdirSync(path.dirname(GRAPHIC_SETTINGS_PATH), { recursive: true })
+  fs.writeFileSync(GRAPHIC_SETTINGS_PATH, JSON.stringify(data, null, 2), 'utf-8')
+}
+// 템플릿 기본값(graphicTemplates.js) 위에 사람이 저장한 덮어쓰기 값을 얹어 "지금 실제로
+// 쓰일 값"을 만든다. type+style 조합으로 저장(스타일별로 다르게 조절 가능).
+// ── 컷별 배경 이미지(검색/업로드/URL) — 메이킹 탭 "🖼 배경 이미지" 패널 ──────────
+// 위 설정(layout/colors)은 템플릿·스타일 단위로 공유되지만, 배경 이미지는 컷마다 다르므로
+// 에피소드 코드+컷 번호로 따로 저장한다.
+const GRAPHIC_BG_PATH = mp.statePath('graphicCutBackgrounds.json')
+function loadGraphicBackgrounds() {
+  if (!fs.existsSync(GRAPHIC_BG_PATH)) return {}
+  try { return JSON.parse(fs.readFileSync(GRAPHIC_BG_PATH, 'utf-8')) } catch { return {} }
+}
+function saveGraphicBackgrounds(data) {
+  fs.mkdirSync(path.dirname(GRAPHIC_BG_PATH), { recursive: true })
+  fs.writeFileSync(GRAPHIC_BG_PATH, JSON.stringify(data, null, 2), 'utf-8')
+}
+function getCutBackground(episodeCode, cutNo) {
+  return loadGraphicBackgrounds()?.[episodeCode]?.[`cut_${cutNo}`] || null
+}
+
+function effectiveTemplateConfig(type, style) {
+  const tmpl = TEMPLATES[type]
+  if (!tmpl) return { layout: {}, colors: {} }
+  const styleKey = style && tmpl.styles[style] ? style : Object.keys(tmpl.styles)[0]
+  const baseColors = tmpl.styles[styleKey]?.colors || {}
+  const baseLayout = tmpl.layout || {}
+  const saved = loadGraphicSettings()?.[type]?.[styleKey] || {}
+  return {
+    styleKey,
+    layout: { ...baseLayout, ...(saved.layout || {}) },
+    colors: { ...baseColors, ...(saved.colors || {}) },
+  }
+}
+
 function loadStudioState() {
   return fs.existsSync(STUDIO_STATE_PATH) ? JSON.parse(fs.readFileSync(STUDIO_STATE_PATH, 'utf-8')) : {}
 }
@@ -10743,14 +11044,27 @@ async function resolveGraphicFromGtpl({ epNum, cut, retryNote }) {
   const dur = serverCutTargetDuration(cut)
   let html, method
 
+  let bgVideoPath = ''
   if (gtpl.mode === 'template') {
-    html = generateHTML(gtpl.type, gtpl.style, fieldsFromCut(cut, gtpl.type), dur, dims)
-    method = `template:${gtpl.type}${gtpl.style ? '/' + gtpl.style : ''}`
+    const cfg = effectiveTemplateConfig(gtpl.type, gtpl.style)
+    const bg = getCutBackground(episodeCode, cut.no)
+    const isVideoBg = bg?.type === 'video' && bg.localPath
+    if (isVideoBg) bgVideoPath = bg.localPath
+    // 영상 배경은 ffmpeg가 바깥에서 합성하므로(renderGraphicOverVideo), 여기 HTML은
+    // 글자+어둡게만 투명 배경으로 뽑아가는 캡처용 — backgroundImage/Video 필드는 안 넣는다.
+    const fieldsWithBg = { ...fieldsFromCut(cut, gtpl.type), ...(!isVideoBg && bg?.type !== 'video' && bg?.imageUrl ? { backgroundImage: bg.imageUrl } : {}) }
+    const layoutWithBg = {
+      ...cfg.layout,
+      ...(bg?.overlayOpacity != null ? { overlayOpacity: bg.overlayOpacity } : {}),
+      ...(isVideoBg ? { transparentBackground: true } : {}),
+    }
+    html = generateHTML(gtpl.type, gtpl.style, fieldsWithBg, dur, dims, { layout: layoutWithBg, colors: cfg.colors })
+    method = `template:${gtpl.type}${gtpl.style ? '/' + gtpl.style : ''}${isVideoBg ? ' · video-bg' : ''}`
   } else {
     // ai | ai-template — Claude 로 생성 후 검증
     if (!ANTHROPIC_API_KEY) { const e = new Error('AI 생성 불가 — ANTHROPIC_API_KEY 미설정'); e.statusCode = 503; throw e }
     const skeleton = gtpl.mode === 'ai-template' && gtpl.type
-      ? generateHTML(gtpl.type, gtpl.style, {}, dur, dims) : null
+      ? generateHTML(gtpl.type, gtpl.style, {}, dur, dims, effectiveTemplateConfig(gtpl.type, gtpl.style)) : null
     const prompt = buildGraphicPrompt(cut, dims, { skeleton, retryNote })
     let raw
     try { raw = await callClaudeText(prompt, 8000) }
@@ -10770,10 +11084,10 @@ async function resolveGraphicFromGtpl({ epNum, cut, retryNote }) {
   const fileName = `cut_${String(cut.no).padStart(2, '0')}_graphic.html`
   fs.writeFileSync(path.join(dir, fileName), html, 'utf-8')
   logToFile(`[gtpl] CUT ${cut.no} → ${fileName} (${method})`)
-  return { fileName, method }
+  return { fileName, method, bgVideoPath }
 }
 
-async function makeGraphicCutForMcp({ epNum, cutNo, htmlFile, motion }) {
+async function makeGraphicCutForMcp({ epNum, cutNo, htmlFile, motion, bgVideoPath }) {
   const { epId, ep } = findEpisodeByNumOrThrow(epNum)
   const cut = (ep.cuts || []).find(c => c.no === Number(cutNo))
   if (!cut) { const e = new Error(`컷 번호 ${cutNo} 없음`); e.statusCode = 404; throw e }
@@ -10800,7 +11114,7 @@ async function makeGraphicCutForMcp({ epNum, cutNo, htmlFile, motion }) {
     html = fillTemplateForMcp(cut, cutDims(ep.episode || {}))
   }
 
-  return runGraphicCapture({ html, cutNo: cut.no, epNum, duration: cut.duration, motion: motion || cut.motion, selfText: !effectiveHtmlFile })
+  return runGraphicCapture({ html, cutNo: cut.no, epNum, duration: cut.duration, motion: motion || cut.motion, selfText: !effectiveHtmlFile, bgVideoPath })
 }
 
 // ── BROLL "CLIP:" — 웹 영상의 한 구간을 screen-scenario 화면녹화로 컷 만들기 ──────
@@ -11014,11 +11328,13 @@ async function produceMakingCut({ epNum, cut }) {
   }
   // 3-1) HTML: 파일이 없고 GTPL: 지시가 있으면 여기서 HTML 을 생성해 파일로 만든다.
   let gtplMethod = ''
+  let bgVideoPath = ''
   if (!htmlFile && cut.graphicTemplate) {
     try {
       const g = await resolveGraphicFromGtpl({ epNum, cut })
       htmlFile = g.fileName
       gtplMethod = ` · ${g.method}`
+      bgVideoPath = g.bgVideoPath || ''
       if (!motion) motion = 'self'   // GTPL 생성물은 CSS @keyframes 자체 애니 → 프레임 스텝 캡처
     } catch (e) {
       return { cutNo, type, status: e.statusCode === 422 || e.statusCode === 400 ? 'skipped' : 'error', method: 'gtpl', reason: e.message }
@@ -11028,7 +11344,7 @@ async function produceMakingCut({ epNum, cut }) {
     return { cutNo, type, status: 'skipped', reason: 'CAPCUT — HTML 목업(HTML:/GTPL:) 없음, 데스크톱 녹화는 수동' }
   }
   try {
-    const result = await makeGraphicCutForMcp({ epNum, cutNo, htmlFile: htmlFile || undefined, motion })
+    const result = await makeGraphicCutForMcp({ epNum, cutNo, htmlFile: htmlFile || undefined, motion, bgVideoPath })
     return { cutNo, type, status: 'produced', method: (htmlFile ? 'html-capture' : 'template-capture') + gtplMethod, outputPath: result?.outputPath }
   } catch (e) {
     return { cutNo, type, status: 'error', method: 'graphic-capture', reason: e.message }

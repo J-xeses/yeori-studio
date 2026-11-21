@@ -2,12 +2,29 @@
 <!DOCTYPE html><html><head><meta charset="UTF-8">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-body {
+html, body {
   width:1080px; height:1920px;
+  position:relative; overflow:hidden;
   background:#0C0A10;
+  font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;
+}
+.bg-image {
+  position:absolute; inset:0;
+  background-image:url('');
+  background-size:cover; background-position:center;
+}
+.bg-video {
+  position:absolute; inset:0;
+  width:100%; height:100%; object-fit:cover;
+}
+.bg-overlay {
+  position:absolute; inset:0;
+  background:rgba(0,0,0,0.45);
+}
+.content {
+  position:relative; width:100%; height:100%;
   display:flex; flex-direction:column;
   align-items:center; justify-content:center;
-  font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;
 }
 .accent-line {
   width:80px; height:6px;
@@ -23,11 +40,13 @@ body {
   color:#F5F1EC; text-align:center;
   line-height:1.2; letter-spacing:4px;
   margin-bottom:32px;
+  max-width:86%;
   animation:fadeIn 0.8s ease forwards;
 }
 .subtitle {
   font-size:44px; color:#8b8494;
   text-align:center; letter-spacing:3px;
+  max-width:86%;
   animation:fadeIn 0.8s ease forwards;
   animation-delay:0.4s; opacity:0;
 }
@@ -41,8 +60,12 @@ body {
   to { opacity:1; transform:translateY(0); }
 }
 </style></head><body>
+
+
+<div class="content">
 <div class="accent-line"></div>
 <div class="title">밥 먹었어? (bap meogeosseo?)</div>
 <div class="subtitle">Did you eat? = I care about you</div>
 <div class="info">서울에서 매일 듣는 한국어 · 시리즈</div>
+</div>
 </body></html>
