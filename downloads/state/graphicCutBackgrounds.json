@@ -14,6 +14,41 @@
       "source": "upload",
       "attribution": "Close-up_portrait_of_a_young_202605222053.jpeg",
       "savedAt": "2026-11-21T09:35:38.603Z"
+    },
+    "cut_3": {
+      "type": "image",
+      "imageUrl": "http://localhost:3001/downloads/seoyeori/IG/IG_P/IG_P05/04_making/background/cut_03_bg_1795253864665.jpg",
+      "source": "upload",
+      "attribution": "07-2(유리잔 수정할것).jpeg",
+      "savedAt": "2026-11-21T09:37:44.711Z"
+    },
+    "cut_4": {
+      "type": "image",
+      "imageUrl": "http://localhost:3001/downloads/seoyeori/IG/IG_P/IG_P05/04_making/background/cut_04_bg_1795256553577.jpg",
+      "source": "upload",
+      "attribution": "A_young_Korean_woman_in_202605162103.jpeg",
+      "savedAt": "2026-11-21T10:22:33.615Z"
+    },
+    "cut_5": {
+      "type": "image",
+      "imageUrl": "http://localhost:3001/downloads/seoyeori/IG/IG_P/IG_P05/04_making/background/cut_05_bg_1795256621333.jpg",
+      "source": "upload",
+      "attribution": "A_young_Korean_woman_in_202605181238.jpeg",
+      "savedAt": "2026-11-21T10:23:41.374Z"
+    },
+    "cut_6": {
+      "type": "image",
+      "imageUrl": "http://localhost:3001/downloads/seoyeori/IG/IG_P/IG_P05/04_making/background/cut_06_bg_1795256772532.jpg",
+      "source": "upload",
+      "attribution": "Young_woman_reacting_holding_sma…_202608231516.jpeg",
+      "savedAt": "2026-11-21T10:26:12.559Z"
+    },
+    "cut_7": {
+      "type": "image",
+      "imageUrl": "https://images.pexels.com/photos/6923292/pexels-photo-6923292.jpeg",
+      "source": "pexels",
+      "attribution": "Trung Huynh",
+      "savedAt": "2026-11-21T10:34:08.109Z"
     }
   }
 }

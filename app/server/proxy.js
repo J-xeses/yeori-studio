@@ -5197,10 +5197,14 @@ function graphicMotionVf(motion, dur, W = 1080, H = 1920, fps = 30) {
   return vf
 }
 
-async function runGraphicCapture({ html, cutNo, epNum, duration, motion, outputPath, skipMotionRecord, method = 'graphic', selfText = false, bgVideoPath = '' }) {
+async function runGraphicCapture({ html, cutNo, epNum, duration, motion, outputPath, skipMotionRecord, method = 'graphic', selfText = false, bgVideoPath = '', heavyBackground = false }) {
   const dur = parseInt(duration, 10) || 5
   const padded = String(cutNo).padStart(2, '0')
-  const animated = ANIMATED_MOTIONS.has(motion)
+  // heavyBackground(배경 이미지 있음): 매 프레임(8초×30fps=240장) 큰 사진을 다시 합성하는
+  // 비용이 1장당 ~1초까지 뛰어 240장이면 4분 가까이 걸린다(2026-11-21 실측 — "생성" 버튼이
+  // 멈춘 것처럼 보이던 원인). 등장 애니메이션이 끝나면 화면은 어차피 고정이니, 정착된 상태로
+  // 한 번만 찍어 정지 이미지로 전체 길이를 채운다(영상 배경 경로와 같은 절충, motion-vf는 유지).
+  const animated = ANIMATED_MOTIONS.has(motion) && !heavyBackground
   const { w: CW, h: CH } = episodeCutDims(epNum)   // 에피소드 화면비율
 
   const videoDir = mp.videoDir(epNum)
@@ -5253,6 +5257,8 @@ async function runGraphicCapture({ html, cutNo, epNum, duration, motion, outputP
       // 첫 프레임을 대표 스틸로도 남긴다(썸네일 호환)
       try { fs.copyFileSync(path.join(framesDir, 'f_00000.png'), imagePath) } catch { /* noop */ }
     } else {
+      // 등장 애니메이션이 있으면 끝난 상태로 고정해서 찍는다(없으면 no-op, 안전).
+      try { await page.evaluate(() => { document.getAnimations().forEach(a => { try { a.finish() } catch (e) { /* noop */ } }) }) } catch { /* noop */ }
       await page.screenshot({ path: imagePath })
     }
   } catch (err) {
@@ -5547,12 +5553,14 @@ app.post('/api/generate-graphic-html', async (req, res) => {
 
     let genMethod = ''
     let genBgVideoPath = ''
+    let genHeavyBackground = false
     if (gtpl) {
       // 통합 경로 — 대본 GTPL: 과 동일 로직(템플릿/ai/ai-template). 저장까지 여기서.
       const cut = { ...(ep.cuts || []).find(c => c.no === Number(cutNo)), no: Number(cutNo), graphicTemplate: gtpl }
       const g = await resolveGraphicFromGtpl({ epNum, cut, retryNote })
       genMethod = g.method
       genBgVideoPath = g.bgVideoPath || ''
+      genHeavyBackground = !!g.hasImageBg
     } else {
       // 레거시 템플릿 경로 — 클라 fields 가 컷 자동채움 위에 덮어씀
       const cut = (ep.cuts || []).find(c => c.no === Number(cutNo)) || {}
@@ -5560,7 +5568,8 @@ app.post('/api/generate-graphic-html', async (req, res) => {
       const cfg = effectiveTemplateConfig(type, style)
       const isVideoBg = bg?.type === 'video' && bg.localPath
       if (isVideoBg) genBgVideoPath = bg.localPath
-      const merged = { ...fieldsFromCut(cut, type), ...(!isVideoBg && bg?.type !== 'video' && bg?.imageUrl ? { backgroundImage: bg.imageUrl } : {}), ...(fields || {}) }
+      genHeavyBackground = !isVideoBg && bg?.type !== 'video' && !!bg?.imageUrl
+      const merged = { ...fieldsFromCut(cut, type), ...(genHeavyBackground ? { backgroundImage: bg.imageUrl } : {}), ...(fields || {}) }
       const layoutWithBg = {
         ...cfg.layout,
         ...(bg?.overlayOpacity != null ? { overlayOpacity: bg.overlayOpacity } : {}),
@@ -5572,7 +5581,7 @@ app.post('/api/generate-graphic-html', async (req, res) => {
     }
 
     if (autoGenerate) {
-      const makeResult = await makeGraphicCutForMcp({ epNum, cutNo, htmlFile: fileName, motion: 'self', bgVideoPath: genBgVideoPath })
+      const makeResult = await makeGraphicCutForMcp({ epNum, cutNo, htmlFile: fileName, motion: 'self', bgVideoPath: genBgVideoPath, heavyBackground: genHeavyBackground })
       return res.json({ success: true, filePath, fileName, method: genMethod, makeResult })
     }
     res.json({ success: true, filePath, fileName, method: genMethod })
@@ -11078,14 +11087,16 @@ async function resolveGraphicFromGtpl({ epNum, cut, retryNote }) {
   let html, method
 
   let bgVideoPath = ''
+  let hasImageBg = false
   if (gtpl.mode === 'template') {
     const cfg = effectiveTemplateConfig(gtpl.type, gtpl.style)
     const bg = getCutBackground(episodeCode, cut.no)
     const isVideoBg = bg?.type === 'video' && bg.localPath
     if (isVideoBg) bgVideoPath = bg.localPath
+    hasImageBg = !isVideoBg && bg?.type !== 'video' && !!bg?.imageUrl
     // 영상 배경은 ffmpeg가 바깥에서 합성하므로(renderGraphicOverVideo), 여기 HTML은
     // 글자+어둡게만 투명 배경으로 뽑아가는 캡처용 — backgroundImage/Video 필드는 안 넣는다.
-    const fieldsWithBg = { ...fieldsFromCut(cut, gtpl.type), ...(!isVideoBg && bg?.type !== 'video' && bg?.imageUrl ? { backgroundImage: bg.imageUrl } : {}) }
+    const fieldsWithBg = { ...fieldsFromCut(cut, gtpl.type), ...(hasImageBg ? { backgroundImage: bg.imageUrl } : {}) }
     const layoutWithBg = {
       ...cfg.layout,
       ...(bg?.overlayOpacity != null ? { overlayOpacity: bg.overlayOpacity } : {}),
@@ -11117,10 +11128,10 @@ async function resolveGraphicFromGtpl({ epNum, cut, retryNote }) {
   const fileName = `cut_${String(cut.no).padStart(2, '0')}_graphic.html`
   fs.writeFileSync(path.join(dir, fileName), html, 'utf-8')
   logToFile(`[gtpl] CUT ${cut.no} → ${fileName} (${method})`)
-  return { fileName, method, bgVideoPath }
+  return { fileName, method, bgVideoPath, hasImageBg }
 }
 
-async function makeGraphicCutForMcp({ epNum, cutNo, htmlFile, motion, bgVideoPath }) {
+async function makeGraphicCutForMcp({ epNum, cutNo, htmlFile, motion, bgVideoPath, heavyBackground }) {
   const { epId, ep } = findEpisodeByNumOrThrow(epNum)
   const cut = (ep.cuts || []).find(c => c.no === Number(cutNo))
   if (!cut) { const e = new Error(`컷 번호 ${cutNo} 없음`); e.statusCode = 404; throw e }
@@ -11147,7 +11158,7 @@ async function makeGraphicCutForMcp({ epNum, cutNo, htmlFile, motion, bgVideoPat
     html = fillTemplateForMcp(cut, cutDims(ep.episode || {}))
   }
 
-  return runGraphicCapture({ html, cutNo: cut.no, epNum, duration: cut.duration, motion: motion || cut.motion, selfText: !effectiveHtmlFile, bgVideoPath })
+  return runGraphicCapture({ html, cutNo: cut.no, epNum, duration: cut.duration, motion: motion || cut.motion, selfText: !effectiveHtmlFile, bgVideoPath, heavyBackground })
 }
 
 // ── BROLL "CLIP:" — 웹 영상의 한 구간을 screen-scenario 화면녹화로 컷 만들기 ──────
@@ -11362,12 +11373,14 @@ async function produceMakingCut({ epNum, cut }) {
   // 3-1) HTML: 파일이 없고 GTPL: 지시가 있으면 여기서 HTML 을 생성해 파일로 만든다.
   let gtplMethod = ''
   let bgVideoPath = ''
+  let heavyBackground = false
   if (!htmlFile && cut.graphicTemplate) {
     try {
       const g = await resolveGraphicFromGtpl({ epNum, cut })
       htmlFile = g.fileName
       gtplMethod = ` · ${g.method}`
       bgVideoPath = g.bgVideoPath || ''
+      heavyBackground = !!g.hasImageBg
       if (!motion) motion = 'self'   // GTPL 생성물은 CSS @keyframes 자체 애니 → 프레임 스텝 캡처
     } catch (e) {
       return { cutNo, type, status: e.statusCode === 422 || e.statusCode === 400 ? 'skipped' : 'error', method: 'gtpl', reason: e.message }
@@ -11377,7 +11390,7 @@ async function produceMakingCut({ epNum, cut }) {
     return { cutNo, type, status: 'skipped', reason: 'CAPCUT — HTML 목업(HTML:/GTPL:) 없음, 데스크톱 녹화는 수동' }
   }
   try {
-    const result = await makeGraphicCutForMcp({ epNum, cutNo, htmlFile: htmlFile || undefined, motion, bgVideoPath })
+    const result = await makeGraphicCutForMcp({ epNum, cutNo, htmlFile: htmlFile || undefined, motion, bgVideoPath, heavyBackground })
     return { cutNo, type, status: 'produced', method: (htmlFile ? 'html-capture' : 'template-capture') + gtplMethod, outputPath: result?.outputPath }
   } catch (e) {
     return { cutNo, type, status: 'error', method: 'graphic-capture', reason: e.message }

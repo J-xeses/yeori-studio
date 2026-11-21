@@ -8,7 +8,7 @@ import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import ReelSfxCell from '../components/ReelSfxCell'
 import s from './MakingTab.module.css'
-import { epMediaUrl } from '../lib/mediaPaths'
+import { epMediaUrl, cutMediaUrl, videoUrl } from '../lib/mediaPaths'
 import { elSoundEffect, saveGeneratedSfx } from '../lib/api'
 
 const YEORI_SERVER = 'http://localhost:3001'
@@ -2439,7 +2439,7 @@ export default function MakingTab() {
 
   const renderGraphicPanel = (cut) => (
     <div className={s.subPanel}>
-      <GraphicCardGenerator cut={cut} epNum={episode?.number} />
+      <GraphicCardGenerator cut={cut} epNum={episode?.number} episode={episode} />
       {renderHtmlCapturePanel(cut)}
     </div>
   )
@@ -2772,7 +2772,7 @@ export default function MakingTab() {
           </label>
         </div>
 
-        <GraphicCardGenerator cut={cut} epNum={episode?.number} />
+        <GraphicCardGenerator cut={cut} epNum={episode?.number} episode={episode} />
 
         {mode === 'html' ? (
           renderHtmlCapturePanel(cut)
@@ -4594,7 +4594,11 @@ const GRAPHIC_LAYOUT_LABELS = {
 }
 const GRAPHIC_COLOR_LABELS = { bg: '배경', main: '제목', sub: '부제 · 보조문구', accent: '포인트' }
 
-function GraphicCardGenerator({ cut, epNum, onGenerated }) {
+function GraphicCardGenerator({ cut, epNum, episode, onGenerated }) {
+  // 접힌 상태에서도 "방금 뭐가 만들어졌는지" 바로 보이게 — 생성 패널과 무관하게 항상 보임.
+  const [resultRefresh, setResultRefresh] = useState(0)
+  const [resultThumbOk, setResultThumbOk] = useState(true)
+  const [showResultVideo, setShowResultVideo] = useState(false)
   const [open, setOpen] = useState(false)
   const [templates, setTemplates] = useState([])
   const [selectedType, setSelectedType] = useState('')
@@ -4624,6 +4628,8 @@ function GraphicCardGenerator({ cut, epNum, onGenerated }) {
   const [bgResults, setBgResults] = useState([])
   const [bgSearching, setBgSearching] = useState(false)
   const [bgUrlInput, setBgUrlInput] = useState('')
+  const [bgAiPrompt, setBgAiPrompt] = useState('')
+  const [bgAiModel, setBgAiModel] = useState('nb2')
   const [bgBusy, setBgBusy] = useState(false)
   const [bgError, setBgError] = useState('')
 
@@ -4757,6 +4763,25 @@ function GraphicCardGenerator({ cut, epNum, onGenerated }) {
     }
   }
 
+  // AI 생성(Nano Banana) — 검색/업로드/URL과 달리 실제 요금이 발생하는 호출이라, 사람이
+  // 프롬프트를 직접 쓰고 이 버튼을 눌렀을 때만 실행된다(자동 트리거 없음).
+  const handleBgAiGenerate = async () => {
+    if (!bgAiPrompt.trim()) return
+    setBgBusy(true); setBgError('')
+    try {
+      const res = await fetch(`${YEORI_SERVER}/api/generate-graphic-background-ai`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ epNum, cutNo: cut.no, prompt: bgAiPrompt.trim(), model: bgAiModel }),
+      })
+      const data = await res.json()
+      if (!res.ok || data.error) throw new Error(data.error || 'AI 생성 실패')
+      await saveBg({ type: 'image', imageUrl: data.url, source: 'ai', attribution: data.model || 'Nano Banana' })
+    } catch (err) {
+      setBgError(err.message)
+      setBgBusy(false)
+    }
+  }
+
   // 템플릿+스타일이 정해지면 지금 효과값(기본값+저장된 덮어쓰기 병합)을 받아온다.
   useEffect(() => {
     if (aiMode || !selectedType || !selectedStyle) return
@@ -4852,6 +4877,8 @@ function GraphicCardGenerator({ cut, epNum, onGenerated }) {
       const data = await res.json()
       if (!res.ok || data.error) throw new Error(data.error || '생성 실패')
       setOpen(false)
+      setResultThumbOk(true)
+      setResultRefresh(k => k + 1)
       onGenerated?.(data)
     } catch (err) {
       setError(err.message)
@@ -4862,15 +4889,41 @@ function GraphicCardGenerator({ cut, epNum, onGenerated }) {
 
   const currentTemplate = templates.find(t => t.type === selectedType)
 
+  // 접힌 상태에서도 보이는 "지금 제작된 결과" 미리보기 — 생성 패널을 열지 않아도 바로 확인 가능.
+  const resultThumbSrc = episode ? `${cutMediaUrl(episode, 'video', cut.no, 'png', '_graphic')}?t=${resultRefresh}` : ''
+  const resultVideoSrc = episode ? `${videoUrl(episode, cut.no)}?t=${resultRefresh}` : ''
+
   return (
     <>
-      <button
-        className={s.previewBtn}
-        onClick={() => setOpen(v => !v)}
-        style={{ marginTop: 8 }}
-      >
-        🎨 그래픽 카드 생성 {open ? '▲ 접기' : '▼ 펼치기'}
-      </button>
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>
+        <button
+          className={s.previewBtn}
+          onClick={() => setOpen(v => !v)}
+        >
+          🎨 그래픽 카드 생성 {open ? '▲ 접기' : '▼ 펼치기'}
+        </button>
+
+        {episode && resultThumbOk && (
+          <div
+            onClick={() => setShowResultVideo(v => !v)}
+            title="클릭하면 영상으로 재생/정지"
+            style={{ position: 'relative', width: 64, height: 114, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border)', cursor: 'pointer', flexShrink: 0, background: '#000' }}
+          >
+            {showResultVideo ? (
+              <video src={resultVideoSrc} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              <img src={resultThumbSrc} alt="제작 결과" onError={() => setResultThumbOk(false)}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            )}
+            <span style={{ position: 'absolute', bottom: 2, right: 4, fontSize: 11, color: '#fff', textShadow: '0 0 3px #000' }}>
+              {showResultVideo ? '⏸' : '▶'}
+            </span>
+          </div>
+        )}
+        {episode && !resultThumbOk && (
+          <span style={{ fontSize: 12, color: 'var(--text-dim)' }}>아직 제작된 결과 없음</span>
+        )}
+      </div>
 
       {open && (
         <div style={{
@@ -5023,7 +5076,7 @@ function GraphicCardGenerator({ cut, epNum, onGenerated }) {
 
                       <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
                         {[['image', '🖼 이미지'], ['video', '🎞 영상']].map(([t, label]) => (
-                          <button key={t} onClick={() => { setBgAssetType(t); setBgResults([]) }} className={s.previewBtn}
+                          <button key={t} onClick={() => { setBgAssetType(t); setBgResults([]); if (t === 'video' && bgMode === 'ai') setBgMode('search') }} className={s.previewBtn}
                             style={{ flex: 1, fontSize: 12, fontWeight: 700, borderColor: bgAssetType === t ? 'var(--blue)' : 'var(--border)', background: bgAssetType === t ? 'rgba(59,130,246,.18)' : 'transparent' }}>
                             {label}
                           </button>
@@ -5031,13 +5084,41 @@ function GraphicCardGenerator({ cut, epNum, onGenerated }) {
                       </div>
 
                       <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-                        {[['search', '🔍 검색'], ['upload', '📁 업로드'], ['url', '🔗 URL']].map(([m, label]) => (
+                        {[['search', '🔍 검색'], ['upload', '📁 업로드'], ['url', '🔗 URL'], ...(bgAssetType === 'image' ? [['ai', '🤖 AI 생성']] : [])].map(([m, label]) => (
                           <button key={m} onClick={() => setBgMode(m)} className={s.previewBtn}
                             style={{ flex: 1, fontSize: 12, borderColor: bgMode === m ? 'var(--accent)' : 'var(--border)', background: bgMode === m ? 'var(--accent-glow)' : 'transparent' }}>
                             {label}
                           </button>
                         ))}
                       </div>
+
+                      {bgMode === 'ai' && (
+                        <>
+                          <textarea
+                            value={bgAiPrompt} onChange={e => setBgAiPrompt(e.target.value)}
+                            placeholder="영어 프롬프트 — 예: cozy Seoul cafe interior at night, warm lighting, bokeh"
+                            rows={3}
+                            style={{ width: '100%', background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px', color: 'var(--text)', fontSize: 13, marginBottom: 8, resize: 'vertical' }}
+                          />
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+                            <select value={bgAiModel} onChange={e => setBgAiModel(e.target.value)}
+                              style={{ background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: 8, padding: '6px 10px', color: 'var(--text)', fontSize: 12 }}>
+                              <option value="flash">flash (가장 저렴)</option>
+                              <option value="nb2">Nano Banana 2 (권장)</option>
+                              <option value="pro">Nano Banana Pro (최고 품질/최고가)</option>
+                            </select>
+                            <button onClick={handleBgAiGenerate} disabled={bgBusy || !bgAiPrompt.trim()} className={s.captureBtn} style={{ fontSize: 12 }}>
+                              {bgBusy ? '생성 중…' : '✨ 생성'}
+                            </button>
+                          </div>
+                          <div style={{ fontSize: 11, color: 'var(--accent-light)', marginBottom: 4 }}>
+                            ⚠️ 유료 API 호출입니다(Gemini 이미지 생성 — 무료 티어 없음, 실제 요금 발생). 버튼을 눌러야만 실행됩니다.
+                          </div>
+                          <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>
+                            배경/풍경 전용입니다 — 서여리 등 인물을 일관되게 등장시키려면 스튜디오 탭의 기존 G2(캐릭터 참조) 기능을 쓰세요.
+                          </div>
+                        </>
+                      )}
 
                       {bgMode === 'search' && (
                         <>
