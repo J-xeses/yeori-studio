@@ -1,0 +1,276 @@
+================================================================
+마스터 코드
+[IG_R11] :: [PL:IG_RL] :: [SP:IN.HM.BR_LR.LT_EV] :: [CH:YR_VD] :: [SH:SH_MCU+SH_MS] :: [F군:미설정]
+================================================================
+에피소드명: 선크림 들킨 5분 스킨케어 (뷰티, 일본어 자막 병기·엔딩B 실험) — 2주차 ①
+채널: 서여리 인스타그램 릴스 (IG_R11) · 게시 11/23(월)
+총 길이: 32초 (8+8+8+8)
+콘셉트: 하루를 마친 서여리의 5분 스킨케어. 영상통화로 지아가 선크림을 안 발랐다고 알아맞히고(1주차 "어떻게 알았어?" 반복
+  개그), 서여리는 내일부터 매일 바르기로 한다. 사건(들킴) → 감정(머쓱함) → 선택(내일부터)의 3막.
+  문화 포인트: 선크림을 매일 바르는 한국의 습관, 마스크팩이 일상이라는 점.
+  실험: 엔딩 B(질문형 댓글 유도) 1차 테스트 / 일본어 자막 2단 병기(한국어 위·일본어 아래 작은 글씨) 1차 테스트.
+  지아는 이번 컷엔 음성(영상통화)으로만 참여, 화면에 등장하지 않음.
+  언어 설계: 모든 컷 한국어 자막(나레이션/대사) + 일본어 자막(작은 글씨, 2단) + 영어 부제 한 줄(EN, 캡션·카드 참고용).
+  ⚠️ EN/JP 라인은 scriptParserV3.js가 파싱하는 필드가 아님(참고용 텍스트) — 04_making 자막 단계에서 수동으로
+  한국어 위 / 일본어 아래 2단 레이아웃을 얹을 것. 일본어 문구는 게시 전 원어민 확인 필수(브리프 11/22 과제).
+  나레이션(NR) 처리: 룰셋 ⑬-4(v1.4.7)에 따라 Flow 영상 생성 VP에 화면 밖 V.O.로 직접 포함(TTS 불필요) —
+  Visual:/Audio: 두 블록 명시 분리 구조([[project_narration_vp_visual_audio_split_standard_2026_11_19]] 기준 적용).
+================================================================
+EP.HEADER
+CHAR  : YEORI.BASE (단독 출연, 지아는 음성만 참여 — 화면 비등장)
+EP    : IG_R11
+TITLE : 선크림 들킨 5분 스킨케어
+LOOK.A: 서여리 — 라운지 티셔츠+편한 바지(계정 비주얼 일관성상 IG_R10과 동일 홈웨어), 맨발(집 장면), 머리 풀어 내림
+BG.A  : 서여리 집 욕실(세면대·거울) → 거실(소파)
+LIGHT : LT_EV (저녁 실내 조명, 따뜻함)
+BGM   : 잔잔한 로파이, CUT4 중반 2~3초 정지(여운) 후 엔딩카드 B
+================================================================
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 1] ─ YEORI | 훅 — 욕실 거울 앞, 세안 후 세럼 바르는 서여리 | 8
+━━━━━━━━━━━━━━━━━━━━━━━━
+OSD(첫 3초 온스크린 텍스트): EN "My Korean night routine in 5 minutes" / JP "韓国式ナイトルーティンを5分で"
+SC: 욕실 거울 앞. 세안 후 수건으로 닦고 세럼을 바르는 서여리.
+SP: IN.HM.BR.LT_EV
+PL: YR_VD
+CH: 서여리
+DL: 없음
+NR: 하루 끝, 5분 스킨케어 시간이에요.
+EN: End of the day: my 5-minute skincare time.
+JP: 一日の終わりは5分のスキンケア。
+SH: SH_MCU
+CA: CA_ST
+MD: MD_CLM
+AC: 0~4초 세안 후 수건으로 얼굴을 가볍게 닦음 → 4~8초 세럼을 손으로 가볍게 두드려 바르며 나레이션
+DU: 8
+CP: 하루 끝, 5분 스킨케어 시간이에요.
+CT: YEORI
+BEAT: 훅
+오디오:
+  BGM: 잔잔한 로파이 (0초부터)
+  음성: 여리 — 나긋하고 편안한 톤 — ※나레이션, Flow 영상 생성에 화면 밖 V.O.로 직접 포함(⑬-4, TTS 불필요)
+  효과음: 물소리(가볍게, 세안 마무리 지점)
+  앰비언스: 조용한 저녁 욕실
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     서여리 집 욕실 세면대 거울 앞, 저녁 실내조명
+CH(캐릭터):   서여리 — 라운지 홈웨어, 맨발, 머리 풀어 내림
+SH(샷):       미디엄 클로즈업
+CA(카메라):   고정
+AC(동작):     0~4초 세안 후 수건으로 얼굴을 가볍게 닦음 → 4~8초 세럼을 손으로 가볍게 두드려 바르며 나레이션
+MD(감정):     편안함, 차분함
+DL(대사):     없음
+NR(나레이션): 하루 끝, 5분 스킨케어 시간이에요.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM CLOSE-UP — a young Korean woman in her early 20s, long wavy dark brown hair falling loosely, natural-finish makeup, skin looking soft and real rather than airbrushed, gentle healthy sheen,
+standing in front of a bathroom mirror in the evening, wearing a casual lounge t-shirt, barefoot, patting serum onto her cheek with her fingertips after cleansing, a calm relaxed expression,
+warm soft indoor evening lighting, mirror reflection visible, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no visible skincare product labels or brand logos, no legible text, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+Visual: [0-4s] She stands at the bathroom mirror in the evening, finishing a gentle face-wash, patting her face dry with a small towel. [4-8s] She pats serum onto her cheeks with her fingertips, a calm relaxed expression, looking at her own reflection. She stays silent on camera throughout, lips gently closed and relaxed, no mouth movement.
+
+Audio: a separate off-screen narrator, a calm, natural voice that does not belong to the woman on screen, says in Korean: "하루 끝, 5분 스킨케어 시간이에요." Her lips never move.
+
+No on-screen subtitle text or captions — Korean + Japanese two-line subtitles and the English line are added in post.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 2] ─ YEORI | 전개 — 마스크팩, 소파에서 쉬는 서여리 | 8
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 마스크팩을 올리고 소파에 앉아 쉼, 타이머.
+SP: IN.HM.LR.LT_EV
+PL: YR_VD
+CH: 서여리
+DL: 없음
+NR: 마스크팩을 올리고 가만히 쉬는 것도 루틴이에요.
+EN: Mask on, then just rest. That's part of the routine.
+JP: シートマスクをのせて、ゆっくり休むのもルーティン。
+SH: SH_MS
+CA: CA_ST
+MD: MD_RLX
+AC: 0~3초 마스크팩을 얼굴에 올리는 손 → 3~8초 소파에 편하게 앉아 폰 타이머를 맞추고 눈을 감으며 쉬는 모습, 나레이션
+DU: 8
+CP: 마스크팩을 올리고 가만히 쉬는 것도 루틴이에요.
+CT: YEORI
+BEAT: 전개
+오디오:
+  BGM: 로파이 (이어서)
+  음성: 여리 — 느긋한 톤 — ※나레이션, Flow 영상 생성에 화면 밖 V.O.로 직접 포함(⑬-4, TTS 불필요)
+  효과음: 타이머 설정음(가볍게)
+  앰비언스: 조용한 저녁 거실
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     서여리 집 거실 소파, 저녁 실내조명 (CUT1과 동일 집)
+CH(캐릭터):   서여리 — 라운지 홈웨어, 맨발, 마스크팩 착용
+SH(샷):       미디엄샷
+CA(카메라):   고정
+AC(동작):     0~3초 마스크팩을 얼굴에 올리는 손 → 3~8초 소파에 편하게 앉아 폰 타이머를 맞추고 눈을 감으며 쉬는 모습, 나레이션
+MD(감정):     편안함, 느긋함
+DL(대사):     없음
+NR(나레이션): 마스크팩을 올리고 가만히 쉬는 것도 루틴이에요.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM SHOT — the same young Korean woman, same face, wearing a plain white sheet mask on her face, same lounge t-shirt, barefoot,
+sitting comfortably on a living room sofa in the evening, setting a timer on her phone, eyes gently closed, relaxed peaceful expression,
+warm soft indoor evening lighting, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text on phone screen, no visible brand logos on the mask, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+Visual: [0-3s] Close on her hands smoothing a plain white sheet mask onto her face. [3-8s] She settles back comfortably on the sofa, sets a timer on her phone, then closes her eyes with a relaxed, peaceful expression. She stays silent on camera throughout, lips gently closed and relaxed, no mouth movement.
+
+Audio: a separate off-screen narrator, a calm, natural voice that does not belong to the woman on screen, says in Korean: "마스크팩을 올리고 가만히 쉬는 것도 루틴이에요." Her lips never move.
+
+No on-screen subtitle text or captions — Korean + Japanese two-line subtitles and the English line are added in post.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 3] ─ YEORI | 긴장 — 영상통화, 선크림 들킴 | 8
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 영상통화 알림(화면은 흐리게), 지아 목소리만 들림 — 선크림 안 발랐다고 알아맞히고 여리가 머쓱해함.
+SP: IN.HM.LR.LT_EV
+PL: YR_VD
+CH: 서여리 (지아는 화면 비등장, 음성만 — 전화 너머)
+DL: (지아, 전화 너머) 너 오늘 선크림 안 발랐지? / (여리, 온카메라) …어떻게 알았어?
+NR: 없음
+EN: You skipped sunscreen today, didn't you? / …How did you know?
+JP: 今日、日焼け止め塗らなかったでしょ? / …なんでわかるの?
+SH: SH_MCU
+CA: CA_ST
+MD: MD_EMB
+AC: 0~4초 영상통화 알림이 뜨고 받는 서여리, 폰 화면은 흐리게(지아 얼굴 비노출) → 4~8초 지아의 목소리(전화 너머)를 듣고 머쓱한 표정으로 대답
+DU: 8
+CP: 너 오늘 선크림 안 발랐지? / …어떻게 알았어?
+CT: YEORI
+BEAT: 긴장
+오디오:
+  BGM: 로파이 (이어서, 살짝 낮춤)
+  음성: 지아 — 확신에 찬 장난스러운 톤(전화 너머, 화면 비등장이라 립싱크 없음) / 여리 — 머쓱하고 당황한 톤(온카메라, 립싱크)
+  효과음: 영상통화 수신음
+  앰비언스: 조용한 저녁 거실 + 폰 스피커 음질감
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     거실 소파 (CUT1·2와 동일 집)
+CH(캐릭터):   서여리 — 라운지 홈웨어, 맨발 (지아는 화면에 등장하지 않음, 통화 음성만)
+SH(샷):       미디엄 클로즈업
+CA(카메라):   고정
+AC(동작):     0~4초 영상통화 알림이 뜨고 받는 서여리, 폰 화면은 흐리게 처리(지아 얼굴 비노출) → 4~8초 지아의 목소리(전화 너머)를 듣고 머쓱한 표정으로 대답
+MD(감정):     놀람 → 머쓱함
+DL(대사):     (지아, 전화 너머) 너 오늘 선크림 안 발랐지? / (여리, 온카메라) …어떻게 알았어?
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM CLOSE-UP — the same young Korean woman, same face, same lounge t-shirt,
+sitting on the living room sofa in the evening, holding up her phone with a video call screen softly blurred and not legible (no other face visible), a surprised sheepish expression forming,
+warm soft indoor evening lighting, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text on phone screen, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+Visual: [0-4s] She answers a video call on her phone, the call screen softly blurred and not legible (no other face visible), listening with a neutral curious expression, mouth closed, not speaking on camera. [4-8s] Her expression shifts into a sheepish, caught-out smile; she looks at the phone and speaks.
+
+Audio:
+- 0.0s-4.0s: a separate off-screen voice coming through the phone speaker (muffled, slightly tinny call quality, not belonging to the woman on screen), playful and confident, says in Korean: "너 오늘 선크림 안 발랐지?" The woman on screen stays silent, mouth closed, listening.
+- 4.0s-8.0s: she speaks directly on camera, lips synced to her words, sheepish and surprised (반말, close friend tone), in Korean: "…어떻게 알았어?"
+
+No on-screen subtitle text or captions — Korean + Japanese two-line subtitles and the English line are added in post.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 4] ─ YEORI | 결말 — 거울 앞 다짐, 여운, 엔딩카드 | 8
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 거울 속에서 웃는 서여리. 정적 2~3초(BGM 정지) 후 엔딩 카드.
+SP: IN.HM.BR.LT_EV
+PL: YR_VD
+CH: 서여리
+DL: 없음
+NR: 한국에선 선크림이 매일 아침 습관이래요. 내일부터 저도요.
+EN: In Korea, sunscreen is a daily habit. Starting tomorrow, me too.
+JP: 韓国では日焼け止めは毎朝の習慣。明日から私も。
+SH: SH_MCU
+CA: CA_ST
+MD: MD_WRM
+AC: 0~4초 거울 속 자신을 보며 피식 웃는 서여리 → 4~6초 정적 2초(BGM 정지, 거울 보며 가만히) → 6~8초 카메라 쪽을 보며 나레이션
+DU: 8
+CP: 한국에선 선크림이 매일 아침 습관이래요. 내일부터 저도요.
+CT: YEORI
+BEAT: 결말
+오디오:
+  BGM: 로파이 → 4~6초 지점 2초간 완전 정지(여운) → 6초부터 낮게 흐르다 엔딩카드에서 페이드아웃
+  음성: 여리 — 다짐하듯 담담한 톤 — ※나레이션, Flow 영상 생성에 화면 밖 V.O.로 직접 포함(⑬-4, TTS 불필요)
+  효과음: 없음
+  앰비언스: 조용한 저녁 욕실(정적 구간엔 거의 무음)
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     서여리 집 욕실 거울 앞 (CUT1과 동일 공간)
+CH(캐릭터):   서여리 — 라운지 홈웨어, 맨발
+SH(샷):       미디엄 클로즈업
+CA(카메라):   고정
+AC(동작):     0~4초 거울 속 자신을 보며 피식 웃음 → 4~6초 정적, 거울을 보며 가만히 → 6~8초 카메라를 보며 나레이션
+MD(감정):     따뜻함, 다짐
+DL(대사):     없음
+NR(나레이션): 한국에선 선크림이 매일 아침 습관이래요. 내일부터 저도요.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM CLOSE-UP — the same young Korean woman, same face, same lounge t-shirt,
+standing in front of the bathroom mirror in the evening, looking at her own reflection with a soft amused smile,
+warm soft indoor evening lighting, mirror reflection visible, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+Visual: [0-4s] She looks at her own reflection in the bathroom mirror with a soft, amused smile. [4-6s] She pauses, still looking at the mirror, a quiet beat of stillness — no sound but faint ambient room noise. [6-8s] She turns her gaze gently toward camera, warm soft expression, mouth closed, not speaking on camera. She stays silent on camera throughout, lips gently closed and relaxed, no mouth movement.
+
+Audio: a separate off-screen narrator, a calm, sincere voice that does not belong to the woman on screen, says in Korean: "한국에선 선크림이 매일 아침 습관이래요. 내일부터 저도요." Her lips never move.
+
+No on-screen subtitle text or captions — Korean + Japanese two-line subtitles and the English line are added in post.
+================================================================
+
+
+[엔딩 카드] (마지막 2~3초, 오버레이, 엔딩 B)
+EN: "Which would you try first? 1) Mask pack 2) Sunscreen — tell me below"
+JP: どっちから試したい? 1)シートマスク 2)日焼け止め コメントで教えてね
+하단: Follow for everyday Korean life with Seoyeori
+
+[캡션]
+EN: A Korean night routine in 5 minutes ✨ Daily sunscreen and mask packs are part of everyday life in Korea. Which would you try first? 1) Mask pack 2) Sunscreen — tell me below!
+KR: 5분 한국식 밤 스킨케어예요. 한국에서는 선크림을 매일 바르는 습관과 마스크팩이 일상이에요. 어느 쪽을 먼저 해보고 싶으세요? 1) 마스크팩 2) 선크림
+JP: 韓国式ナイトルーティンを5分で✨ 韓国では日焼け止めを毎日塗る習慣やシートマスクが日常の一部。どちらから試したい? 1)シートマスク 2)日焼け止め
+
+[해시태그]
+#KoreanSkincare #Kbeauty #KoreanDailyLife #AICreator #韓国スキンケア #韓国コスメ
+
+[고정 댓글]
+다음 편: 찜질방 / Next: a day at a Korean jjimjilbang 🧖 / 次回:チムジルバン
+
+[체크]
+- AI 라벨 부착 확인(게시 시)
+- 제품명·브랜드 글자 노출 금지(세럼 통, 마스크팩 포장 등 전부 로고 비노출/블러)
+- 피부 묘사: 룰셋 v1.4.6 기준 문구 사용(natural-finish makeup / soft real skin / avoid acne 등), "skin texture on cheek" 류 표현 금지
+- 효능·치료 표현("피부가 좋아진다" 등) 사용 금지
+- 실내 장면 전부 맨발
+- CUT3 지아 음성: 전화 스피커 음질(muffled, tinny)로 구분 — 온카메라 여리 음성과 혼동되지 않게 Audio 블록에 명시함
+- ⚠️ 일본어(JP)/영어(EN) 라인은 scriptParserV3.js가 파싱하는 필드가 아님(참고용 텍스트) — 자동 생성에는 반영되지
+  않으므로, 04_making 자막 단계에서 한국어 위/일본어 아래 2단 레이아웃을 수동으로 얹을 것. 일본어 문구는
+  게시 전 원어민 확인 필수(브리프 11/22 과제)
+- 엔딩 B 최초 적용 — 1주차 엔딩 A 결과와 공유/프로필활동 비교 예정(12/2 판정, IG_R12 엔딩카드에 영향)

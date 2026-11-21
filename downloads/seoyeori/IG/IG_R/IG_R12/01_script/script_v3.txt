@@ -1,0 +1,270 @@
+================================================================
+마스터 코드
+[IG_R12] :: [PL:IG_RL] :: [SP:IN.JJ.ENT_HR_LNG.LT_WM] :: [CH:YR_VD+HJ_VD] :: [SH:SH_WS+SH_MS] :: [F군:미설정]
+================================================================
+에피소드명: 3분만 더 — 찜질방 완주기 (생활문화, 지아 등장) — 2주차 ②
+채널: 서여리 인스타그램 릴스 (IG_R12) · 게시 11/25(수)
+총 길이: 32초 (8+8+8+8)
+콘셉트: 서여리와 지아의 찜질방. 뜨거운 방에서 도망가려는 서여리를 지아가 "3분만 더"로 붙잡고, 결국 식혜와 구운 계란,
+  누워서 쉬는 시간까지 즐긴다. 사건(더워서 후퇴) → 감정(마지못해 따라함) → 선택(또 오고 싶어짐).
+  문화 포인트: 입구에서 신발을 벗고, 목욕 후 같은 찜질복으로 갈아입은 뒤 가족·친구와 함께 쉬는 한국식 휴식 공간.
+  실험: 반복 시청(완주율) 테스트.
+  엔딩 카드: IG_R11(11/23) 결과에서 성과가 나은 쪽(엔딩 A/B)으로 확정 예정 — 이 초안엔 A안을 임시 기본값으로 작성.
+================================================================
+EP.HEADER
+CHAR  : YEORI.BASE + JIA (characters.json jia)
+EP    : IG_R12
+TITLE : 3분만 더 — 찜질방 완주기
+LOOK.A: 서여리 — 찜질방 단색 유니폼 상하의(지아와 동일 디자인), 양말(맨발 아님 — 공공장소 규칙), 입장 전 신발은 CUT1 신발장에
+LOOK.B: 지아 — 동일 디자인 찜질복, 양머리 수건(CUT3부터), 입장 전 신발은 CUT1 신발장에 (characters.json jia 참조)
+BG.A  : 찜질방 입구(신발장) → 뜨거운 방(한증막) → 라운지(식혜·구운계란, 결말)
+LIGHT : LT_WM (찜질방 특유의 따뜻한 주황빛 조명)
+BGM   : 잔잔한 로파이, CUT4 중반 2~3초 정지(여운) 후 엔딩카드
+================================================================
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 1] ─ YEORI+JIA | 훅 — 입구, 신발 벗고 입장 | 8
+━━━━━━━━━━━━━━━━━━━━━━━━
+OSD(첫 3초 온스크린 텍스트): EN "Everyone wears the same outfit at a Korean jjimjilbang"
+SC: 입구에서 신발을 벗어 신발장에 넣고, 찜질복 차림의 서여리와 지아.
+SP: IN.JJ.ENT.LT_WM
+PL: YR_VD
+CH: 서여리 + 지아
+DL: 없음
+NR: 한국 찜질방은 모두가 같은 옷을 입고 쉬는 곳이에요.
+EN: At a Korean jjimjilbang, everyone relaxes in the same outfit.
+SH: SH_WS
+CA: CA_ST
+MD: MD_CLM
+AC: 0~4초 신발장 앞에서 신발을 벗어 넣는 두 사람(양말 상태, 맨발 아님) → 4~8초 찜질복 차림으로 나란히 걸어 들어가며 나레이션
+DU: 8
+CP: 한국 찜질방은 모두가 같은 옷을 입고 쉬는 곳이에요.
+CT: YEORI
+BEAT: 훅
+오디오:
+  BGM: 잔잔한 로파이 (0초부터)
+  음성: 여리 — 담담하고 친근한 톤 — ※나레이션, Flow 영상 생성에 화면 밖 V.O.로 직접 포함(⑬-4, TTS 불필요)
+  효과음: 신발장 문 여닫는 소리
+  앰비언스: 찜질방 입구의 잔잔한 소음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     찜질방 입구, 신발장 앞, 따뜻한 주황빛 조명
+CH(캐릭터):   서여리·지아 — 동일 디자인 찜질복, 양말 (맨발 아님 — 공공장소 규칙)
+SH(샷):       와이드샷
+CA(카메라):   고정
+AC(동작):     0~4초 신발장 앞에서 신발을 벗어 넣는 두 사람 → 4~8초 찜질복 차림으로 나란히 걸어 들어가며 나레이션
+MD(감정):     편안함, 설렘
+DL(대사):     없음
+NR(나레이션): 한국 찜질방은 모두가 같은 옷을 입고 쉬는 곳이에요.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+WIDE SHOT — two young Korean women in their early 20s at the entrance of a Korean jjimjilbang (bathhouse lounge), warm orange ambient lighting, wooden shoe lockers along the wall,
+The woman on the right: long wavy dark brown hair falling loosely, natural-finish makeup, skin looking soft and real rather than airbrushed, wearing a plain solid-color jjimjilbang uniform top and shorts, socks on her feet (no shoes), putting her sneakers into a shoe locker,
+The woman on the left: oval face, large dark brown almond eyes with dramatic curled lashes and subtle winged black eyeliner, full lips in deep mauve-brown, short wavy black bob with wispy curtain bangs, wearing the same style plain jjimjilbang uniform, socks on her feet (no shoes), putting her sneakers into a shoe locker, DO NOT change clothing,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, K-model proportions, small face, long legs, slender figure,
+photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no visible shop signage or logos, no clothing brand text, no other people in the background, only the two named women in frame, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+Visual: [0-4s] Both women stand at the shoe lockers near the entrance, taking off their sneakers and placing them inside, feet in socks only (never barefoot in this public space). [4-8s] They walk forward together into the lounge area in their matching jjimjilbang uniforms, relaxed and at ease. Both stay silent on camera throughout, lips gently closed and relaxed, no mouth movement.
+
+Audio: a separate off-screen narrator, a calm, natural voice that does not belong to either woman on screen, says in Korean: "한국 찜질방은 모두가 같은 옷을 입고 쉬는 곳이에요." Neither woman's lips move.
+
+No on-screen subtitle text or captions — Korean subtitle and the English line are added in post.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 2] ─ YEORI+JIA | 긴장 — 뜨거운 방, 3분만 더 | 8
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 뜨거운 방에서 땀을 흘리는 서여리가 슬쩍 나가려 함.
+SP: IN.JJ.HR.LT_WM
+PL: YR_VD
+CH: 서여리 + 지아
+DL: 여리 "나 좀 나갈게…" / 지아 "아직 3분 남았어."
+NR: 없음
+EN: I'm stepping out… / Three more minutes.
+SH: SH_MS
+CA: CA_ST
+MD: MD_TRD (더위에 지침)
+AC: 0~4초 뜨거운 황토방에서 땀을 흘리며 슬쩍 일어나려는 여리 → 4~8초 지아가 팔을 잡으며 말려 앉힘, 둘의 대사
+DU: 8
+SEG: 4+4
+CP: 나 좀 나갈게… / 아직 3분 남았어.
+CT: YEORI
+BEAT: 긴장
+오디오:
+  BGM: 로파이 (이어서)
+  음성: 여리 — 지친 투(반말) / 지아 — 단호하고 장난스러운 톤(반말)
+  효과음: 없음(한증막 특유의 조용함)
+  앰비언스: 뜨거운 황토방의 고요함, 희미한 숨소리
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     찜질방 뜨거운 황토방(한증막), 주황빛 조명
+CH(캐릭터):   서여리·지아 — 동일 찜질복, 양말 (CUT1과 동일)
+SH(샷):       미디엄샷
+CA(카메라):   고정
+AC(동작):     0~4초 땀을 흘리며 슬쩍 일어나려는 여리 → 4~8초 지아가 팔을 잡으며 말려 앉힘, 둘의 대사
+MD(감정):     더위에 지침 → 장난스러운 실랑이
+DL(대사):     여리 "나 좀 나갈게…" / 지아 "아직 3분 남았어."
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM SHOT — the same two young Korean women, same faces, same matching jjimjilbang uniforms, socks on, sitting inside a warm ochre-walled hot sauna room (한증막), warm orange ambient lighting, subtle sweat sheen on their skin,
+The woman on the right: fanning herself slightly, tired flushed expression, starting to rise. The woman on the left: reaching out to hold her arm, playful determined expression, pulling her back down, DO NOT change clothing,
+photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no visible signage or logos, no other people in the background, only the two named women in frame, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+Visual: [0-4s] The woman on the right, flushed and sweating in the hot sauna room, starts to rise as if to leave, tired expression, mouth closed. [4-8s] The woman on the left reaches out and holds her arm, pulling her back down with a playful, determined look.
+
+Audio:
+- 0.0s-4.0s: both women stay silent, mouths closed, only faint ambient room sound.
+- 4.0s-5.8s: the woman on the right, tired and reluctant, says in Korean (반말): "나 좀 나갈게…" while the woman on the left listens, mouth closed.
+- 5.8s-8.0s: the woman on the left, firm and playful, says in Korean (반말): "아직 3분 남았어." while the woman on the right stays silent, mouth closed, settling back down.
+
+No on-screen subtitle text or captions — Korean subtitle and the English line are added in post.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 3] ─ YEORI+JIA | 안정 — 식혜·구운계란, 누워서 쉼 | 8
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 양머리 수건, 식혜와 구운 계란을 먹고 바닥에 누워 쉬는 두 사람.
+SP: IN.JJ.LNG.LT_WM
+PL: YR_VD
+CH: 서여리 + 지아
+DL: 없음
+NR: 식혜, 구운 계란, 누워서 쉬는 시간까지. 이게 찜질방 코스예요.
+EN: Sikhye, roasted eggs, lying down to rest. That's the whole experience.
+SH: SH_MS
+CA: CA_ST
+MD: MD_CNT (만족)
+AC: 0~4초 양머리 수건을 두른 두 사람이 식혜와 구운 계란을 먹음 → 4~8초 따뜻한 바닥에 나란히 누워 쉬며 나레이션
+DU: 8
+CP: 식혜, 구운 계란, 누워서 쉬는 시간까지. 이게 찜질방 코스예요.
+CT: YEORI
+BEAT: 안정
+오디오:
+  BGM: 로파이 (이어서, 편안하게)
+  음성: 여리 — 만족스럽고 편안한 톤 — ※나레이션, Flow 영상 생성에 화면 밖 V.O.로 직접 포함(⑬-4, TTS 불필요)
+  효과음: 계란 까는 소리, 식혜 마시는 소리(가볍게)
+  앰비언스: 라운지의 편안한 소음(멀리 TV 소리 등)
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     찜질방 라운지(휴게 구역), 따뜻한 조명
+CH(캐릭터):   서여리·지아 — 찜질복, 양머리 수건
+SH(샷):       미디엄샷
+CA(카메라):   고정
+AC(동작):     0~4초 양머리 수건을 두른 두 사람이 식혜와 구운 계란을 먹음 → 4~8초 따뜻한 바닥에 나란히 누워 쉬며 나레이션
+MD(감정):     만족, 편안함
+DL(대사):     없음
+NR(나레이션): 식혜, 구운 계란, 누워서 쉬는 시간까지. 이게 찜질방 코스예요.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM SHOT — the same two young Korean women, same faces, same matching jjimjilbang uniforms, both with a twisted sheep-ear towel wrap on their heads (playful jjimjilbang towel style),
+sitting on the heated floor of a lounge area, eating roasted eggs and sipping sikhye (sweet rice drink) from small cups, warm cozy orange ambient lighting, content relaxed expressions, DO NOT change clothing,
+photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no visible signage, brand names or logos on cups/packaging, no other people in the background, only the two named women in frame, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+Visual: [0-4s] Both women, towels twisted into sheep-ear shapes on their heads, sit together eating roasted eggs and sipping sikhye from small cups, relaxed and content. [4-8s] They lie down side by side on the warm heated floor, stretching out comfortably, smiling at the ceiling. Both stay silent on camera throughout, lips gently closed and relaxed, no mouth movement.
+
+Audio: a separate off-screen narrator, a calm, content voice that does not belong to either woman on screen, says in Korean: "식혜, 구운 계란, 누워서 쉬는 시간까지. 이게 찜질방 코스예요." Neither woman's lips move.
+
+No on-screen subtitle text or captions — Korean subtitle and the English line are added in post.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 4] ─ YEORI+JIA | 결말 — 나란히 누워 여운, 엔딩카드 | 8
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 나란히 누워 천장을 보는 두 사람. 정적 2~3초(BGM 정지) 후 엔딩 카드.
+SP: IN.JJ.LNG.LT_WM
+PL: YR_VD
+CH: 서여리 + 지아
+DL: 없음
+NR: 더위가 지나가면, 이상하게 또 생각나요.
+EN: Once the heat passes, you somehow want to come back.
+SH: SH_MS
+CA: CA_ST
+MD: MD_WRM
+AC: 0~4초 나란히 누워 천장을 보며 편안하게 웃는 두 사람 → 4~6초 정적 2초(BGM 정지) → 6~8초 여리가 카메라 쪽을 보며 나레이션
+DU: 8
+CP: 더위가 지나가면, 이상하게 또 생각나요.
+CT: YEORI
+BEAT: 결말
+오디오:
+  BGM: 로파이 → 4~6초 지점 2초간 완전 정지(여운) → 6초부터 낮게 흐르다 엔딩카드에서 페이드아웃
+  음성: 여리 — 잔잔하고 다정한 톤 — ※나레이션, Flow 영상 생성에 화면 밖 V.O.로 직접 포함(⑬-4, TTS 불필요)
+  효과음: 없음
+  앰비언스: 조용한 라운지(정적 구간엔 거의 무음)
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     찜질방 라운지 (CUT3과 동일 공간)
+CH(캐릭터):   서여리·지아 — 찜질복 (CUT3과 동일)
+SH(샷):       미디엄샷
+CA(카메라):   고정
+AC(동작):     0~4초 나란히 누워 천장을 보며 편안하게 웃음 → 4~6초 정적 → 6~8초 여리가 카메라를 보며 나레이션
+MD(감정):     따뜻함, 여운
+DL(대사):     없음
+NR(나레이션): 더위가 지나가면, 이상하게 또 생각나요.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM SHOT — the same two young Korean women, same faces, same matching jjimjilbang uniforms, lying side by side on the warm heated floor looking up, relaxed contented smiles, DO NOT change clothing,
+warm cozy orange ambient lighting, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no visible signage or logos, no other people in the background, only the two named women in frame, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+Visual: [0-4s] Both women lie side by side on the warm floor, looking up, relaxed contented smiles. [4-6s] They go still for a quiet beat, no sound but faint ambient room noise. [6-8s] The woman on the right turns her head slightly toward camera, warm soft expression, mouth closed, not speaking on camera. Both stay silent on camera throughout, lips gently closed and relaxed, no mouth movement.
+
+Audio: a separate off-screen narrator, a calm, warm voice that does not belong to either woman on screen, says in Korean: "더위가 지나가면, 이상하게 또 생각나요." Neither woman's lips move.
+
+No on-screen subtitle text or captions — Korean subtitle and the English line are added in post.
+================================================================
+
+
+[엔딩 카드] (마지막 2~3초, 오버레이)
+⚠️ IG_R11(11/23) 결과에서 성과가 나은 쪽(엔딩 A/B)으로 확정 예정 — 이 초안은 A안을 임시 기본값으로 적용.
+A안(임시): "Send this to the friend you'd take to a jjimjilbang"
+
+[캡션]
+EN: Matching outfits, roasted eggs, sikhye, and a nap on a warm floor 🇰🇷 A jjimjilbang is a bathhouse, a lounge, and sometimes an overnight stop. Hours and overnight rules vary by place. Would you try it?
+KR: 찜질방은 같은 옷을 입고, 구운 계란과 식혜를 먹고, 따뜻한 바닥에서 쉬는 한국식 휴식 공간이에요. 운영 시간과 숙박 가능 여부는 매장마다 달라요.
+JP: おそろいの服、焼き卵、シッケ、あたたかい床でゴロゴロ。チムジルバンは韓国式の休憩スポットです。営業時間や宿泊の可否はお店によって違います。
+
+[해시태그]
+#Jjimjilbang #KoreanSpa #KoreanCulture #KoreanDailyLife #AICreator #韓国 #チムジルバン
+
+[고정 댓글]
+이번 금요일: 서여리의 서울 하루 지도 / This Friday: Seoyeori's Seoul in one day
+
+[체크]
+- AI 라벨 부착 확인(게시 시)
+- 탕·탈의 장면 전부 제외 — 찜질복 착용 구역(입구/한증막/라운지)만 묘사
+- 공공장소 규칙: 맨발 금지, 전 장면 양말 착용(집 장면 맨발 규칙과 반대 — PUBLIC_INDOOR_RE 가드 대상 확인)
+- 특정 업소 상호·간판 비노출
+- 지아 실제 얼굴 등장 — characters.json jia 레퍼런스 이미지(jia-face.jpg/jia-closeup.jpg) 생성 시 반드시 참조
+- 양머리 수건은 "꼭 해야 하는 규칙"처럼 단정적으로 쓰지 않고 놀이 요소로만 묘사(브리프 제작메모 반영)
+- 선정적 연출 금지
+- CUT2 대사는 SEG 4+4(발화 컷 규칙 ⑬-2) — 생성 시 "발화 (한국어)" 블록이 VP 하단에 자동 추가될 수 있음(본 VP의
+  Audio 블록과 중복돼도 무방)
+- 엔딩 카드는 IG_R11(11/23) 결과 확정 전까지 임시값 — 정식 생성 전 반드시 재확인

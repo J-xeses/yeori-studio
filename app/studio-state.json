@@ -14215,7 +14215,7 @@
   "videoTabState": {
     "videoClips": {},
     "g4Approved": {},
-    "selectedCutId": null,
+    "selectedCutId": "cut-1",
     "subtitles": {}
   },
   "ttsTabState": {

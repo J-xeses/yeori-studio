@@ -1,0 +1,165 @@
+================================================================
+마스터 코드
+[IG_P06] :: [PL:IG_CR] :: [SP:MIXED] :: [CH:YR_IM] :: [SH:MIXED] :: [F군:미설정]
+================================================================
+에피소드명: 서여리의 서울 하루 지도 (음식·장소) — 2주차 ③
+채널: 서여리 인스타그램 캐러셀 (IG_P06) · 게시 11/27(금)
+총 장수: 7장 (표지 1 + 아침·점심·오후·저녁·밤 5 + 마무리 1)
+목적: 프로필 방문자가 서여리의 세계를 한눈에 보는 허브 게시물. 고정 게시물(하이라이트) 후보 — 프로필 방문·팔로우가
+  릴스 평균 이상이면 고정 3개 중 P01 자리를 이 캐러셀로 교체.
+콘셉트: 서여리의 하루를 아침→점심→오후→저녁→밤 순서로 보여주는 "하루 지도". 실제 업소가 아니라 장소 유형을
+  보여주는 것이 원칙 — 표지의 지도는 특정 업소 표시 없는 일러스트.
+제작 메모:
+  - 표지(패널1)의 "지도"는 실제 업소가 아니라 장소 유형을 보여주는 일러스트 지도 — 별도 일러스트 소스 1종이
+    필요(브리프 11/22까지 준비 항목, 2026-11-21 기준 아직 미확보). 소스 확보 전까지 패널1 생성은 보류 권장.
+  - 패널2~6은 실사 사진컷(서여리 등장), 글자는 이미지 생성에 넣지 않고 HTML/그래픽 카드로 별도 얹는다
+    (IG_P05와 동일 방식).
+  - 패널6(밤·찜질방)은 IG_R12(11/25) 생성 컷 중 서여리 단독이 잘 나온 스틸 프레임을 재사용할 수 있다 —
+    중복 생성 비용을 줄이려면 IG_R12 완성 후 이 패널을 나중에 확정하는 순서를 권장.
+================================================================
+EP.HEADER
+CHAR  : YEORI.BASE (패널1~5 실사 등장, 패널6은 IG_R12 재사용 검토, 패널7 인물 미등장)
+EP    : IG_P06
+TITLE : 서여리의 서울 하루 지도
+LOOK.A: 서여리 — 패널별 캐주얼 데일리룩(아래 각 패널 참조), 자연광/야외 위주, 밝고 친근한 표정
+BGM   : 없음(캐러셀, 무음 — 캡션/카드 텍스트 중심)
+================================================================
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[패널 1] ─ 표지 — 일러스트 지도 + 서여리 스틸 + 제목
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 일러스트 지도 배경 위에 서여리 스틸 합성 + 제목 텍스트 오버레이.
+SP: OUT.PARK.DY.LT_SUN
+PL: YR_IM
+CH: 서여리
+CP: 서여리의 서울 하루 / Seoyeori's Seoul in one day
+CT: GRAPHIC
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM SHOT — a young Korean woman in her early 20s, long wavy dark brown hair falling naturally, natural-finish makeup, skin looking soft and real rather than airbrushed, gentle healthy sheen,
+casual daily outfit (soft knit top), standing outdoors in natural daylight with a bright friendly smile looking just off-camera,
+photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, plenty of clean negative space around her for a background map graphic and title overlay, no legible text or logos, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine
+
+제작 노트: 인물 스틸은 단순 배경으로 생성 후, 별도 확보할 일러스트 지도(특정 업소 표시 없는 형태) 위에 합성.
+타이포는 굵은 손글씨 계열(Gamja Flower 등, 기존 썸네일 타이포 원칙과 동일)+사진의 네거티브 스페이스에 맞춰 배치. 얇은 캡션형 금지.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[패널 2] ─ 아침 — 편의점 커피와 삼각김밥
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP: IN.CVS.DY.LT_FL
+PL: YR_IM
+CH: 서여리
+CP: 아침은 편의점에서 / Breakfast at the convenience store
+CT: GRAPHIC
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM SHOT — the same young Korean woman, same face, casual daily outfit,
+standing inside a convenience store in the morning, holding a canned coffee and a triangle rice snack (samgak-gimbap), warm satisfied morning expression,
+bright fluorescent store lighting, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text or brand logos on packaging, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[패널 3] ─ 점심 — 반찬 여러 개, 한식 점심상
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP: IN.RST.DY.LT_WD
+PL: YR_IM
+CH: 서여리
+CP: 밥과 반찬, 점심 한 상 / Rice and side dishes for lunch
+CT: GRAPHIC
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM SHOT — the same young Korean woman, same face, casual daily outfit,
+sitting at a Korean restaurant table set with rice, soup, and several small side dishes (banchan), picking up a side dish with chopsticks, content everyday expression,
+warm natural daylight through a window, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text or logos, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[패널 4] ─ 오후 — 한강공원, 편의점 라면
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP: OUT.HN.DY.LT_SUN
+PL: YR_IM
+CH: 서여리
+CP: 한강에서 라면 한 그릇 / A bowl of ramen by the Han River
+CT: GRAPHIC
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM SHOT — the same young Korean woman, same face, casual daily outfit,
+sitting at an outdoor convenience-store table by the Han River park in the afternoon, eating cup ramen with chopsticks, the river visible in the background, relaxed happy expression,
+bright natural daylight, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text or logos, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[패널 5] ─ 저녁 — 포장마차 길거리 간식
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP: OUT.ST.EV.LT_WM
+PL: YR_IM
+CH: 서여리
+CP: 퇴근길 길거리 간식 / Street snacks on the way home
+CT: GRAPHIC
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM SHOT — the same young Korean woman, same face, casual daily outfit,
+standing at an outdoor street food cart (pojangmacha) in the evening, holding a skewer of Korean street snacks, warm string lights and cart lighting, satisfied relaxed smile,
+warm evening ambient lighting, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no visible shop signage or logos, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[패널 6] ─ 밤 — 찜질방 휴식 (IG_R12 재사용 검토)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP: IN.JJ.LNG.LT_WM
+PL: YR_IM
+CH: 서여리
+CP: 밤엔 찜질방에서 쉬어요 / Resting at a jjimjilbang at night
+CT: GRAPHIC
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM SHOT — the same young Korean woman, same face, wearing a plain solid-color jjimjilbang uniform, socks on (no shoes), lying relaxed on the warm heated floor of a jjimjilbang lounge at night, content peaceful smile,
+warm cozy orange ambient lighting, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no visible signage or logos, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine
+
+제작 노트: IG_R12(11/25 찜질방 릴스) CUT3·4 생성 컷 중 서여리 단독이 잘 나온 스틸 프레임을 추출해 재사용 가능 —
+별도 생성 전에 IG_R12 결과 먼저 확인 권장(중복 생성 비용 절감).
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[패널 7] ─ 마무리 — 저장 + 질문 + 팔로우
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP: GR.ED
+PL: GR_ED
+CH: 없음
+CP: 지도에 넣고 싶은 장소는? 댓글로 알려주세요 / What would you add to the map? Comment below
+CT: GRAPHIC
+IP: 텍스트 전용 카드 — 이미지 생성 불필요. HTML/그래픽 카드로 직접 제작.
+================================================================
+
+
+[캡션]
+EN: One day in Seoul with Seoyeori 🗺️ Convenience store breakfast, a ramen by the Han River, street snacks, and a night at a jjimjilbang. What would you add to the map? Save this for your trip 📌
+KR: 서여리의 서울 하루예요. 편의점 아침, 한강 라면, 길거리 간식, 그리고 밤의 찜질방까지. 지도에 넣고 싶은 곳이 있다면 댓글로 알려주세요.
+JP: ソ・ヨリと過ごすソウルの1日🗺️ コンビニの朝ごはん、漢江のラーメン、屋台のおやつ、夜はチムジルバン。地図に加えたい場所はある? 保存して旅の参考にしてね。
+
+[해시태그]
+#SeoulTravel #KoreanDailyLife #KoreanFood #AICreator #ソウル旅行 #韓国グルメ
+
+[판정]
+프로필 방문·팔로우가 릴스 평균 이상이면 고정 게시물 3개 중 P01 자리를 이 캐러셀로 교체.
+
+[체크]
+- AI 라벨 부착 확인(게시 시, 패널1~6 실사컷 전부 포함)
+- ⚠️ 패널1 일러스트 지도 소스 아직 미확보 — 브리프 11/22 준비 항목, 확보 전 패널1 생성 보류 권장
+- 실제 업소명·간판·로고 전부 비노출(패널1 지도 포함 — 장소 "유형"만 표현)
+- 패널6은 IG_R12 완성 후 재사용 여부 먼저 검토(중복 생성 방지)
+- 일본어 문구는 게시 전 원어민에 가까운 분 확인
