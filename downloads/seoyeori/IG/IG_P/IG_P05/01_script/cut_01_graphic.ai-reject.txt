@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080">
+<title>서여리 스틸 + 제목</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 1080px;
+    height: 1920px;
+    overflow: hidden;
+    background-color: #0C0A10;
+    font-family: 'Pretendard','Apple SD Gothic Neo',-apple-system,BlinkMacSystemFont,sans-serif;
+  }
+
+  /* ── 전체 래퍼 ── */
+  .root {
+    position: relative;
+    width: 1080px;
+    height: 1920px;
+    background: #0C0A10;
+    overflow: hidden;
+  }
+
+  /* ══════════════════════════════
+     서울 지도 SVG 배경
+  ══════════════════════════════ */
+  .map-layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    animation: mapFadeIn 1.4s cubic-bezier(.4,0,.2,1) 0.1s forwards;
+  }
+
+  @keyframes mapFadeIn {
+    from { opacity: 0; transform: scale(1.06); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  .map-svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* 지도 위 그라디언트 오버레이 */
+  .map-overlay {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 70% 60% at 50% 42%, rgba(12,10,16,0.18) 0%, rgba(12,10,16,0.72) 100%),
+      linear-gradient(180deg,
+        rgba(12,10,16,0.55) 0%,
+        rgba(12,10,16,0.10) 28%,
+        rgba(12,10,16,0.10) 60%,
+        rgba(12,10,16,0.90) 100%
+      );
+  }
+
+  /* 맥동하는 위치 핀 */
+  .pin-pulse {
+    position: absolute;
+    top: 48%;
+    left: 52%;
+    transform: translate(-50%, -50%);
+    animation: pinAppear 0.6s ease 1.2s both;
+  }
+
+  @keyframes pinAppear {
+    from { opacity: 0; transform: translate(-50%,-50%) scale(0); }
+    to   { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+  }
+
+  .pin-ring {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    width: 110px; height: 110px;
+    border-radius: 50%;
+    border: 2px solid rgba(91,184,255,0.6);
+    animation: ringPulse 2.4s ease-in-out 1.8s infinite;
+  }
+  .pin-ring:nth-child(2) {
+    width: 160px; height: 160px;
+    border-color: rgba(91,184,255,0.3);
+    animation-delay: 2.1s;
+  }
+  .pin-ring:nth-child(3) {
+    width: 220px; height: 220px;
+    border-color: rgba(91,184,255,0.15);
+    animation-delay: 2.4s;
+  }
+
+  @keyframes ringPulse {
+    0%   { transform: translate(-50%,-50%) scale(0.7); opacity: 1; }
+    100% { transform: translate(-50%,-50%) scale(1.5); opacity: 0; }
+  }
+
+  .pin-dot {
+    position: relative;
+    z-index: 2;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: #5BB8FF;
+    box-shadow: 0 0 0 4px rgba(91,184,255,0.3), 0 0 24px 8px rgba(91,184,255,0.5);
+    animation: dotGlow 2s ease-in-out 1.8s infinite alternate;
+  }
+
+  @keyframes dotGlow {
+    from { box-shadow: 0 0 0 4px rgba(91,184,255,0.3), 0 0 24px 8px rgba(91,184,255,0.5); }
+    to   { box-shadow: 0 0 0 6px rgba(91,184,255,0.5), 0 0 44px 16px rgba(91,184,255,0.7); }
+  }
+
+  /* ══════════════════════════════
+     그리드 / 스캔라인 텍스처
+  ══════════════════════════════ */
+  .grid-texture {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(91,184,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(91,184,255,0.04) 1px, transparent 1px);
+    background-size: 54px 54px;
+    animation: gridDrift 12s linear infinite;
+  }
+
+  @keyframes gridDrift {
+    from { transform: translate(0,0); }
+    to   { transform: translate(54px, 54px); }
+  }
+
+  /* ══════════════════════════════
+     상단 배지
+  ══════════════════════════════ */
+  .top-badge {
+    position: absolute;
+    top: 110px;
+    left: 65px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    opacity: 0;
+    animation: slideRight 0.7s cubic-bezier(.22,1,.36,1) 0.3s forwards;
+  }
+
+  @keyframes slideRight {
+    from { opacity: 0; transform: translateX(-40px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  .badge-pill {
+    background: linear-gradient(135deg, #5BB8FF 0%, #C87FFF 100%);
+    color: #0C0A10;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    padding: 10px 28px;
+    border-radius: 100px;
+  }
+
+  .badge-line {
+    width: 80px;
+    height: 3px;
+    background: linear-gradient(90deg, #5BB8FF, transparent);
+    border-radius: 2px;
+  }
+
+  /* ══════════════════════════════
+     캐릭터 실루엣 (여리 스틸컷 대체)
+  ══════════════════════════════ */
+  .character-layer {
+    position: absolute;
+    bottom: 320px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 480px;
+    height: 820px;
+    opacity: 0;
+    animation: charRise 1s cubic-bezier(.22,1,.36,1) 0.6s forwards;
+  }
+
+  @keyframes charRise {
+    from { opacity: 0; transform: translateX(-50%) translateY(60px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+
+  .char-glow {
+    position: absolute;
+    bottom: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 360px;
+    height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(200,127,255,0.35) 0%, transparent 70%);
+    animation: glowBreathe 3s ease-in-out 3s infinite alternate;
+  }
+
+  @keyframes glowBreathe {
+    from { opacity: 0.6; transform: translateX(-50%) scaleX(1); }
+    to   { opacity: 1;   transform: translateX(-50%) scaleX(1.15); }
+  }
+
+  /* ══════════════════════════════
+     떠다니는 한국어 단어 태그
+  ══════════════════════════════ */
+  .float-tags {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .tag {
+    position: absolute;
+    color: #F5F1EC;
+    font-weight: 700;
+    border-radius: 12px;
+    padding: 10px 20px;
+    white-space: nowrap;
+    opacity: 0;
+  }
+
+  .tag-1 {
+    top: 310px; left: 68px;
+    font-size: 32px;
+    background: rgba(91,184,255,0.18);
+    border: 1.5px solid rgba(91,184,255,0.45);
+    color: #5BB8FF;
+    animation: tagFloat1 0.7s cubic-bezier(.22,1,.36,1) 1.0s forwards, floatY1 3.6s ease-in-out 1.7s infinite;
+  }
+  .tag-2 {
+    top: 420px; right: 68px;
+    font-size: 28px;
+    background: rgba(200,127,255,0.18);
+    border: 1.5px solid rgba(200,127,255,0.45);
+    color: #C87FFF;
+    animation: tagFloat2 0.7s cubic-bezier(.22,1,.36,1) 1.2s forwards, floatY2 4.1s ease-in-out 1.9s infinite;
+  }
+  .tag-3 {
+    top: 560px; left: 68px;
+    font-size: 30px;
+    background: rgba(255,107,138,0.18);
+    border: 1.5px solid rgba(255,107,138,0.45);
+    color: #FF6B8A;
+    animation: tagFloat1 0.7s cubic-bezier(.22,1,.36,1) 1.4s forwards, floatY1 3.9s ease-in-out 2.1s infinite;
+  }
+  .tag-4 {
+    top: 680px; right: 68px;
+    font-size: 28px;
+    background: rgba(255,184,119,0.18);
+    border: 1.5px solid rgba(255,184,119,0.45);
+    color: #FFB877;
+    animation: tagFloat2 0.7s cubic-bezier(.22,1,.36,1) 1.6s forwards, floatY2 4.4s ease-in-out 2.3s infinite;
+  }
+  .tag-5 {
+    top: 800px; left: 68px;
+    font-size: 30px;
+    background: rgba(91,184,255,0.18);
+    border: 1.5px solid rgba(91,184,255,0.45);
+    color: #5BB8FF;
+    animation: tagFloat1 0.7s cubic-bezier(.22,1,.36,1) 1.8s forwards, floatY1 3.7s ease-in-out 2.5s infinite;
+  }
+
+  @keyframes tagFloat1 {
+    from { opacity: 0; transform: translateX(-30px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes tagFloat2 {
+    from { opacity: 0; transform: translateX(30px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes floatY1 {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-12px); }
+  }
+  @keyframes floatY2 {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(12px); }
+  }
+
+  /* ══════════════════════════════
+     숫자 카운터 강조
+  ══════════════════════════════ */
+  .number-accent {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    font-size: 420px;
+    font-weight: 900;
+    color: rgba(91,184,255,0.04);
+    letter-spacing: -0.05em;
+    line-height: 1;
+    white-space: nowrap;
+    pointer-events: none;
+    animation: numFade 1s ease 0.5s both;
+  }
+
+  @keyframes numFade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* ══════════════════════════════
+     하단 메인 텍스트 블록
+  ══════════════════════════════ */
+  .text-block {
+    position: absolute;
+    bottom: 0;
+    left: 0; right: 0;
+    padding: 0 65px 100px;
+    background: linear-gradient(0deg, rgba(12,10,16,0.98) 0%, rgba(12,10,16,0.85) 55%, transparent 100%);
+  }
+
+  /* 한글 메인 타이틀 */
+  .title-ko {
+    display: block;
+    font-size: 72px;
+    font-weight: 900;
+    line-height: 1.18;
+    color: #F5F1EC;
+    letter-spacing: -0.02em;
+    clip-path: inset(0 100% 0 0);
+    animation: revealTitle 0.9s cubic-bezier(.77,0,.18,1) 1.5s forwards;
+  }
+
+  .title-ko .hl {
+    background: linear-gradient(135deg, #5BB8FF 0%, #C87FFF 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  @keyframes revealTitle {
+    from { clip-path: inset(0 100% 0 0); }
+    to   { clip-path: inset(0 0% 0 0); }
+  }
+
+  /* 숫자 강조 배지 */
+  .num-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 90px; height: 90px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #5BB8FF, #C87FFF);
+    font-size: 48px;
+    font-weight: 900;
+    color: #0C0A10;
+    margin-right: 18px;
+    vertical-align: middle;
+    flex-shrink: 0;
+    opacity: 0;
+    animation: badgePop 0.5s cubic-bezier(.34,1.56,.64,1) 1.4s forwards;
+  }
+
+  @keyframes badgePop {
+    from { opacity: 0; transform: scale(0.4) rotate(-15deg); }
+    to   { opacity: 1; transform: scale(1) rotate(0deg); }
+  }
+
+  .title-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 18px;
+  }
+
+  /* 영어 서브타이틀 */
+  .title-en {
+    display: block;
+    font-size: 36px;
+    font-weight: 500;
+    color: rgba(245,241,236,0.62);
+    letter-spacing: 0.01em;
+    line-height: 1.4;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.7s ease 2.2s forwards;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* 구분선 */
+  .divider {
+    width: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #5BB8FF, #C87FFF, transparent);
+    border-radius: 2px;
+    margin-bottom: 32px;
+    animation: dividerGrow 0.8s ease 1.8s forwards;
+  }
+
+  @keyframes dividerGrow {
+    from { width: 0; }
+    to   { width: 100%; }
+  }
+
+  /* 하단 채널 태그 */
+  .channel-tag {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 36px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease 0.5s forwards;
+  }
+
+  .ch-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: #FF6B8A;
+    animation: dotPulse 2s ease-in-out 3s infinite;
+  }
+
+  @keyframes dotPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,107,138,0.6); }
+    50%      { box-shadow: 0 0 0 8px rgba(255,107,138,0); }
+  }
+
+  .ch-name {
+    font-size: 30px;
+    font-weight: 700;
+    color: rgba(245,241,236,0.70);
+    letter-spacing: 0.04em;
+  }
+
+  /* 스캔 라인 효과 */
+  .scanline {
+    position: absolute;
+    top: -100%;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, rgba(91,184,255,0.6), transparent);
+    animation: scan 4s linear 0.8s infinite;
+  }
+
+  @keyframes scan {
+    0%   { top: -2%; }
+    100% { top: 102%; }
+  }
+
+  /* 코너 데코 */
+  .corner {
+    position: absolute;
+    width: 60px; height: 60px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease 0.8s forwards;
+  }
+  .corner-tl { top: 65px; left: 65px; border-top: 3px solid #5BB8FF; border-left: 3px solid #5BB8FF; }
+  .corner-tr { top: 65px; right: 65px; border-top: 3px solid #C87FFF; border-right: 3px solid #C87FFF; }
+  .corner-bl { bottom: 65px; left: 65px; border-bottom: 3px solid #C87FFF; border-left: 3px solid #C87FFF; }
+  .corner-br { bottom: 65px; right: 65px; border-bottom: 3px solid #5BB8FF; border-right: 3px solid #5BB8FF; }
+
+</style>
+</head>
+<body>
+<div class="root">
+
+  <!-- 서울 지도 SVG 배경 -->
+  <div class="map-layer">
+    <svg class="map-svg" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <radialGradient id="bgGrad" cx="50%" cy="45%" r="65%">
+          <stop offset="0%" stop-color="#1A1630"/>
+          <stop offset="100%" stop-color="#0C0A10"/>
+        </radialGradient>
+        <!-- 한강 그라디언트 -->
+        <linearGradient id="riverGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#1A3A5C" stop-opacity="0.8"/>
+          <stop offset="40%" stop-color="#1E4A72" stop-opacity="0.9"/>
+          <stop offset="100%" stop-color="#152E48" stop-opacity="0.7"/>
+        </linearGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="softGlow">
+          <feGaussianBlur stdDeviation="6" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      <!-- 배경 -->
+      <rect width="1080" height="1920" fill="url(#bgGrad)"/>
+
+      <!-- 도시 블록 (구 경계 스타일) -->
+      <!-- 도봉·노원 북부 -->
+      <path d="M 200 80 L 420 60 L 580 90 L 620 180 L 540 220 L 380 240 L 240 200 Z"
+            fill="rgba(91,184,255,0.04)" stroke="rgba(91,184,255,0.18)" stroke-width="1.5"/>
+      <!-- 은평·서대문·마포 서부 -->
+      <path d="M 60 220 L 240 200 L 310 310 L 280 440 L 140 460 L 60 380 Z"
+            fill="rgba(200,127,255,0.04)" stroke="rgba(200,127,255,0.14)" stroke-width="1.5"/>
+      <!-- 종로·중구·용산 중심부 -->
+      <path d="M 310 280 L 540 260 L 600 360 L 580 480 L 380 500 L 280 440 Z"
+            fill="rgba(91,184,255,0.06)" stroke="rgba(91,184,255,0.22)" stroke-width="2"/>
+      <!-- 성동·광진·동대문 동부 -->
+      <path d="M 580 240 L 820 200 L 900 320 L 880 460 L 680 490 L 600 400 Z"
+            fill="rgba(255,107,138,0.04)" stroke="rgba(255,107,138,0.14)" stroke-width="1.5"/>
+      <!-- 강남·서초 -->
+      <path d="M 340 820 L 680 790 L 760 940 L 720 1080 L 420 1100 L 300 960 Z"
+            fill="rgba(91,184,255,0.05)" stroke="rgba(91,184,255,0.18)" stroke-width="1.5"/>
+      <!-- 송파·강동 -->
+      <path d="M 680 800 L 940 760 L 1020 900 L 980 1060 L 760 1080 L 680 950 Z"
+            fill="rgba(200,127,255,0.04)" stroke="rgba(200,127,255,0.14)" stroke-width="1.5"/>
+      <!-- 관악·동작 남서 -->
+      <path d="M 80 840 L 340 820 L 300 980 L 160 1020 L 60 920 Z"
+            fill="rgba(255,184,119,0.04)" stroke="rgba(255,184,119,0.14)" stroke-width="1.5"/>
+
+      <!-- 한강 본류 -->
+      <path d="M -20 680 C 80 660 180 650 320 648 C 460 646 540 655 620 658 C 720 662 820 650 940 640 C 1000 635 1060 632 1100 630"
+            fill="none" stroke="url(#riverGrad)" stroke-width="68" stroke-linecap="round" opacity="0.9"/>
+      <!-- 한강 하이라이트 (반짝임) -->
+      <path d="M -20 672 C 180 655 400 648 620 652 C 820 656 1000 638 1100 630"
+            fill="none" stroke="rgba(91,184,255,0.25)" stroke-width="4" stroke-linecap="round"
+            stroke-dasharray="40 20" opacity="0.7">
+        <animate attributeName="stroke-dashoffset" from="0" to="-120" dur="3s" repeatCount="indefinite"/>
+      </path>
+
+      <!-- 한강 텍스트 -->
+      <text x="520" y="670" font-family="'Apple SD Gothic Neo',sans-serif" font-size="22" font-weight="600"
+            fill="rgba(91,184,255,0.55)" text-anchor="middle" letter-spacing="6">한 강</text>
+
+      <!-- 주요 도로 (방사형 대로) -->
+      <!-- 경부고속도로 방향 세로 대로 -->
+      <path d="M 540 60 L 530 680 L 510 1200 L 500 1920"
+            fill="none" stroke="rgba(91,184,255,0.22)" stroke-width="3"/>
+      <!-- 강변북로 -->
+      <path d="M -20 630 C 200 620 500 618 1100 605"
+            fill="none" stroke="rgba(91,184,255,0.18)" stroke-width="2.5" stroke-dasharray="20 8"/>
+      <!-- 올림픽대로 -->
+      <path d="M -20 720 C 200 715 500 710 1100 695"
+            fill="none" stroke="rgba(91,184,255,0.18)" stroke-width="2.5" stroke-dasharray="20 8"/>
+      <!-- 외곽순환 북부 (호선) -->
+      <path d="M 60 150 C 300 100 700 80 980 160"
+            fill="none" stroke="rgba(200,127,255,0.20)" stroke-width="2" stroke-dasharray="16 8"/>
+      <!-- 외곽순환 남부 -->
+      <path d="M 60 1100 C 300 1150 700 1160 1020 1080"
+            fill="none" stroke="rgba(200,127,255,0.18)" stroke-width="2" stroke-dasharray="16 8"/>
+      <!-- 동서 대로 1 -->
+      <path d="M 60 380 L 1020 350"
+            fill="none" stroke="rgba(255,184,119,0.14)" stroke-width="2"/>
+      <!-- 동서 대로 2 -->
+      <path d="M 60 500 L 1020 480"
+            fill="none" stroke="rgba(255,184,119,0.14)" stroke-width="2"/>
+      <!-- 사선 대로 (경인로 방향) -->
+      <path d="M 60 440 L 460 320 L 580 300"
+            fill="none" stroke="rgba(91,184,255,0.16)" stroke-width="2"/>
+      <!-- 동부간선 -->
+      <path d="M 860 60 L 850 650 L 820 1200"
+            fill="none" stroke="rgba(91,184,255,0.16)" stroke-width="2"/>
+
+      <!-- 지하철 노선들 -->
+      <!-- 1호선 (남북 진한 파랑) -->
+      <path d="M 530 80 L 528 460 L 522 630 L 518 760 L 510 1100"
+            fill="none" stroke="#2563EB" stroke-width="5" opacity="0.55"/>
+      <!-- 2호선 순환선 (녹색 타원) -->
+      <ellipse cx="520" cy="490" rx="310" ry="210"
+               fill="none" stroke="#16A34A" stroke-width="5" opacity="0.5"
+               stroke-dasharray="30 6"/>
+      <!-- 4호선 (하늘색 사선) -->
+      <path d="M 340 100 L 400 300 L 440 460 L 460 640 L 440 820 L 400 1050"
+            fill="none" stroke="#06B6D4" stroke-width="4" opacity="0.45"/>
+      <!-- 경의중앙선 (보라) -->
+      <path d="M 60 350 C 200 340 380 360 530 400 C 660 430 800 400 980 320"
+            fill="none" stroke="#7C3AED" stroke-width="4" opacity="0.4" stroke-dasharray="22 7"/>
+      <!-- 신분당선 (빨강) -->
+      <path d="M 530 360 L 540 490 L 560 640 L 580 820 L 600 1000"
+            fill="none" stroke="#DC2626" stroke-width="4" opacity="0.4"/>
+
+      <!-- 지하철역 점 -->
+      <circle cx="528" cy="460" r="7" fill="#16A34A" opacity="0.7" filter="url(#glow)"/>
+      <circle cx="526" cy="490" r="6" fill="#16A34A" opacity="0.6"/>
+      <circle cx="400" cy="300" r="6" fill="#06B6D4" opacity="0.6"/>
+      <circle cx="460" cy="640" r="6" fill="#06B6D4" opacity="0.6"/>
+      <circle cx="860" cy="440" r="7" fill="#2563EB" opacity="0.6" filter="url(#glow)"/>
+      <circle cx="560" cy="820" r="6" fill="#DC2626" opacity="0.6"/>
+      <circle cx="400" cy="380" r="5" fill="#7C3AED" opacity="0.6"/>
+
+      <!-- 주요 랜드마크 점 (밝은 도트) -->
+      <!-- 광화문 -->
+      <circle cx="516" cy="390" r="9" fill="rgba

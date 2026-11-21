@@ -28,16 +28,17 @@ BGM   : 없음(캐러셀, 무음 — 캡션/카드 텍스트 중심)
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
-[CUT 1] ─ GRAPHIC | 표지 — 서여리 스틸 + 제목 | 8
+[CUT 1] ─ GRAPHIC | 표지 — 서울에서 매일 듣는 한국어 5개 | 8
 ━━━━━━━━━━━━━━━━━━━━━━━━
-SC: 서여리 캐주얼 데일리 스틸컷 위에 제목 텍스트 오버레이.
+SC: 서울에서 매일 듣는 한국어 · 시리즈
 SP: IN.CF.DY.LT_WD (카페 또는 집, 낮 자연광)
 PL: YR_IM
 CH: 서여리
 DL: 없음
 NR: 없음
-CP: 서울에서 매일 듣는 한국어 5개 / 5 Korean phrases you hear every day in Seoul
+CP: 5 Korean phrases you hear every day in Seoul
 CT: GRAPHIC
+GTPL: text-card/yeori
 DU: 8
 
 ━━━━━━━━━━━━━━━━━━━━━━━━

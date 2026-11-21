@@ -2438,7 +2438,10 @@ export default function MakingTab() {
   )
 
   const renderGraphicPanel = (cut) => (
-    <div className={s.subPanel}>{renderHtmlCapturePanel(cut)}</div>
+    <div className={s.subPanel}>
+      <GraphicCardGenerator cut={cut} epNum={episode?.number} />
+      {renderHtmlCapturePanel(cut)}
+    </div>
   )
 
   const renderBrollPanel = (cut) => {
@@ -4663,7 +4666,16 @@ function GraphicCardGenerator({ cut, epNum, onGenerated }) {
       subtitle: f.subtitle || cut.subtitle || '',
       ...f,
     }))
-    if (scriptGtpl && /^ai\b/i.test(scriptGtpl)) setAiMode(true)
+    if (scriptGtpl && /^ai\b/i.test(scriptGtpl)) {
+      setAiMode(true)
+    } else if (scriptGtpl) {
+      // 대본이 "GTPL: text-card/yeori" 식으로 템플릿을 이미 지정해뒀으면 모달도 그걸로
+      // 맞춰 연다 — 사람이 매번 수동으로 같은 템플릿/스타일을 다시 눌러야 "디자인 세부
+      // 설정"이 뜨는 걸 피하려는 것(2026-11-21, 다른 템플릿을 눌러서 설정이 안 보인다는
+      // 혼선이 실제로 있었음).
+      const [t, st] = scriptGtpl.split('/').map(x => x.trim())
+      if (t) { setSelectedType(t); setSelectedStyle(st || '') }
+    }
   }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // 모달 열 때 이 컷에 저장된 배경 이미지(있으면)를 불러온다 — 템플릿/스타일과 무관(컷 단위).
@@ -4854,25 +4866,18 @@ function GraphicCardGenerator({ cut, epNum, onGenerated }) {
     <>
       <button
         className={s.previewBtn}
-        onClick={() => setOpen(true)}
+        onClick={() => setOpen(v => !v)}
         style={{ marginTop: 8 }}
       >
-        🎨 그래픽 카드 생성
+        🎨 그래픽 카드 생성 {open ? '▲ 접기' : '▼ 펼치기'}
       </button>
 
       {open && (
         <div style={{
-          position: 'fixed', inset: 0,
-          background: 'rgba(0,0,0,0.7)',
-          display: 'flex', alignItems: 'center',
-          justifyContent: 'center', zIndex: 1000
+          background: 'var(--bg-panel)', border: '1px solid var(--border)',
+          borderRadius: 12, padding: 24, marginTop: 10,
+          color: 'var(--text)'
         }}>
-          <div style={{
-            background: 'var(--bg-panel)', border: '1px solid var(--border)',
-            borderRadius: 16, padding: 32, width: 640,
-            maxHeight: '80vh', overflowY: 'auto',
-            color: 'var(--text)'
-          }}>
             <h3 style={{ marginBottom: 16 }}>
               🎨 그래픽 HTML 생성 — CUT {cut.no}
             </h3>
@@ -5132,6 +5137,12 @@ function GraphicCardGenerator({ cut, epNum, onGenerated }) {
                           </div>
 
                           <div style={{ fontSize: 12, color: 'var(--accent-light)', marginBottom: 6 }}>크기 · 위치</div>
+                          {Object.keys(design.layout || {}).length === 0 && (
+                            <div style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 14 }}>
+                              이 템플릿("{selectedType}")엔 아직 크기·위치 조절 항목이 없습니다 — "텍스트 카드"
+                              템플릿(대본 지정: <code>{scriptGtpl || 'text-card/yeori'}</code>)에만 있습니다.
+                            </div>
+                          )}
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
                             {Object.entries(design.layout || {}).map(([key, val]) => (
                               <label key={key} style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, color: 'var(--text-dim)' }}>
@@ -5192,7 +5203,7 @@ function GraphicCardGenerator({ cut, epNum, onGenerated }) {
               <button
                 onClick={() => setOpen(false)}
                 className={s.previewBtn}
-              >취소</button>
+              >접기</button>
               <button
                 onClick={handleGenerate}
                 disabled={generating || (!aiMode && (!selectedType || !selectedStyle))}
@@ -5201,7 +5212,6 @@ function GraphicCardGenerator({ cut, epNum, onGenerated }) {
                 {generating ? (aiMode ? 'Claude 생성 중… (~20초)' : '생성 중...') : '✨ 생성 + 영상 변환'}
               </button>
             </div>
-          </div>
         </div>
       )}
     </>
