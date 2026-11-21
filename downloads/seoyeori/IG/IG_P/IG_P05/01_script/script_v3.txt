@@ -59,16 +59,17 @@ photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, plenty of cle
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
-[CUT 2] ─ GRAPHIC | 그래픽 카드 1 — 밥 먹었어? | 8
+[CUT 2] ─ GRAPHIC | 그래픽 카드 1 — 밥 먹었어? (bap meogeosseo?) | 8
 ━━━━━━━━━━━━━━━━━━━━━━━━
-SC: 텍스트 전용 그래픽 카드.
+SC: 서울에서 매일 듣는 한국어 · 시리즈
 SP: GR.ED (HTML/그래픽 카드)
 PL: GR_ED
 CH: 없음
 DL: 없음
 NR: 없음
-CP: 밥 먹었어? (bap meogeosseo?) / Did you eat? = I care about you
+CP: Did you eat? = I care about you
 CT: GRAPHIC
+GTPL: text-card/yeori
 DU: 8
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -86,16 +87,17 @@ IP (이미지 프롬프트)
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
-[CUT 3] ─ GRAPHIC | 그래픽 카드 2 — 잘 먹겠습니다 | 8
+[CUT 3] ─ GRAPHIC | 그래픽 카드 2 — 잘 먹겠습니다 (jal meokgesseumnida) | 8
 ━━━━━━━━━━━━━━━━━━━━━━━━
-SC: 텍스트 전용 그래픽 카드.
+SC: 서울에서 매일 듣는 한국어 · 시리즈
 SP: GR.ED
 PL: GR_ED
 CH: 없음
 DL: 없음
 NR: 없음
-CP: 잘 먹겠습니다 (jal meokgesseumnida) / Said before a meal: "I will eat well"
+CP: Said before a meal: I will eat well
 CT: GRAPHIC
+GTPL: text-card/yeori
 DU: 8
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -113,16 +115,17 @@ IP (이미지 프롬프트)
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
-[CUT 4] ─ GRAPHIC | 그래픽 카드 3 — 고생했어요 | 8
+[CUT 4] ─ GRAPHIC | 그래픽 카드 3 — 고생했어요 (gosaenghaesseoyo) | 8
 ━━━━━━━━━━━━━━━━━━━━━━━━
-SC: 텍스트 전용 그래픽 카드.
+SC: 서울에서 매일 듣는 한국어 · 시리즈
 SP: GR.ED
 PL: GR_ED
 CH: 없음
 DL: 없음
 NR: 없음
-CP: 고생했어요 (gosaenghaesseoyo) / "You worked hard." A thank-you for someone's effort
+CP: You worked hard - thanks for the effort
 CT: GRAPHIC
+GTPL: text-card/yeori
 DU: 8
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -140,16 +143,17 @@ IP (이미지 프롬프트)
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
-[CUT 5] ─ GRAPHIC | 그래픽 카드 4 — 밥 한번 먹자 | 8
+[CUT 5] ─ GRAPHIC | 그래픽 카드 4 — 밥 한번 먹자 (bap hanbeon meokja) | 8
 ━━━━━━━━━━━━━━━━━━━━━━━━
-SC: 텍스트 전용 그래픽 카드.
+SC: 서울에서 매일 듣는 한국어 · 시리즈
 SP: GR.ED
 PL: GR_ED
 CH: 없음
 DL: 없음
 NR: 없음
-CP: 밥 한번 먹자 (bap hanbeon meokja) / "Let's eat sometime." Often a friendly goodbye, not always a real plan
+CP: Let's eat sometime - often just a goodbye
 CT: GRAPHIC
+GTPL: text-card/yeori
 DU: 8
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -167,16 +171,17 @@ IP (이미지 프롬프트)
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
-[CUT 6] ─ GRAPHIC | 그래픽 카드 5 — 대박 | 8
+[CUT 6] ─ GRAPHIC | 그래픽 카드 5 — 대박 (daebak) | 8
 ━━━━━━━━━━━━━━━━━━━━━━━━
-SC: 텍스트 전용 그래픽 카드.
+SC: 서울에서 매일 듣는 한국어 · 시리즈
 SP: GR.ED
 PL: GR_ED
 CH: 없음
 DL: 없음
 NR: 없음
-CP: 대박 (daebak) / Wow! / Amazing!
+CP: Wow! / Amazing!
 CT: GRAPHIC
+GTPL: text-card/yeori
 DU: 8
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -194,16 +199,17 @@ IP (이미지 프롬프트)
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
-[CUT 7] ─ GRAPHIC | 마무리 — 저장 유도 + 팔로우 | 8
+[CUT 7] ─ GRAPHIC | 마무리 — Save this for your Seoul trip 📌 | 8
 ━━━━━━━━━━━━━━━━━━━━━━━━
-SC: 저장 + 팔로우 유도 카드 (텍스트 전용).
+SC: 서울에서 매일 듣는 한국어 · 시리즈
 SP: GR.ED
 PL: GR_ED
 CH: 없음
 DL: 없음
 NR: 없음
-CP: Save this for your Seoul trip 📌 / Follow for everyday Korean life with Seoyeori
+CP: Follow Seoyeori for daily Korean life
 CT: GRAPHIC
+GTPL: text-card/yeori
 DU: 8
 
 ━━━━━━━━━━━━━━━━━━━━━━━━

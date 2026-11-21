@@ -5,6 +5,54 @@
     "motion": "none",
     "baked": true,
     "duration": 8,
-    "producedAt": "2026-11-21T05:32:45.554Z"
+    "producedAt": "2026-11-21T06:05:46.735Z"
+  },
+  "2": {
+    "method": "graphic",
+    "selfText": false,
+    "motion": "self",
+    "baked": true,
+    "duration": 5,
+    "producedAt": "2026-11-21T06:09:05.616Z"
+  },
+  "3": {
+    "method": "graphic",
+    "selfText": false,
+    "motion": "self",
+    "baked": true,
+    "duration": 5,
+    "producedAt": "2026-11-21T06:09:25.155Z"
+  },
+  "4": {
+    "method": "graphic",
+    "selfText": false,
+    "motion": "self",
+    "baked": true,
+    "duration": 5,
+    "producedAt": "2026-11-21T06:09:44.469Z"
+  },
+  "5": {
+    "method": "graphic",
+    "selfText": false,
+    "motion": "self",
+    "baked": true,
+    "duration": 5,
+    "producedAt": "2026-11-21T06:10:03.732Z"
+  },
+  "6": {
+    "method": "graphic",
+    "selfText": false,
+    "motion": "self",
+    "baked": true,
+    "duration": 5,
+    "producedAt": "2026-11-21T06:10:22.306Z"
+  },
+  "7": {
+    "method": "graphic",
+    "selfText": false,
+    "motion": "self",
+    "baked": true,
+    "duration": 5,
+    "producedAt": "2026-11-21T06:10:41.266Z"
   }
 }

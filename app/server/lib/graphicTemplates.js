@@ -26,12 +26,12 @@ const TEMPLATES = {
       }
     },
     fields: ['title', 'subtitle', 'info'],
-    generate: (fields, colors, duration) => `
+    generate: (fields, colors, duration, dims = { w: 1920, h: 1080 }) => `
 <!DOCTYPE html><html><head><meta charset="UTF-8">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
-  width:1920px; height:1080px;
+  width:${dims.w}px; height:${dims.h}px;
   background: linear-gradient(135deg, ${colors.bg}, ${colors.bg}dd);
   overflow:hidden; font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;
 }
@@ -53,7 +53,7 @@ body {
   animation: float 3s ease-in-out infinite;
 }
 @keyframes float {
-  0% { transform:translateY(1080px); opacity:0; }
+  0% { transform:translateY(${dims.h}px); opacity:0; }
   50% { opacity:1; }
   100% { transform:translateY(-20px); opacity:0; }
 }
@@ -114,12 +114,12 @@ ${[10,22,34,46,58,70,82,94].map((l,i)=>`
       }
     },
     fields: ['title', 'subtitle', 'info'],
-    generate: (fields, colors, duration) => `
+    generate: (fields, colors, duration, dims = { w: 1920, h: 1080 }) => `
 <!DOCTYPE html><html><head><meta charset="UTF-8">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
-  width:1920px; height:1080px;
+  width:${dims.w}px; height:${dims.h}px;
   background:${colors.bg.startsWith('#6')?`linear-gradient(135deg,${colors.bg},#764ba2)`:colors.bg};
   display:flex; flex-direction:column;
   align-items:center; justify-content:center;
@@ -177,12 +177,12 @@ body {
       }
     },
     fields: ['title', 'stat1_label', 'stat1_value', 'stat2_label', 'stat2_value', 'stat3_label', 'stat3_value'],
-    generate: (fields, colors, duration) => `
+    generate: (fields, colors, duration, dims = { w: 1920, h: 1080 }) => `
 <!DOCTYPE html><html><head><meta charset="UTF-8">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
-  width:1920px; height:1080px;
+  width:${dims.w}px; height:${dims.h}px;
   background:${colors.bg};
   display:flex; flex-direction:column;
   align-items:center; justify-content:center; gap:60px;
@@ -254,12 +254,12 @@ body {
       }
     },
     fields: ['title', 'fact1', 'fact2', 'fact3', 'source'],
-    generate: (fields, colors, duration) => `
+    generate: (fields, colors, duration, dims = { w: 1920, h: 1080 }) => `
 <!DOCTYPE html><html><head><meta charset="UTF-8">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
-  width:1920px; height:1080px;
+  width:${dims.w}px; height:${dims.h}px;
   background:${colors.bg};
   display:flex; flex-direction:column;
   justify-content:center;
@@ -333,18 +333,18 @@ body {
       }
     },
     fields: ['title', 'subtitle'],
-    generate: (fields, colors, duration) => `
+    generate: (fields, colors, duration, dims = { w: 1920, h: 1080 }) => `
 <!DOCTYPE html><html><head><meta charset="UTF-8">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
-  width:1920px; height:1080px;
+  width:${dims.w}px; height:${dims.h}px;
   background:${colors.bg};
   display:flex; align-items:center; justify-content:center;
   font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;
 }
 .frame {
-  width:1500px; padding:80px 100px;
+  width:min(1500px, 90%); padding:80px 100px;
   border:1.5px solid ${colors.accent};
   border-radius:4px;
   display:flex; flex-direction:column; align-items:center; text-align:center;

@@ -1,5 +1,5 @@
 {
-  "activeTab": "making",
+  "activeTab": "script",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -13580,7 +13580,6 @@
               "md": ""
             }
           },
-          "imageSeq": null,
           "overrides": {
             "duration": {
               "value": 8,
@@ -13607,14 +13606,14 @@
         {
           "id": "cut-2",
           "no": 2,
-          "cutTitle": "밥 먹었어?",
+          "cutTitle": "밥 먹었어? (bap meogeosseo?)",
           "lipsync": false,
-          "scene": "텍스트 전용 그래픽 카드.",
+          "scene": "서울에서 매일 듣는 한국어 · 시리즈",
           "action": "",
           "character": "서여리",
           "dialogue": "",
           "narration": "",
-          "subtitle": "밥 먹었어? (bap meogeosseo?) / Did you eat? = I care about you",
+          "subtitle": "Did you eat? = I care about you",
           "imagePrompt": "",
           "videoPrompt": "",
           "duration": 5,
@@ -13622,6 +13621,7 @@
           "cutType": "GRAPHIC",
           "cutMark": "NORMAL",
           "beat": "",
+          "graphicTemplate": "text-card/yeori",
           "masterCode": {
             "sp": "GR.ED (HTML/그래픽 카드)",
             "pl": "GR_ED",
@@ -13673,14 +13673,14 @@
         {
           "id": "cut-3",
           "no": 3,
-          "cutTitle": "잘 먹겠습니다",
+          "cutTitle": "잘 먹겠습니다 (jal meokgesseumnida)",
           "lipsync": false,
-          "scene": "텍스트 전용 그래픽 카드.",
+          "scene": "서울에서 매일 듣는 한국어 · 시리즈",
           "action": "",
           "character": "서여리",
           "dialogue": "",
           "narration": "",
-          "subtitle": "잘 먹겠습니다 (jal meokgesseumnida) / Said before a meal: \"I will eat well\"",
+          "subtitle": "Said before a meal: I will eat well",
           "imagePrompt": "",
           "videoPrompt": "",
           "duration": 5,
@@ -13688,6 +13688,7 @@
           "cutType": "GRAPHIC",
           "cutMark": "NORMAL",
           "beat": "",
+          "graphicTemplate": "text-card/yeori",
           "masterCode": {
             "sp": "GR.ED",
             "pl": "GR_ED",
@@ -13739,14 +13740,14 @@
         {
           "id": "cut-4",
           "no": 4,
-          "cutTitle": "고생했어요",
+          "cutTitle": "고생했어요 (gosaenghaesseoyo)",
           "lipsync": false,
-          "scene": "텍스트 전용 그래픽 카드.",
+          "scene": "서울에서 매일 듣는 한국어 · 시리즈",
           "action": "",
           "character": "서여리",
           "dialogue": "",
           "narration": "",
-          "subtitle": "고생했어요 (gosaenghaesseoyo) / \"You worked hard.\" A thank-you for someone's effort",
+          "subtitle": "You worked hard - thanks for the effort",
           "imagePrompt": "",
           "videoPrompt": "",
           "duration": 5,
@@ -13754,6 +13755,7 @@
           "cutType": "GRAPHIC",
           "cutMark": "NORMAL",
           "beat": "",
+          "graphicTemplate": "text-card/yeori",
           "masterCode": {
             "sp": "GR.ED",
             "pl": "GR_ED",
@@ -13805,14 +13807,14 @@
         {
           "id": "cut-5",
           "no": 5,
-          "cutTitle": "밥 한번 먹자",
+          "cutTitle": "밥 한번 먹자 (bap hanbeon meokja)",
           "lipsync": false,
-          "scene": "텍스트 전용 그래픽 카드.",
+          "scene": "서울에서 매일 듣는 한국어 · 시리즈",
           "action": "",
           "character": "서여리",
           "dialogue": "",
           "narration": "",
-          "subtitle": "밥 한번 먹자 (bap hanbeon meokja) / \"Let's eat sometime.\" Often a friendly goodbye, not always a real plan",
+          "subtitle": "Let's eat sometime - often just a goodbye",
           "imagePrompt": "",
           "videoPrompt": "",
           "duration": 5,
@@ -13820,6 +13822,7 @@
           "cutType": "GRAPHIC",
           "cutMark": "NORMAL",
           "beat": "",
+          "graphicTemplate": "text-card/yeori",
           "masterCode": {
             "sp": "GR.ED",
             "pl": "GR_ED",
@@ -13871,14 +13874,14 @@
         {
           "id": "cut-6",
           "no": 6,
-          "cutTitle": "대박",
+          "cutTitle": "대박 (daebak)",
           "lipsync": false,
-          "scene": "텍스트 전용 그래픽 카드.",
+          "scene": "서울에서 매일 듣는 한국어 · 시리즈",
           "action": "",
           "character": "서여리",
           "dialogue": "",
           "narration": "",
-          "subtitle": "대박 (daebak) / Wow! / Amazing!",
+          "subtitle": "Wow! / Amazing!",
           "imagePrompt": "",
           "videoPrompt": "",
           "duration": 5,
@@ -13886,6 +13889,7 @@
           "cutType": "GRAPHIC",
           "cutMark": "NORMAL",
           "beat": "",
+          "graphicTemplate": "text-card/yeori",
           "masterCode": {
             "sp": "GR.ED",
             "pl": "GR_ED",
@@ -13937,14 +13941,14 @@
         {
           "id": "cut-7",
           "no": 7,
-          "cutTitle": "저장 유도 + 팔로우",
+          "cutTitle": "Save this for your Seoul trip 📌",
           "lipsync": false,
-          "scene": "저장 + 팔로우 유도 카드 (텍스트 전용).",
+          "scene": "서울에서 매일 듣는 한국어 · 시리즈",
           "action": "",
           "character": "서여리",
           "dialogue": "",
           "narration": "",
-          "subtitle": "Save this for your Seoul trip 📌 / Follow for everyday Korean life with Seoyeori",
+          "subtitle": "Follow Seoyeori for daily Korean life",
           "imagePrompt": "",
           "videoPrompt": "",
           "duration": 5,
@@ -13952,6 +13956,7 @@
           "cutType": "GRAPHIC",
           "cutMark": "NORMAL",
           "beat": "",
+          "graphicTemplate": "text-card/yeori",
           "masterCode": {
             "sp": "GR.ED",
             "pl": "GR_ED",
@@ -14067,7 +14072,6 @@
           "md": ""
         }
       },
-      "imageSeq": null,
       "overrides": {
         "duration": {
           "value": 8,
@@ -14094,14 +14098,14 @@
     {
       "id": "cut-2",
       "no": 2,
-      "cutTitle": "밥 먹었어?",
+      "cutTitle": "밥 먹었어? (bap meogeosseo?)",
       "lipsync": false,
-      "scene": "텍스트 전용 그래픽 카드.",
+      "scene": "서울에서 매일 듣는 한국어 · 시리즈",
       "action": "",
       "character": "서여리",
       "dialogue": "",
       "narration": "",
-      "subtitle": "밥 먹었어? (bap meogeosseo?) / Did you eat? = I care about you",
+      "subtitle": "Did you eat? = I care about you",
       "imagePrompt": "",
       "videoPrompt": "",
       "duration": 5,
@@ -14109,6 +14113,7 @@
       "cutType": "GRAPHIC",
       "cutMark": "NORMAL",
       "beat": "",
+      "graphicTemplate": "text-card/yeori",
       "masterCode": {
         "sp": "GR.ED (HTML/그래픽 카드)",
         "pl": "GR_ED",
@@ -14160,14 +14165,14 @@
     {
       "id": "cut-3",
       "no": 3,
-      "cutTitle": "잘 먹겠습니다",
+      "cutTitle": "잘 먹겠습니다 (jal meokgesseumnida)",
       "lipsync": false,
-      "scene": "텍스트 전용 그래픽 카드.",
+      "scene": "서울에서 매일 듣는 한국어 · 시리즈",
       "action": "",
       "character": "서여리",
       "dialogue": "",
       "narration": "",
-      "subtitle": "잘 먹겠습니다 (jal meokgesseumnida) / Said before a meal: \"I will eat well\"",
+      "subtitle": "Said before a meal: I will eat well",
       "imagePrompt": "",
       "videoPrompt": "",
       "duration": 5,
@@ -14175,6 +14180,7 @@
       "cutType": "GRAPHIC",
       "cutMark": "NORMAL",
       "beat": "",
+      "graphicTemplate": "text-card/yeori",
       "masterCode": {
         "sp": "GR.ED",
         "pl": "GR_ED",
@@ -14226,14 +14232,14 @@
     {
       "id": "cut-4",
       "no": 4,
-      "cutTitle": "고생했어요",
+      "cutTitle": "고생했어요 (gosaenghaesseoyo)",
       "lipsync": false,
-      "scene": "텍스트 전용 그래픽 카드.",
+      "scene": "서울에서 매일 듣는 한국어 · 시리즈",
       "action": "",
       "character": "서여리",
       "dialogue": "",
       "narration": "",
-      "subtitle": "고생했어요 (gosaenghaesseoyo) / \"You worked hard.\" A thank-you for someone's effort",
+      "subtitle": "You worked hard - thanks for the effort",
       "imagePrompt": "",
       "videoPrompt": "",
       "duration": 5,
@@ -14241,6 +14247,7 @@
       "cutType": "GRAPHIC",
       "cutMark": "NORMAL",
       "beat": "",
+      "graphicTemplate": "text-card/yeori",
       "masterCode": {
         "sp": "GR.ED",
         "pl": "GR_ED",
@@ -14292,14 +14299,14 @@
     {
       "id": "cut-5",
       "no": 5,
-      "cutTitle": "밥 한번 먹자",
+      "cutTitle": "밥 한번 먹자 (bap hanbeon meokja)",
       "lipsync": false,
-      "scene": "텍스트 전용 그래픽 카드.",
+      "scene": "서울에서 매일 듣는 한국어 · 시리즈",
       "action": "",
       "character": "서여리",
       "dialogue": "",
       "narration": "",
-      "subtitle": "밥 한번 먹자 (bap hanbeon meokja) / \"Let's eat sometime.\" Often a friendly goodbye, not always a real plan",
+      "subtitle": "Let's eat sometime - often just a goodbye",
       "imagePrompt": "",
       "videoPrompt": "",
       "duration": 5,
@@ -14307,6 +14314,7 @@
       "cutType": "GRAPHIC",
       "cutMark": "NORMAL",
       "beat": "",
+      "graphicTemplate": "text-card/yeori",
       "masterCode": {
         "sp": "GR.ED",
         "pl": "GR_ED",
@@ -14358,14 +14366,14 @@
     {
       "id": "cut-6",
       "no": 6,
-      "cutTitle": "대박",
+      "cutTitle": "대박 (daebak)",
       "lipsync": false,
-      "scene": "텍스트 전용 그래픽 카드.",
+      "scene": "서울에서 매일 듣는 한국어 · 시리즈",
       "action": "",
       "character": "서여리",
       "dialogue": "",
       "narration": "",
-      "subtitle": "대박 (daebak) / Wow! / Amazing!",
+      "subtitle": "Wow! / Amazing!",
       "imagePrompt": "",
       "videoPrompt": "",
       "duration": 5,
@@ -14373,6 +14381,7 @@
       "cutType": "GRAPHIC",
       "cutMark": "NORMAL",
       "beat": "",
+      "graphicTemplate": "text-card/yeori",
       "masterCode": {
         "sp": "GR.ED",
         "pl": "GR_ED",
@@ -14424,14 +14433,14 @@
     {
       "id": "cut-7",
       "no": 7,
-      "cutTitle": "저장 유도 + 팔로우",
+      "cutTitle": "Save this for your Seoul trip 📌",
       "lipsync": false,
-      "scene": "저장 + 팔로우 유도 카드 (텍스트 전용).",
+      "scene": "서울에서 매일 듣는 한국어 · 시리즈",
       "action": "",
       "character": "서여리",
       "dialogue": "",
       "narration": "",
-      "subtitle": "Save this for your Seoul trip 📌 / Follow for everyday Korean life with Seoyeori",
+      "subtitle": "Follow Seoyeori for daily Korean life",
       "imagePrompt": "",
       "videoPrompt": "",
       "duration": 5,
@@ -14439,6 +14448,7 @@
       "cutType": "GRAPHIC",
       "cutMark": "NORMAL",
       "beat": "",
+      "graphicTemplate": "text-card/yeori",
       "masterCode": {
         "sp": "GR.ED",
         "pl": "GR_ED",
@@ -14609,11 +14619,110 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-21T02:06:12.310Z",
+  "savedAt": "2026-11-21T06:15:52.044Z",
   "videoTabState": {
-    "videoClips": {},
+    "videoClips": {
+      "cut-1": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_P/IG_P05/05_video/cut_01.mp4?t=1795242222202",
+          "name": "cut_01.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_P\\IG_P05\\05_video\\cut_01.mp4",
+          "keepAudio": false,
+          "createdAt": 1795241303000
+        }
+      ],
+      "cut-2": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_P/IG_P05/05_video/cut_02.mp4?t=1795242223016",
+          "name": "cut_02.mp4",
+          "duration": 5,
+          "trimStart": 0,
+          "trimEnd": 5,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_P\\IG_P05\\05_video\\cut_02.mp4",
+          "keepAudio": false,
+          "createdAt": 1795241345000
+        }
+      ],
+      "cut-3": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_P/IG_P05/05_video/cut_03.mp4?t=1795242223289",
+          "name": "cut_03.mp4",
+          "duration": 5,
+          "trimStart": 0,
+          "trimEnd": 5,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_P\\IG_P05\\05_video\\cut_03.mp4",
+          "keepAudio": false,
+          "createdAt": 1795241364000
+        }
+      ],
+      "cut-4": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_P/IG_P05/05_video/cut_04.mp4?t=1795242223555",
+          "name": "cut_04.mp4",
+          "duration": 5,
+          "trimStart": 0,
+          "trimEnd": 5,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_P\\IG_P05\\05_video\\cut_04.mp4",
+          "keepAudio": false,
+          "createdAt": 1795241384000
+        }
+      ],
+      "cut-5": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_P/IG_P05/05_video/cut_05.mp4?t=1795242223816",
+          "name": "cut_05.mp4",
+          "duration": 5,
+          "trimStart": 0,
+          "trimEnd": 5,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_P\\IG_P05\\05_video\\cut_05.mp4",
+          "keepAudio": false,
+          "createdAt": 1795241403000
+        }
+      ],
+      "cut-6": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_P/IG_P05/05_video/cut_06.mp4?t=1795242224079",
+          "name": "cut_06.mp4",
+          "duration": 5,
+          "trimStart": 0,
+          "trimEnd": 5,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_P\\IG_P05\\05_video\\cut_06.mp4",
+          "keepAudio": false,
+          "createdAt": 1795241422000
+        }
+      ],
+      "cut-7": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_P/IG_P05/05_video/cut_07.mp4?t=1795242224336",
+          "name": "cut_07.mp4",
+          "duration": 5,
+          "trimStart": 0,
+          "trimEnd": 5,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_P\\IG_P05\\05_video\\cut_07.mp4",
+          "keepAudio": false,
+          "createdAt": 1795241441000
+        }
+      ]
+    },
     "g4Approved": {},
-    "selectedCutId": "cut-1",
+    "selectedCutId": "cut-7",
     "subtitles": {}
   },
   "ttsTabState": {
