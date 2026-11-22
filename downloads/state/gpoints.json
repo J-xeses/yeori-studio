@@ -2225,7 +2225,7 @@
   "IG_R10": {
     "cut_1": {
       "g1": true,
-      "updatedAt": "2026-11-18T15:48:08.122Z",
+      "updatedAt": "2026-11-22T09:18:39.224Z",
       "g4": true,
       "g2Checklist": {
         "0": {
@@ -2273,7 +2273,7 @@
     },
     "cut_2": {
       "g1": true,
-      "updatedAt": "2026-11-18T15:48:08.123Z",
+      "updatedAt": "2026-11-22T09:18:39.225Z",
       "g2Checklist": {
         "0": {
           "filename": "cut_02_a.jpg",
@@ -2322,7 +2322,7 @@
     },
     "cut_3": {
       "g1": true,
-      "updatedAt": "2026-11-18T15:48:08.124Z",
+      "updatedAt": "2026-11-22T09:18:39.226Z",
       "g2Checklist": {
         "0": {
           "filename": "cut_03_a.jpg",
@@ -2370,7 +2370,7 @@
     },
     "cut_4": {
       "g1": true,
-      "updatedAt": "2026-11-18T15:48:08.125Z",
+      "updatedAt": "2026-11-22T09:18:39.226Z",
       "g2Checklist": {
         "0": {
           "filename": "cut_04_b.jpg",
@@ -2420,47 +2420,89 @@
   "IG_H02": {
     "cut_1": {
       "g1": true,
-      "updatedAt": "2026-11-20T13:07:43.808Z"
+      "updatedAt": "2026-11-22T11:27:25.605Z",
+      "g2Checklist": {
+        "0": {
+          "filename": "cut_01_a.jpg",
+          "scores": {
+            "face": 2,
+            "outfit": 2,
+            "proportion": 2,
+            "hair": 2,
+            "action": 1,
+            "mood": 2,
+            "shot": 2,
+            "camera": 2,
+            "background": 2,
+            "propContinuity": 2,
+            "trend": 2
+          },
+          "total": 95,
+          "note": "",
+          "scoredAt": "2026-11-22T11:27:24.361Z"
+        },
+        "1": {
+          "filename": "cut_01_b.jpg",
+          "scores": {
+            "face": 2,
+            "outfit": 2,
+            "proportion": 1,
+            "hair": 2,
+            "action": 1,
+            "mood": 2,
+            "shot": 2,
+            "camera": 1,
+            "background": 2,
+            "propContinuity": 1,
+            "trend": 2
+          },
+          "total": 83,
+          "note": "",
+          "scoredAt": "2026-11-22T11:27:24.361Z"
+        }
+      },
+      "g2": true,
+      "selectedImage": "cut_01_a.jpg"
     },
     "cut_2": {
       "g1": true,
-      "updatedAt": "2026-11-20T13:07:43.809Z"
+      "updatedAt": "2026-11-22T11:19:30.634Z"
     },
     "cut_3": {
       "g1": true,
-      "updatedAt": "2026-11-20T13:07:43.811Z"
+      "updatedAt": "2026-11-22T11:19:30.635Z"
     },
     "cut_4": {
       "g1": true,
-      "updatedAt": "2026-11-20T13:07:43.812Z"
+      "updatedAt": "2026-11-22T11:19:30.635Z"
     },
     "cut_5": {
       "g1": true,
-      "updatedAt": "2026-11-20T13:07:43.812Z"
+      "updatedAt": "2026-11-22T11:19:30.636Z"
     },
     "cut_6": {
       "g1": true,
-      "updatedAt": "2026-11-20T13:07:43.813Z"
+      "updatedAt": "2026-11-22T11:19:30.636Z"
     },
     "cut_7": {
       "g1": true,
-      "updatedAt": "2026-11-20T13:07:43.814Z"
+      "updatedAt": "2026-11-22T11:19:30.637Z"
     },
     "cut_8": {
       "g1": true,
-      "updatedAt": "2026-11-20T13:07:43.815Z"
+      "updatedAt": "2026-11-22T11:19:30.638Z"
     },
     "cut_9": {
       "g1": true,
-      "updatedAt": "2026-11-20T13:07:43.816Z"
+      "updatedAt": "2026-11-22T11:19:30.640Z"
     },
     "cut_10": {
       "g1": true,
-      "updatedAt": "2026-11-20T13:07:43.817Z"
+      "updatedAt": "2026-11-22T11:19:30.641Z"
     },
     "cut_11": {
       "g1": true,
-      "updatedAt": "2026-11-20T13:07:43.817Z"
+      "updatedAt": "2026-11-22T11:19:30.642Z"
     }
   },
   "IG_P05": {
@@ -2498,6 +2540,24 @@
       "g1": true,
       "updatedAt": "2026-11-22T02:34:40.866Z",
       "g4": true
+    }
+  },
+  "IG_R11": {
+    "cut_1": {
+      "g1": true,
+      "updatedAt": "2026-11-22T09:33:07.240Z"
+    },
+    "cut_2": {
+      "g1": true,
+      "updatedAt": "2026-11-22T09:33:07.241Z"
+    },
+    "cut_3": {
+      "g1": true,
+      "updatedAt": "2026-11-22T09:33:07.242Z"
+    },
+    "cut_4": {
+      "g1": true,
+      "updatedAt": "2026-11-22T09:33:07.243Z"
     }
   }
 }
