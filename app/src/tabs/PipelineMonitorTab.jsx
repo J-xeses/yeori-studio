@@ -614,12 +614,21 @@ function Workbench() {
     if (e.data?.user) return { ...e, type: 'default', reconnectable: true, style: { stroke: USER_EDGE_COLOR, strokeWidth: 2, strokeDasharray: '2 5', opacity: dim ? 0.15 : 1 } }
     if (e.planned) return { ...e, type: 'default', reconnectable: true, label: '계획', labelStyle: { fill: PLANNED_EDGE_COLOR, fontSize: 10 }, style: { stroke: PLANNED_EDGE_COLOR, strokeWidth: 1.5, strokeDasharray: '4 4', opacity: dim ? 0.1 : 0.7 } }
     const st = byId[e.target]?.state
-    const flowing = st === 'done' || st === 'partial'
+    // 2026-11-22 교정(IG_P05 워크벤치 실측 — 성준님: "나레이션 배선이 진행됨으로 깔려있다").
+    // 나레이션이 아예 없는 캐러셀(텍스트 카드만)인데 TTS→최종화 배선이 "음성"(분홍) 색으로
+    // 정상/진행 중처럼 보였다. 원인: 배선 색이 "도착 노드 상태"만 보고 정해짐 — 최종화는
+    // BGM·컷영상만으로도 done이 될 수 있는데, 그 done 판정이 TTS에서 온 배선까지 전부 같은
+    // 색으로 덮어썼다. 소스가 health 추적 대상인데 애초에 해당 없음(health.total===0 &&
+    // verified===0, 예: "나레이션 컷 없음")이면 실제로 아무것도 안 날랐다는 뜻 — 도착 노드
+    // 상태와 무관하게 무조건 대기색으로 고정한다.
+    const srcHealth = byId[e.source]?.health
+    const srcInapplicable = !!srcHealth && srcHealth.total === 0 && srcHealth.verified === 0
+    const flowing = !srcInapplicable && (st === 'done' || st === 'partial')
     const kindColor = PORT_KINDS[PORT_KIND_OF[`${e.source}.${e.sourceHandle}`]]?.color
-    const color = (flowing && kindColor) || STATE_COLOR[st] || IDLE_COLOR
+    const color = srcInapplicable ? IDLE_COLOR : ((flowing && kindColor) || STATE_COLOR[st] || IDLE_COLOR)
     return {
       ...e, type: 'default', reconnectable: true, animated: st === 'active',
-      style: { stroke: color, strokeWidth: st === 'fail' ? 2.5 : 2, strokeDasharray: st === 'fail' ? '10 8' : undefined, opacity: dim ? 0.1 : (STATE_COLOR[st] ? 0.9 : 1) },
+      style: { stroke: color, strokeWidth: st === 'fail' ? 2.5 : 2, strokeDasharray: st === 'fail' ? '10 8' : undefined, opacity: dim ? 0.1 : (!srcInapplicable && STATE_COLOR[st] ? 0.9 : 1) },
     }
   })
 
