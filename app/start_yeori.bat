@@ -14,7 +14,6 @@ cd /d "%~dp0"
 ::  browser tabs, git pull. Safe to re-run any time.
 :: ===============================================================
 
-set ACC_HTML=%~dp0a_creative_cutter.html
 set MATRIX_HTML=%~dp0content_matrix_v3.html
 
 :: TREND_RADAR_DIR - location differs per PC, check candidates in order
@@ -24,6 +23,14 @@ if not defined TREND_RADAR_DIR if exist "C:\trend-radar\package.json" set TREND_
 if not defined TREND_RADAR_DIR if exist "%USERPROFILE%\Documents\GitHub\trend-radar\package.json" set TREND_RADAR_DIR=%USERPROFILE%\Documents\GitHub\trend-radar
 if not defined TREND_RADAR_DIR for /d %%D in ("%USERPROFILE%\OneDrive - CTEC\*") do if not defined TREND_RADAR_DIR if exist "%%D\GitHub\trend-radar\package.json" set TREND_RADAR_DIR=%%D\GitHub\trend-radar
 if not defined TREND_RADAR_DIR for /d %%D in ("%USERPROFILE%\OneDrive\*") do if not defined TREND_RADAR_DIR if exist "%%D\GitHub\trend-radar\package.json" set TREND_RADAR_DIR=%%D\GitHub\trend-radar
+
+:: VIRTAL_DIR - same search pattern as TREND_RADAR_DIR
+set VIRTAL_DIR=
+if exist "C:\yeori-studio\app\virtal-studio\package.json" set VIRTAL_DIR=C:\yeori-studio\app\virtal-studio
+if not defined VIRTAL_DIR if exist "C:\virtal-studio\package.json" set VIRTAL_DIR=C:\virtal-studio
+if not defined VIRTAL_DIR if exist "%USERPROFILE%\Documents\GitHub\virtal-studio\package.json" set VIRTAL_DIR=%USERPROFILE%\Documents\GitHub\virtal-studio
+if not defined VIRTAL_DIR for /d %%D in ("%USERPROFILE%\OneDrive - CTEC\*") do if not defined VIRTAL_DIR if exist "%%D\GitHub\virtal-studio\package.json" set VIRTAL_DIR=%%D\GitHub\virtal-studio
+if not defined VIRTAL_DIR for /d %%D in ("%USERPROFILE%\OneDrive\*") do if not defined VIRTAL_DIR if exist "%%D\GitHub\virtal-studio\package.json" set VIRTAL_DIR=%%D\GitHub\virtal-studio
 
 echo.
 echo ============================================================
@@ -73,15 +80,33 @@ if %errorlevel% == 0 (
 )
 echo.
 
+:: [3b] VIRTAL STUDIO (:3100) - overlay subline UI, same auto-build-then-start pattern
+echo [3b] VIRTAL STUDIO (:3100)...
+netstat -ano | findstr ":3100 " | findstr "LISTENING" >nul 2>&1
+if %errorlevel% == 0 (
+    echo        already running -- skip
+) else (
+    if defined VIRTAL_DIR (
+        if exist "%VIRTAL_DIR%\.next\BUILD_ID" (
+            start "VIRTAL STUDIO Server" /D "%VIRTAL_DIR%" cmd /k "npm run start"
+        ) else (
+            start "VIRTAL STUDIO Server" /D "%VIRTAL_DIR%" cmd /k "npm run build && npm run start"
+        )
+    ) else (
+        echo        virtal-studio not found -- skip
+    )
+)
+echo.
+
 :: [4] Browser tabs - all tools as tabs in ONE new Chrome window.
 ::     Reference board is opened via the proxy (/downloads) instead of file://.
 ::     Without Chrome: fall back to the default browser, one by one.
 echo [4] Opening tabs...
 set "REF_BOARD=http://localhost:3001/downloads/_shared/references/library/index.html"
 set "TABS="http://localhost:5173" "http://localhost:3001/insta-ops" "http://localhost:3001/youtube-ops" "http://localhost:3001/mobile" "%REF_BOARD%""
-if exist "%ACC_HTML%" set "TABS=%TABS% "%ACC_HTML%""
 if exist "%MATRIX_HTML%" set "TABS=%TABS% "%MATRIX_HTML%""
 set "TABS=%TABS% "http://localhost:3000""
+set "TABS=%TABS% "http://localhost:3100/overlay""
 set "CHROME="
 if exist "C:\Program Files\Google\Chrome\Application\chrome.exe" set "CHROME=C:\Program Files\Google\Chrome\Application\chrome.exe"
 if not defined CHROME if exist "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" set "CHROME=C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
@@ -93,9 +118,9 @@ if defined CHROME (
     start "" "http://localhost:3001/youtube-ops"
     start "" "http://localhost:3001/mobile"
     start "" "%REF_BOARD%"
-    if exist "%ACC_HTML%" start "" "%ACC_HTML%"
     if exist "%MATRIX_HTML%" start "" "%MATRIX_HTML%"
     start "" "http://localhost:3000"
+    start "" "http://localhost:3100/overlay"
 )
 echo.
 
@@ -116,8 +141,8 @@ echo   Insta Ops   : http://localhost:3001/insta-ops
 echo   YouTube Ops : http://localhost:3001/youtube-ops
 echo   Mobile      : http://localhost:3001/mobile
 echo   Ref Board   : %REF_BOARD%
-echo   Cutter      : %ACC_HTML%
 echo   Trend Radar : http://localhost:3000
+echo   Virtal      : http://localhost:3100/overlay
 echo   Health      : http://localhost:3001/api/health
 echo.
 echo   proxy/vite/tunnel are kept alive by Task Scheduler -- this window can be closed.

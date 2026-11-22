@@ -2466,31 +2466,38 @@
   "IG_P05": {
     "cut_1": {
       "g1": true,
-      "updatedAt": "2026-11-21T05:56:01.727Z"
+      "updatedAt": "2026-11-22T02:34:06.691Z",
+      "g4": true
     },
     "cut_2": {
       "g1": true,
-      "updatedAt": "2026-11-21T05:58:40.170Z"
+      "updatedAt": "2026-11-22T02:34:15.275Z",
+      "g4": true
     },
     "cut_3": {
       "g1": true,
-      "updatedAt": "2026-11-21T05:58:40.170Z"
+      "updatedAt": "2026-11-22T02:34:22.259Z",
+      "g4": true
     },
     "cut_4": {
       "g1": true,
-      "updatedAt": "2026-11-21T05:58:40.170Z"
+      "updatedAt": "2026-11-22T02:34:27.838Z",
+      "g4": true
     },
     "cut_5": {
       "g1": true,
-      "updatedAt": "2026-11-21T05:58:40.170Z"
+      "updatedAt": "2026-11-22T02:34:32.098Z",
+      "g4": true
     },
     "cut_6": {
       "g1": true,
-      "updatedAt": "2026-11-21T05:58:40.170Z"
+      "updatedAt": "2026-11-22T02:34:36.242Z",
+      "g4": true
     },
     "cut_7": {
       "g1": true,
-      "updatedAt": "2026-11-21T05:58:40.170Z"
+      "updatedAt": "2026-11-22T02:34:40.866Z",
+      "g4": true
     }
   }
 }

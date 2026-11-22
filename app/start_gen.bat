@@ -6,7 +6,7 @@ cd /d "%~dp0"
 :: ASCII ONLY (see docs\start_yeori-notes.md). Browser tabs are listed in gen-tabs.txt.
 
 echo ============================================================
-echo   Yeori Studio -- Generation Tools (tabs from gen-tabs.txt + CapCut)
+echo   Yeori Studio -- Generation Tools (tabs from gen-tabs.txt)
 echo ============================================================
 echo.
 
@@ -64,14 +64,7 @@ if %errorlevel%==0 (
 )
 echo.
 
-echo [2] CapCut desktop
-set "CAPCUT="
-if exist "%LOCALAPPDATA%\CapCut\Apps" for /f "delims=" %%D in ('dir /b /ad /o-n "%LOCALAPPDATA%\CapCut\Apps" 2^>nul') do if not defined CAPCUT if exist "%LOCALAPPDATA%\CapCut\Apps\%%D\CapCut.exe" set "CAPCUT=%LOCALAPPDATA%\CapCut\Apps\%%D\CapCut.exe"
-if not defined CAPCUT if exist "%PROGRAMFILES%\CapCut\CapCut.exe" set "CAPCUT=%PROGRAMFILES%\CapCut\CapCut.exe"
-if defined CAPCUT (start "" "%CAPCUT%" & echo     %CAPCUT%) else (echo     CapCut.exe not found -- launch manually)
-echo.
-
-echo [3] Making pipeline (auto-produce GRAPHIC/BROLL/CAPCUT, then wait at G4 gate)
+echo [2] Making pipeline (auto-produce GRAPHIC/BROLL/CAPCUT, then wait at G4 gate)
 netstat -ano | findstr /r /c:":3001 .*LISTENING" >nul 2>&1
 if errorlevel 1 (
   echo     [!] proxy :3001 down -- skipped. Run start_yeori.bat first, then re-run this.
