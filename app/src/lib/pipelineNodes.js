@@ -153,9 +153,14 @@ export const PIPELINE_NODES = [
       '(별도 엔진) scripts/yeori_subtitle.py + server/proxy.js · /api/subtitle/render — CapCut식 모션 자막, drawtext와 무관',
     ],
     inputs: [
+      // 2026-11-23(성준님 지적 — "배선이 최대한 크로스 안 되게 포트 순서를 재정렬"): cutVideo는
+      // 바로 왼쪽 compose(출력 포트 1개뿐이라 높이가 낮음)에서 오고, cpText·enJaText는 같은
+      // script 노드라도 출력 목록 맨 끝(IP·VP·narration·scriptTxt·bgmMood 다음)이라 카드 아래쪽에서
+      // 온다 — cutVideo를 맨 위로 올려 compose와 가깝게, cpText·enJaText를 아래로 둬 script의
+      // 낮은 출력 위치와 가깝게 맞췄다(순서만 바뀜, from·의미는 그대로).
+      { port: 'cutVideo', kind: 'video', from: 'compose.cutVideo', text: '번인 대상 영상(05_video/cut_NN.mp4)' },
       { port: 'cpText', kind: 'text', from: 'script.cpText', text: '컷별 자막(KR) 원문' },
       { port: 'enJaText', kind: 'text', from: 'script.enJaText', text: '컷별 EN/JP 번역 병기 문구' },
-      { port: 'cutVideo', kind: 'video', from: 'compose.cutVideo', text: '번인 대상 영상(05_video/cut_NN.mp4)' },
     ],
     outputs: [
       // 2026-11-23(성준님 지적): 처음엔 compose.cutVideo 가 이 노드로도 들어오고 06·07로도
@@ -237,10 +242,13 @@ export const PIPELINE_NODES = [
       // 2026-11-23: compose 에서 직결하던 것을 caption 을 거쳐 받도록 바꿨다(아래 caption 포트와
       // 같은 이유) — 합성된 컷 영상은 캡션 단계를 지나 "자막까지 확정된 상태"로 이 노드에 들어온다.
       { port: 'cutVideo', kind: 'video', from: 'caption.cutVideo', text: '05_video/cut_NN.mp4(자막 확정 후, caption 경유)' },
-      { port: 'narrationMp3', kind: 'audio', from: 'tts.narrationMp3', text: '03_audio/cut_NN_nr.mp3' },
       // subtitleBurn.js 참조는 전부터 code 목록에 있었는데 입력 포트가 없었다 —
       // 확정된 자막(caption 노드)을 받아 이 미리듣기 ffmpeg(/api/run-ffmpeg)가 drawtext로 굽는다.
+      // 2026-11-23(크로스 최소화): cutVideo·caption 둘 다 caption 노드 출력(위쪽 cutVideo,
+      // 아래쪽 styleDecided 순)에서 오니 그 순서 그대로 붙였고, 전혀 다른(더 아래 행) tts
+      // 노드에서 오는 narrationMp3는 맨 아래로 내려 caption 노드발 두 선과 안 겹치게 했다.
       { port: 'caption', kind: 'text', from: 'caption.styleDecided', text: '확정된 자막(KR+EN+JA) — 이 미리듣기에도 같은 drawtext로 번인' },
+      { port: 'narrationMp3', kind: 'audio', from: 'tts.narrationMp3', text: '03_audio/cut_NN_nr.mp3' },
     ],
     outputs: [
       { port: 'previewFile', kind: 'video', text: '06_publishing/cut_NN_preview.mp4 (미리듣기 전용)' },
@@ -255,16 +263,19 @@ export const PIPELINE_NODES = [
     inputs: [
       // 2026-11-23: preview와 같은 이유로 compose 직결을 caption 경유로 바꿨다.
       { port: 'cutVideo', kind: 'video', from: 'caption.cutVideo', text: '05_video 컷 영상 전체(자막 확정 후, caption 경유)' },
-      { port: 'narrationMp3', kind: 'audio', from: 'tts.narrationMp3', text: '나레이션 음성(직접 믹스)' },
+      // 2026-11-23: 기존엔 vars 의 "자막 번인 켜기/끄기" 토글만 있고 실제 자막 내용·스타일이
+      // 어디서 오는지는 그래프에 안 보였다 — reelFinalize.js 의 decideCut·buildLangFilter가
+      // 실제로 쓰는 입력(caption 노드의 확정본)을 명시한다.
+      // (크로스 재정리, 성준님 지적) caption·previewFile 순서를 바꿔 caption을 cutVideo 바로
+      // 아래 — caption 노드에서 오는 두 선(cutVideo·caption)을 먼저 묶고, preview 노드에서
+      // 오는 previewFile을 그 다음으로 뒀다.
+      { port: 'caption', kind: 'text', from: 'caption.styleDecided', text: '확정된 자막(KR+EN+JA) — buildLangFilter가 최종본에 번인' },
       { port: 'previewFile', kind: 'video', from: 'preview.previewFile', text: '미리듣기 결과(원본보다 최신일 때만 사용)' },
+      { port: 'narrationMp3', kind: 'audio', from: 'tts.narrationMp3', text: '나레이션 음성(직접 믹스)' },
       // 2026-11-19: 이전엔 trendRadar.bgm(원곡 라이브러리)을 여기로 바로 연결해 "자동 선곡"만
       // 보이는 그림이었다 — 실제로는 bgm 노드(후보선곡·최종 결정)를 거친 결과를 쓴다. BGM
       // 결정 방식 선택(vars)도 그 노드로 옮겼다 — finalize는 이미 결정된 값을 실행만 한다.
       { port: 'bgm', kind: 'audio', from: 'bgm.decided', text: '최종 결정된 BGM(직접 지정 또는 자동 선곡)' },
-      // 2026-11-23: 기존엔 vars 의 "자막 번인 켜기/끄기" 토글만 있고 실제 자막 내용·스타일이
-      // 어디서 오는지는 그래프에 안 보였다 — reelFinalize.js 의 decideCut·buildLangFilter가
-      // 실제로 쓰는 입력(caption 노드의 확정본)을 명시한다.
-      { port: 'caption', kind: 'text', from: 'caption.styleDecided', text: '확정된 자막(KR+EN+JA) — buildLangFilter가 최종본에 번인' },
     ],
     outputs: [
       { port: 'finalOutput', kind: 'video', text: '07_output/{CODE}_final.mp4' },
