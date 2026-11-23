@@ -45,6 +45,8 @@ PL: {PL코드}                    ← 예: YR_VD / BR_VD / GR_HT / CC_ED
 CH: {캐릭터} / {LK코드}         ← 예: 서여리 / LK_CS.TOP_CRP
 DL: {대사 텍스트 or 없음}
 NR: {나레이션 텍스트 or 없음}
+EN: {영어 자막 or 없음}         ← DL 있으면 DL 번역, 없으면 NR 번역. 직역 대신 자연스러운 영어 문장
+JP: {일본어 자막 or 없음}       ← EN과 같은 기준, 일본어권 시청자에게 자연스러운 문장
 SH: {SH코드}                    ← 예: SH_CU / SH_MCU / SH_MS / SH_FS / SH_WS / SH_ECU
 CA: {CA코드}                    ← 예: CA_ST(고정) / CA_PS(푸시인) / CA_ZI(줌인) / CA_TR(트래킹) / CA_PAN(패닝) / CA_TLD(틸트다운)
 MD: {MD코드}                    ← 예: MD_JOY / MD_REL / MD_INT / MD_DRM

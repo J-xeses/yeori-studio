@@ -8946,6 +8946,91 @@ app.post('/api/upload-cut-video', (req, res) => {
   })
 })
 
+// ── POST /api/replace-cut-audio-segment — 컷 영상(cut_NN.mp4) 안 [start,end] 구간 오디오만
+// 교체. 두 캐릭터가 번갈아 말하는 대사 컷에서 한쪽 목소리만 이상하게 생성됐을 때, 그 구간만
+// TTS로 다시 만들어 끼워넣는 용도(2026-11-23) — 동시발화(겹침) 구간엔 못 쓴다(화자분리 아님).
+// body = 교체용 오디오 raw stream(mp3). 비디오는 손대지 않는다(-c:v copy). 항상 원본 cut_NN.mp4만
+// 대상으로 한다 — 덮어쓰면 mtime이 갱신돼 pickCutSource가 기존 _subtitle/_overlay 파생본을
+// 자동으로 무효화한다(mediaPaths.js 규칙 재사용, 파생본 쪽은 따로 손댈 필요 없음).
+app.post('/api/replace-cut-audio-segment', (req, res) => {
+  const { epNum, cutNo } = req.query
+  const start = parseFloat(req.query.start)
+  const end = parseFloat(req.query.end)
+  if (!epNum || !cutNo) return res.status(400).json({ error: 'epNum, cutNo 필요' })
+  if (!Number.isFinite(start) || !Number.isFinite(end) || !(end > start) || start < 0) {
+    return res.status(400).json({ error: 'start/end 구간이 올바르지 않습니다' })
+  }
+
+  const padded = String(cutNo).padStart(2, '0')
+  const videoDir = mp.videoDir(epNum)
+  const target = path.join(videoDir, `cut_${padded}.mp4`)
+  if (!fs.existsSync(target)) return res.status(404).json({ error: `cut_${padded}.mp4 없음` })
+
+  const chunks = []
+  req.on('data', c => chunks.push(c))
+  req.on('error', () => res.status(400).json({ error: '업로드 스트림 오류' }))
+  req.on('end', async () => {
+    const buf = Buffer.concat(chunks)
+    if (!buf.length) return res.status(400).json({ error: '빈 파일' })
+
+    const totalDur = await getMediaDuration(target)
+    if (!totalDur || end > totalDur + 0.05) {
+      return res.status(400).json({ error: `구간이 영상 길이(${totalDur.toFixed(2)}s)를 벗어납니다` })
+    }
+
+    const newAudioPath = path.join(videoDir, `cut_${padded}_seg_new.mp3`)
+    fs.writeFileSync(newAudioPath, buf)
+    const newDur = await getMediaDuration(newAudioPath)
+    if (!newDur) {
+      try { fs.unlinkSync(newAudioPath) } catch { /* noop */ }
+      return res.status(500).json({ error: '교체 오디오 길이를 읽지 못했습니다' })
+    }
+
+    const targetDur = end - start
+    // atempo=factor 를 걸면 결과 길이가 newDur/factor 가 된다 — factor를 newDur/targetDur 로
+    // 두면 정확히 구간 길이에 맞춰진다. ffmpeg atempo 유효범위(0.5~100)보다는 훨씬 좁게
+    // 0.5~3.0으로만 쓰고, 그 밖이면(TTS 문장이 구간과 너무 안 맞음) 무음 패딩/트림으로 대신한다.
+    const factor = newDur / targetDur
+    const AFMT = 'aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo'
+    const segCore = (factor >= 0.5 && factor <= 3.0)
+      ? `atempo=${factor.toFixed(4)}`
+      : (newDur < targetDur ? `apad=whole_dur=${targetDur.toFixed(3)}` : `atrim=0:${targetDur.toFixed(3)}`)
+
+    const backupDir = path.join(videoDir, '_backup')
+    fs.mkdirSync(backupDir, { recursive: true })
+    const backupPath = path.join(backupDir, `cut_${padded}_${Date.now()}.mp4`)
+    fs.copyFileSync(target, backupPath)
+
+    const parts = []
+    if (start > 0) parts.push(`[0:a]atrim=0:${start.toFixed(3)},asetpts=PTS-STARTPTS,${AFMT}[a0]`)
+    parts.push(`[1:a]${segCore},asetpts=PTS-STARTPTS,${AFMT}[aseg]`)
+    if (end < totalDur) parts.push(`[0:a]atrim=${end.toFixed(3)}:${totalDur.toFixed(3)},asetpts=PTS-STARTPTS,${AFMT}[a2]`)
+    const labels = [start > 0 ? '[a0]' : null, '[aseg]', end < totalDur ? '[a2]' : null].filter(Boolean)
+    const fullFilter = `${parts.join(';')};${labels.join('')}concat=n=${labels.length}:v=0:a=1[aout]`
+
+    const outPath = path.join(videoDir, `cut_${padded}_audiofix_tmp.mp4`)
+    const args = ['-y', '-i', target, '-i', newAudioPath, '-filter_complex', fullFilter,
+      '-map', '0:v', '-map', '[aout]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', outPath]
+    const proc = spawn('ffmpeg', args, { windowsHide: true })
+    let err = ''
+    proc.stderr.on('data', d => { err += d.toString() })
+    proc.on('close', code => {
+      try { fs.unlinkSync(newAudioPath) } catch { /* noop */ }
+      if (code !== 0 || !fs.existsSync(outPath)) {
+        try { fs.unlinkSync(outPath) } catch { /* noop */ }
+        return res.status(500).json({ error: `오디오 교체 실패: ${err.slice(-500)}` })
+      }
+      fs.renameSync(outPath, target)
+      const st = fs.statSync(target)
+      res.json({ success: true, mtimeMs: st.mtimeMs, backupPath: mp.toMediaUrl(backupPath), factor: +factor.toFixed(3) })
+    })
+    proc.on('error', e => {
+      try { fs.unlinkSync(newAudioPath) } catch { /* noop */ }
+      res.status(500).json({ error: `ffmpeg 실행 오류: ${e.message}` })
+    })
+  })
+})
+
 // ── POST /api/rename-clip-files — 스테이징된 클립 파일명을 cut_NN_clip_<슬롯번호>.mp4 로 표준화 ──
 // body: { epNum, renames: [{ from, to }] } — from/to 는 04_making/raw 안의 절대경로.
 // 안전장치: ① raw 폴더 밖·cut_NN_clip_*.mp4 형식이 아닌 이름은 거부 ② 목적지에 "이 요청과 무관한"

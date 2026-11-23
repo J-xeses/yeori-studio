@@ -5,7 +5,14 @@ import { resolveEpisodeCode } from '../lib/episodeCode'
 import { EpisodeOverviewBlock, CutList } from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import s from './VoiceTab.module.css'
-import { elIsolateVoice, elSpeechToText } from '../lib/api'
+import { elIsolateVoice, elSpeechToText, elTTS, freeTTS, replaceCutAudioSegment } from '../lib/api'
+import { isFreeVoice, freeVoiceName, speedToRate } from '../lib/freeTts'
+import { videoUrl } from '../lib/mediaPaths'
+
+// TTSTab.jsx의 기본값과 동일(이 코드베이스 관례상 작은 값은 탭마다 복제) — 화자별 목소리
+// 설정이 없는 컷에서 구간교체 미리듣기가 쓸 폴백.
+const SEGFIX_DEFAULT_VOICE_ID = 'free:ko-KR-SunHiNeural'
+const SEGFIX_DEFAULT_SETTINGS = { speed: 0.9, stability: 30, similarity: 75 }
 
 function makeVoiceTrack() {
   return {
@@ -138,6 +145,88 @@ export default function VoiceTab() {
   const cut = activeCut
   const cutTracks = cut ? getTracksForCut(cut.id) : []
 
+  // ── 컷 영상 자체 오디오 구간 교체(2026-11-23) — 두 캐릭터가 번갈아 말하는 대사 컷에서
+  // 한쪽 목소리만 이상하게 생성됐을 때, 그 구간만 시간으로 잘라 TTS로 다시 끼워넣는다.
+  // 화자가 겹쳐 말하는(동시발화) 구간엔 못 쓴다 — 음원 분리가 아니라 시간상 분리 전용.
+  const [segFix, setSegFix] = useState({})   // cutId -> { duration, start, end, text, speaker, previewUrl, previewBlob, previewBusy, applyBusy, videoBust }
+  const segVideoRef = useRef(null)
+  const sf = cut ? (segFix[cut.id] || {}) : {}
+  const setSf = (patch) => { if (cut) setSegFix(p => ({ ...p, [cut.id]: { ...p[cut.id], ...patch } })) }
+
+  const onSegVideoMeta = (e) => {
+    if (sf.duration) return
+    const d = e.target.duration
+    setSf({ duration: d, start: 0, end: Math.min(2, d) })
+  }
+
+  const playSegOriginal = () => {
+    const v = segVideoRef.current
+    if (!v || sf.end == null) return
+    v.currentTime = sf.start
+    v.play()
+    const onTime = () => { if (v.currentTime >= sf.end) { v.pause(); v.removeEventListener('timeupdate', onTime) } }
+    v.addEventListener('timeupdate', onTime)
+  }
+
+  const dragSegBar = (e) => {
+    const r = e.currentTarget.getBoundingClientRect()
+    const move = (ev) => {
+      const ratio = Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width))
+      const sec = Math.round((ratio * sf.duration) / 0.1) * 0.1
+      // 클릭/드래그 지점에 더 가까운 핸들(시작/끝)을 옮긴다 — 핸들을 따로 그리지 않아도
+      // 막대 위 아무 곳이나 끌면 그쪽 경계가 따라오는 단순한 구간 선택.
+      if (Math.abs(sec - sf.start) <= Math.abs(sec - sf.end)) setSf({ start: Math.max(0, Math.min(sec, sf.end - 0.3)) })
+      else setSf({ end: Math.min(sf.duration, Math.max(sec, sf.start + 0.3)) })
+    }
+    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up) }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+    move(e)
+  }
+
+  const segTtsRequest = (voiceId, text, settings) => {
+    if (isFreeVoice(voiceId)) return freeTTS(freeVoiceName(voiceId), text, speedToRate(settings.speed))
+    if (!apiKeys.elevenLabs) throw new Error('ElevenLabs API 키를 입력하세요 (상단 API 바)')
+    return elTTS(apiKeys.elevenLabs, voiceId, {
+      text, model_id: 'eleven_multilingual_v2',
+      voice_settings: { stability: settings.stability / 100, similarity_boost: settings.similarity / 100, speed: settings.speed },
+    })
+  }
+
+  const genSegPreview = async () => {
+    if (!sf.text?.trim()) { alert('교체할 대사를 입력하세요'); return }
+    const tts = state.ttsSettings || {}
+    const speakerVoices = tts.speakerVoices || {}
+    const speakerSettings = tts.speakerSettings || {}
+    const voiceId  = (sf.speaker && speakerVoices[sf.speaker]) || tts.voiceId || SEGFIX_DEFAULT_VOICE_ID
+    const settings = (sf.speaker && speakerSettings[sf.speaker]) || SEGFIX_DEFAULT_SETTINGS
+    setSf({ previewBusy: true })
+    try {
+      const res = await segTtsRequest(voiceId, sf.text.trim(), settings)
+      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.detail?.message || e.error || 'TTS 생성 실패') }
+      const blob = await res.blob()
+      setSf({ previewBusy: false, previewUrl: URL.createObjectURL(blob), previewBlob: blob })
+    } catch (err) {
+      setSf({ previewBusy: false })
+      alert('미리듣기 실패: ' + err.message)
+    }
+  }
+
+  const applySegFix = async () => {
+    if (!sf.previewBlob) { alert('먼저 미리듣기를 생성하세요'); return }
+    setSf({ applyBusy: true })
+    try {
+      const res = await replaceCutAudioSegment(state.episode?.number, cut.no, sf.start, sf.end, sf.previewBlob)
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || !data.success) throw new Error(data.error || '적용 실패')
+      setSf({ applyBusy: false, videoBust: data.mtimeMs, previewUrl: null, previewBlob: null })
+      alert('✅ 적용 완료 — 영상의 해당 구간 음성이 교체되었습니다(원본은 _backup에 보관).')
+    } catch (err) {
+      setSf({ applyBusy: false })
+      alert('적용 실패: ' + err.message)
+    }
+  }
+
   return (
     <div className={s.page}>
       <TabToolbar />
@@ -172,6 +261,61 @@ export default function VoiceTab() {
             <div className={s.dialogue}>
               {cut.dialogue && <div className={s.textBlock}><span className={s.textLabel}>대사</span><span>{cut.dialogue}</span></div>}
               {cut.narration && <div className={s.textBlock}><span className={s.textLabel}>나레이션</span><span>{cut.narration}</span></div>}
+            </div>
+
+            <div className={s.audioBlock} style={{ marginBottom: 14 }}>
+              <div className={s.audioName}>🎬 영상 음성 구간 교체 — 번갈아 말하는 대사 중 한쪽만 다시 녹음(겹쳐 말하는 구간엔 못 씀)</div>
+              <video
+                ref={segVideoRef}
+                src={`${videoUrl(state.episode, cut.no)}?v=${sf.videoBust || cut.id}`}
+                controls
+                onLoadedMetadata={onSegVideoMeta}
+                style={{ width: '100%', maxHeight: 220, background: '#000', borderRadius: 6 }}
+              />
+              {sf.duration > 0 && (
+                <>
+                  <div
+                    style={{ position: 'relative', height: 28, background: 'rgba(255,255,255,0.08)', borderRadius: 4, margin: '10px 0 4px', cursor: 'pointer' }}
+                    onPointerDown={dragSegBar}
+                  >
+                    <div style={{
+                      position: 'absolute', top: 0, bottom: 0,
+                      left: `${(sf.start / sf.duration) * 100}%`,
+                      width: `${Math.max(0, (sf.end - sf.start) / sf.duration) * 100}%`,
+                      background: 'rgba(124,92,255,0.5)', borderRadius: 4,
+                    }} />
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, opacity: 0.85 }}>
+                    <span>구간 {sf.start?.toFixed(1)}s ~ {sf.end?.toFixed(1)}s (길이 {(sf.end - sf.start).toFixed(1)}s) · 전체 {sf.duration.toFixed(1)}s</span>
+                    <button type="button" onClick={playSegOriginal}>▶ 이 구간 들어보기</button>
+                  </div>
+
+                  <textarea rows={2} placeholder="이 구간에서 다시 말할 대사를 입력하세요"
+                    style={{ width: '100%', marginTop: 8, boxSizing: 'border-box' }}
+                    value={sf.text || ''} onChange={e => setSf({ text: e.target.value })} />
+
+                  <div style={{ display: 'flex', gap: 6, marginTop: 6, alignItems: 'center' }}>
+                    <select value={sf.speaker || ''} onChange={e => setSf({ speaker: e.target.value || null })}>
+                      <option value="">기본 목소리</option>
+                      {Object.keys(state.ttsSettings?.speakerVoices || {}).map(name => (
+                        <option key={name} value={name}>{name}</option>
+                      ))}
+                    </select>
+                    <button type="button" disabled={sf.previewBusy} onClick={genSegPreview} style={{ flex: 1 }}>
+                      {sf.previewBusy ? '⏳ 생성 중…' : '🔊 미리듣기 생성'}
+                    </button>
+                  </div>
+
+                  {sf.previewUrl && (
+                    <div className={s.audioBlock} style={{ marginTop: 8 }}>
+                      <audio controls src={sf.previewUrl} className={s.player} />
+                      <button type="button" disabled={sf.applyBusy} onClick={applySegFix}>
+                        {sf.applyBusy ? '⏳ 적용 중…' : '✅ 이 구간에 적용'}
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
 
             <div className={s.trackGrid}>

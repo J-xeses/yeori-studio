@@ -19,7 +19,9 @@ const V3_CUT_HEADER_RE = /^\[CUT\s+(\d+)\]\s*(.*)$/
 // 가능. src/tabs/ScriptGenTab.jsx 와 함께 유지.
 // BEAT: 서사 비트 태그(훅/긴장/반전/안정/고조/결말/시그) — 2026-10-10 추가, 스토리 전개연출
 // 설계 체크 기능. src/tabs/ScriptGenTab.jsx 와 함께 유지.
-const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CPP|CT|SH|CA|MD|AC|LOOK_ID|DU|SEG|SEGT|SEGP|AU|BEAT|HTML|SRC|BQ|URL|CLIP|MOTION|GTPL):\s?(.*)$/
+// EN/JP: 자막 영어/일본어 번역(DL/NR과 같은 화면에 동시 병기) — 2026-11-23 추가.
+// src/tabs/ScriptGenTab.jsx 와 반드시 함께 유지.
+const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|EN|JP|CP|CPP|CT|SH|CA|MD|AC|LOOK_ID|DU|SEG|SEGT|SEGP|AU|BEAT|HTML|SRC|BQ|URL|CLIP|MOTION|GTPL):\s?(.*)$/
 
 // 자유 텍스트(한글/영문/오탈자 섞여도)를 7종 표준 비트로 정규화. 매칭 안 되면 ''(미태깅).
 const BEAT_CANON = ['훅', '긴장', '반전', '안정', '고조', '결말', '시그']
@@ -375,6 +377,9 @@ export function parseCutsV3(raw) {
     const firstSh = shCode.split(/[→>]/)[0].trim()
     const dl = fields.DL && fields.DL !== '없음' ? fields.DL : ''
     const nr = fields.NR && fields.NR !== '없음' ? fields.NR : ''
+    // EN/JP: DL(대사) 또는 NR(나레이션)의 번역 — 화면 자막 병기용, CP(손글씨 오버레이)와 별개.
+    const subtitleEn = fields.EN && fields.EN !== '없음' ? fields.EN.trim() : ''
+    const subtitleJa = fields.JP && fields.JP !== '없음' ? fields.JP.trim() : ''
     // CP(자막): 컷 대본 단계에서 정의하는 손글씨 오버레이 텍스트(순수 텍스트).
     // "없음"/"(작성 필요)" 플레이스홀더는 빈 값으로. 메이킹 탭이 이 값이 있는 컷에만
     // 손글씨 오버레이 섹션을 노출하고, 위치/말풍선/타이밍 등 시각 상세를 형성한다.
@@ -403,6 +408,8 @@ export function parseCutsV3(raw) {
       dialogue: dl,
       subtitle: cp,
       narration: nr,
+      subtitleEn,
+      subtitleJa,
       imagePrompt: castGuarded.ip,
       videoPrompt: silentGuardedVp,
       ...(voiceSource ? { voiceSource } : {}),

@@ -653,6 +653,16 @@ export default function VideoTab() {
     const nextEndCard = { ...reelEndCardStyle, ...patch }
     setReelStyle({ endCard: nextEndCard })
   }
+  // 영어/일본어 자막 병기(2026-11-23) — 엔딩 카드와 같은 패턴(reelOverrides._style.en/.ja =
+  // {enabled,fontPx,y}, 독립 크기·세로위치). server/lib/reelFinalize.js가 cut.subtitleEn/
+  // subtitleJa를 이 스타일로 메인 캡션과 별개 drawtext 체인으로 번인한다. 기본은 꺼짐 —
+  // 모든 에피소드가 병기를 쓰는 게 아니라서 명시적으로 켜야 함.
+  const reelEnStyle = reelStyle.en || {}
+  const reelJaStyle = reelStyle.ja || {}
+  const setLangStyle = (key, patch) => {
+    const cur = reelStyle[key] || {}
+    setReelStyle({ [key]: { ...cur, ...patch } })
+  }
   // 릴스 자막 텍스트(줄바꿈 \n 포함) 수동 편집을 override 파일에 저장(2026-09-28) — studio-state.json
   // 로컬 subtitles 상태만으로는 최종본(reel-finalize) 렌더가 이 값을 전혀 못 읽는다(로컬 상태는 화면
   // 미리보기·SRT 내보내기 전용). subtitle 전체 문자열(" / "로 세그 구분, 세그 내부는 \n 그대로)로 저장.
@@ -2203,6 +2213,48 @@ export default function VideoTab() {
               <div style={{ fontSize: 11, color: "var(--text-3)", lineHeight: 1.5 }}>
                 대본 [엔딩 카드] 섹션(마지막 2초 공유·팔로우 유도 문구)의 크기·위치 — 건드리지 않으면
                 위 자막 크기·세로 위치와 똑같이 번인됩니다. 이 에피소드에 [엔딩 카드]가 없으면 효과 없음.
+              </div>
+              {/* 영어/일본어 자막 병기 — 대본(ScriptGenTab)의 EN:/JP: 필드를 메인 캡션과 독립된
+                  크기·세로위치로 번인. 텍스트 자체는 여기서 입력하지 않고(대본 탭에서 컷마다
+                  고침), 여기선 "켤지·얼마나 작게·어디에" 디자인만 정한다. */}
+              {['en', 'ja'].map((key) => {
+                const label = key === 'en' ? '🇺🇸 영어' : '🇯🇵 일본어'
+                const cur = key === 'en' ? reelEnStyle : reelJaStyle
+                const defaultFontPx = Math.round(reelFontPx * 0.6)
+                const mainY = reelStyle.y || 0.66
+                const defaultY = key === 'en' ? Math.max(0.05, mainY - 0.07) : Math.max(0.05, mainY - 0.14)
+                return (
+                  <div key={key} style={{ marginTop: 10, paddingTop: 10, borderTop: '1px dashed var(--border)' }}>
+                    <label className={s.check}>
+                      <input type="checkbox" checked={!!cur.enabled} disabled={!subtitleEnabled}
+                        onChange={e => setLangStyle(key, { enabled: e.target.checked })} />
+                      <span>{label} 자막 병기</span>
+                    </label>
+                    {cur.enabled && (
+                      <>
+                        <div className={s.field}>
+                          <label>{label} 자막 크기 <span className={s.val}>{cur.fontPx || defaultFontPx}px</span></label>
+                          <input type="range" min="20" max="90" value={cur.fontPx || defaultFontPx} disabled={!subtitleEnabled}
+                            onChange={e => setLangStyle(key, { fontPx: parseInt(e.target.value) })} />
+                        </div>
+                        <div className={s.field}>
+                          <label>{label} 세로 위치 <span className={s.val}>
+                            {cur.y != null ? `${Math.round(cur.y * 100)}%` : `${Math.round(defaultY * 100)}%(기본)`}
+                          </span></label>
+                          <input type="range" min="5" max="90"
+                            value={Math.round((cur.y != null ? cur.y : defaultY) * 100)}
+                            disabled={!subtitleEnabled}
+                            onChange={e => setLangStyle(key, { y: parseInt(e.target.value) / 100 })} />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )
+              })}
+              <div style={{ fontSize: 11, color: "var(--text-3)", lineHeight: 1.5 }}>
+                텍스트 자체는 대본 탭의 EN(영어 자막)/JP(일본어 자막) 입력칸에서 컷마다 수정합니다.
+                기본 크기·위치는 메인 자막과 겹치지 않도록 띄워뒀지만, 자막 줄 수에 따라 겹칠 수 있어
+                슬라이더로 직접 맞출 수 있습니다.
               </div>
               </>
               )}

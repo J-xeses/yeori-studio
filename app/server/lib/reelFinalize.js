@@ -498,6 +498,10 @@ export function decideCut(cut) {
     // 나레이션 1줄이 한참 뒤에 나오는 R04 cut3)에서 실제 발화 타이밍과 안 맞을 때 사용.
     // 세그 개수와 정확히 일치할 때만 적용, 아니면 무시하고 자동배분으로 폴백.
     captionSegTiming: Array.isArray(cut.captionSegTiming) && cut.captionSegTiming.length ? cut.captionSegTiming : null,
+    // 영어/일본어 자막 병기(2026-11-23) — CP(캡션)와 독립, DL/NR 유무와 무관하게 컷 전체
+    // 구간에 걸쳐 한 줄로 표시한다(세그 단위 분할 안 함, isDialogue:false로 배경박스 없음).
+    subtitleEn: String(cut.subtitleEn || '').trim(),
+    subtitleJa: String(cut.subtitleJa || '').trim(),
     sfx,
     bgmText: String(audio.bgm || ''),
   }
@@ -846,7 +850,12 @@ export async function finalizeReel(p) {
     ? endCardOverrideText.split('\n').map((l) => l.trim()).filter(Boolean)
     : extractEndCard(loadEpisodeScriptRaw(code))
   if (endCardLines.length) log(`엔딩 카드 발견 — "${endCardLines.join(' / ')}"${endCardOverrideText.trim() ? '(영상 탭 입력값)' : '(대본 원본)'}`)
-  if (captionStyle === 'text' && (capCount > 0 || endCardLines.length)) {
+  // 영어/일본어 자막 병기(2026-11-23, capStyle.en/.ja = {enabled,fontPx,y}, 영상 탭에서 설정) —
+  // CP(캡션) 유무와 무관하게 subtitleEn/subtitleJa가 있는 컷이면 켤 수 있어야 해서, 이 블록
+  // 자체를 여는 조건에도 반영한다(안 그러면 CP도 엔딩카드도 없는 컷은 블록을 통째로 건너뛰어
+  // EN/JA가 있어도 절대 안 구워짐).
+  const hasEnJa = (capStyle.en?.enabled && decisions.some((d) => d.subtitleEn)) || (capStyle.ja?.enabled && decisions.some((d) => d.subtitleJa))
+  if (captionStyle === 'text' && (capCount > 0 || endCardLines.length || hasEnJa)) {
     const allSegs = []
     for (const d of decisions) {
       if (!d.caption) continue
@@ -898,8 +907,36 @@ export async function finalizeReel(p) {
       if (endCardFilter) log(`엔딩 카드 번인 — ${endCardStyle.fontSize || 32}px · y=${endCardStyle.positionRatio ?? '(캡션과 동일)'}`)
     }
 
-    const filter = [capResult.filter, endCardFilter].filter(Boolean).join(',')
-    const tempFiles = [...capResult.tempFiles, ...endCardTempFiles]
+    // EN/JA 레이어 — 엔딩 카드와 같은 패턴(별도 drawtext 체인, 독립 스타일). 세그 단위로
+    // 쪼개지 않고 컷 전체 구간[시작~끝]에 한 줄로 띄운다(번역은 그 컷 전체에 대한 것이라
+    // 캡션 세그 타이밍과 일치시킬 필요가 없음, 2026-11-23). 기본 크기는 메인 캡션의 60%,
+    // 기본 세로 위치는 메인 캡션(보통 하단)보다 위로 7%p/14%p 띄워 겹치지 않게 함 — 실제
+    // 줄 수·길이에 따라 겹칠 수 있어 영상 탭 슬라이더로 사람이 최종 조정(엔딩 카드와 동일 철학).
+    const mainY = typeof style.positionRatio === 'number' ? style.positionRatio : 0.93
+    const buildLangFilter = (key, textField, font) => {
+      const cfg = capStyle[key]
+      if (!cfg?.enabled) return { filter: '', tempFiles: [] }
+      const segs = decisions.filter((d) => d[textField]).map((d) => ({
+        text: d[textField], start: d.startSec, end: d.startSec + d.durSec, isDialogue: false,
+      }))
+      if (!segs.length) return { filter: '', tempFiles: [] }
+      const langStyle = {
+        ...style,
+        font: font || style.font,
+        fontSize: cfg.fontPx || Math.round(style.fontSize * 0.6),
+        positionRatio: cfg.y != null ? cfg.y : (key === 'en' ? Math.max(0.05, mainY - 0.07) : Math.max(0.05, mainY - 0.14)),
+        outlineScale: 0.09,
+      }
+      const workDirLang = path.join(tmp, `drawtext_${key}`)
+      return buildSubtitleDrawtextFilter(segs, langStyle, workDirLang, vH, vW)
+    }
+    const enResult = buildLangFilter('en', 'subtitleEn')
+    const jaResult = buildLangFilter('ja', 'subtitleJa', 'Yu Gothic')
+    if (enResult.filter) log(`영어 자막 번인 — ${capStyle.en?.fontPx || Math.round(style.fontSize * 0.6)}px`)
+    if (jaResult.filter) log(`일본어 자막 번인 — ${capStyle.ja?.fontPx || Math.round(style.fontSize * 0.6)}px`)
+
+    const filter = [capResult.filter, endCardFilter, enResult.filter, jaResult.filter].filter(Boolean).join(',')
+    const tempFiles = [...capResult.tempFiles, ...endCardTempFiles, ...enResult.tempFiles, ...jaResult.tempFiles]
     if (filter) {
       const capOut = path.join(tmp, 'captioned_text.mp4')
       log(`자막 번인(기본 텍스트, drawtext) — 세그 ${allSegs.length}개 · ${style.font || '맑은 고딕'} ${style.fontSize || 32}px`)

@@ -79,3 +79,11 @@ export const elSpeechToText = (apiKey, audioFile) =>
     headers: { 'xi-api-key': apiKey, 'content-type': audioFile.type || 'audio/mpeg' },
     body: audioFile,
   })
+
+// 컷 영상(cut_NN.mp4)의 [start,end] 구간 오디오만 새 오디오로 교체 — audioBlob: TTS 결과(mp3)
+export const replaceCutAudioSegment = (epNum, cutNo, start, end, audioBlob) =>
+  fetch(`http://localhost:3001/api/replace-cut-audio-segment?epNum=${epNum}&cutNo=${cutNo}&start=${start}&end=${end}`, {
+    method: 'POST',
+    headers: { 'content-type': audioBlob.type || 'audio/mpeg' },
+    body: audioBlob,
+  })

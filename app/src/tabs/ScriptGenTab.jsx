@@ -306,7 +306,9 @@ const V3_CUT_HEADER_RE = /^\[CUT\s+(\d+)\]\s*(.*)$/
 // server/lib/clipPrompt.js가 masterCode.audio(오디오: 블록)에서 결정적으로 유도한다.
 // server/lib/scriptParserV3.js 와 반드시 함께 유지.
 // BEAT: 서사 비트 태그(훅/긴장/반전/안정/고조/결말/시그) — 2026-10-10 추가, server/lib/scriptParserV3.js 와 함께 유지.
-const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CPP|CT|SH|CA|MD|AC|LOOK_ID|DU|SEG|SEGT|SEGP|AU|BEAT|HTML|SRC|BQ|URL|CLIP|MOTION|GTPL):\s?(.*)$/
+// EN/JP: 자막 영어/일본어 번역(DL/NR과 같은 화면에 동시 병기) — 2026-11-23 추가.
+// server/lib/scriptParserV3.js 와 반드시 함께 유지.
+const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|EN|JP|CP|CPP|CT|SH|CA|MD|AC|LOOK_ID|DU|SEG|SEGT|SEGP|AU|BEAT|HTML|SRC|BQ|URL|CLIP|MOTION|GTPL):\s?(.*)$/
 
 // "8+8+10" → [8,10] 단위로만 구성된 배열(2개 이상). 형식이 안 맞거나 "auto"/빈값이면 null.
 // server/lib/scriptParserV3.js 의 동일 함수와 반드시 함께 유지.
@@ -657,6 +659,10 @@ export function parseCutsV3(raw) {
     const firstSh = shCode.split(/[→>]/)[0].trim()
     const dl = fields.DL && fields.DL !== '없음' ? fields.DL : ''
     const nr = fields.NR && fields.NR !== '없음' ? fields.NR : ''
+    // EN/JP: DL(대사) 또는 NR(나레이션)의 번역 — 화면 자막 병기용, CP(손글씨 오버레이)와 별개.
+    // server/lib/scriptParserV3.js와 동일 규칙 — 반드시 함께 유지.
+    const subtitleEn = fields.EN && fields.EN !== '없음' ? fields.EN.trim() : ''
+    const subtitleJa = fields.JP && fields.JP !== '없음' ? fields.JP.trim() : ''
     // CP(자막): 컷 대본 단계에서 정의하는 손글씨 오버레이 텍스트(순수 텍스트).
     // server/lib/scriptParserV3.js와 동일 규칙 — 반드시 함께 유지.
     const cp = fields.CP && !['없음', '(작성 필요)'].includes(fields.CP.trim()) ? fields.CP.trim() : ''
@@ -687,6 +693,8 @@ export function parseCutsV3(raw) {
       dialogue: dl,
       narration: nr,
       subtitle: cp,
+      subtitleEn,
+      subtitleJa,
       imagePrompt: castGuarded.ip,
       videoPrompt: silentGuardedVp,
       ...(voiceSource ? { voiceSource } : {}),
@@ -754,6 +762,8 @@ function serializeCutForRevision(c) {
   L.push(`CH: ${m.ch || c.character || '서여리'}`)
   L.push(`DL: ${c.dialogue || '없음'}`)
   L.push(`NR: ${c.narration || '없음'}`)
+  L.push(`EN: ${c.subtitleEn || '없음'}`)
+  L.push(`JP: ${c.subtitleJa || '없음'}`)
   L.push(`CP: ${c.subtitle || '없음'}`)
   L.push(`SH: ${m.sh || ''}`)
   L.push(`CA: ${m.ca || ''}`)
@@ -796,6 +806,8 @@ function v3RevisionPatch(fields, original) {
   if (fields.SC != null) p.scene = fields.SC
   if (fields.DL != null) p.dialogue = clr(fields.DL) ? '' : fields.DL
   if (fields.NR != null) p.narration = clr(fields.NR) ? '' : fields.NR
+  if (fields.EN != null) p.subtitleEn = clr(fields.EN) ? '' : fields.EN
+  if (fields.JP != null) p.subtitleJa = clr(fields.JP) ? '' : fields.JP
   if (fields.CP != null) p.subtitle = clr(fields.CP) ? '' : fields.CP
   if (fields.DU != null) { const d = parseInt(fields.DU, 10); if (d) p.duration = d }
   if (fields.AU != null) p.audioNote = clr(fields.AU) || isBlank(fields.AU) ? '' : fields.AU.trim()
@@ -862,6 +874,8 @@ export function buildV3CutBlock(c) {
       `CH: ${mc.ch || ''}`,
       `DL: ${c.dialogue || '없음'}`,
       `NR: ${c.narration || '없음'}`,
+      `EN: ${c.subtitleEn || '없음'}`,
+      `JP: ${c.subtitleJa || '없음'}`,
       `CP: ${c.subtitle || '없음'}`,
       `SH: ${mc.sh || ''}`,
       `CA: ${mc.ca || ''}`,
@@ -1729,6 +1743,8 @@ ${currentScript}
 
 [필드 설명]
 SC 씬(한국어) · SP 공간코드 · PL 파이프라인코드 · CH 캐릭터 · DL 대사 · NR 나레이션 ·
+EN 영어 자막(DL 있으면 DL 번역, 없으면 NR 번역 — 직역 대신 영어권 시청자에게 자연스러운 문장) ·
+JP 일본어 자막(EN과 같은 기준, 일본어권 시청자에게 자연스러운 문장) ·
 CP 자막(손글씨 오버레이) · SH 샷타입 · CA 카메라 · MD 감정 · AC 동작 · DU 길이(초) ·
 CT 컷유형(YEORI|BROLL|GRAPHIC|CAPCUT|PIP)
 메이킹 소스: HTML(그래픽 목업 .html) · GTPL(HTML 자동생성: "ai" | "<템플릿>/<스타일>" | "ai:<템플릿>/<스타일>") ·
@@ -1742,7 +1758,7 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
 [출력 규칙]
 1. 요청과 관련된 컷만 출력. 나머지 컷은 출력하지 말 것.
 2. 각 컷은 [CUT N] 다음 줄부터 "약자: 값" 형식. 바뀐 필드 + 판단에 필요한 필드만.
-3. 값을 지우려면 DL/NR/CP 는 "없음", 나머지는 필드 자체를 생략(빈 값 출력 금지 = 원본 유지로 처리됨).
+3. 값을 지우려면 DL/NR/EN/JP/CP 는 "없음", 나머지는 필드 자체를 생략(빈 값 출력 금지 = 원본 유지로 처리됨).
 4. 마크다운(** ## ---) 금지. KR/IP/VP/오디오 블록 출력하지 말 것.
 5. CT 를 GRAPHIC/CAPCUT 으로 바꾸면 HTML 이나 GTPL 중 하나를 함께 제시. BROLL 이면 CLIP/SRC/URL/BQ 중 하나.
 6. 마지막 줄에 "=== 수정 완료 ===" 추가.`
@@ -2841,6 +2857,16 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                         </div>
                       )
                     })()}
+                    <div className={s.v3MiniField}>
+                      <label>EN (영어 자막)</label>
+                      <textarea rows={2} placeholder="없음 — DL(대사) 있으면 대사 번역, 없으면 NR(나레이션) 번역. 직역 대신 자연스러운 영어 문장으로."
+                        value={cut?.subtitleEn || ''} onChange={e => updateCut(cut.id, 'subtitleEn', e.target.value)} />
+                    </div>
+                    <div className={s.v3MiniField}>
+                      <label>JP (일본어 자막)</label>
+                      <textarea rows={2} placeholder="없음 — EN과 같은 기준, 일본어권 시청자에게 자연스러운 문장으로."
+                        value={cut?.subtitleJa || ''} onChange={e => updateCut(cut.id, 'subtitleJa', e.target.value)} />
+                    </div>
                     <div className={s.v3MiniField}>
                       <label>CP (자막·손글씨 오버레이)</label>
                       <textarea rows={2} placeholder="없음 — 이 컷에 손글씨 자막을 얹을 텍스트(순수 텍스트). 메이킹 탭에서 위치·말풍선·타이밍을 형성."

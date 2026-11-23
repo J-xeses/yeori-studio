@@ -19,6 +19,9 @@ const FONT_CANDIDATES = {
   '나눔고딕': ['NanumGothic.ttf', 'malgun.ttf'],
   'Arial': ['arialbd.ttf', 'arial.ttf'],
   'Impact': ['impact.ttf'],
+  // JP 자막 레이어 전용(2026-11-23) — 맑은고딕은 한자 커버리지가 일본어 자막엔 부족해
+  // 두부(tofu)가 날 수 있어, 일본어 전용 폰트를 따로 둔다. 유고딕 없으면 MS고딕으로.
+  'Yu Gothic': ['YuGothR.ttc', 'msgothic.ttc', 'malgun.ttf'],
   // 하위호환(studio-state.json에 이미 저장된 옛 영문 드롭다운 값) — 새 한글 키와 같은 파일로 매핑.
   // 직접 state 파일을 패치하면 브라우저 자동저장이 덮어쓸 위험이 있어(2026-11-16 교훈), 여기서
   // 두 이름 모두 받아주는 쪽을 택함 — 사용자가 드롭다운에서 아무거나 한 번 다시 고르면 자연히 새 키로 넘어감.
