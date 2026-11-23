@@ -1,5 +1,5 @@
 {
-  "activeTab": "editmeta",
+  "activeTab": "tts",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -14831,7 +14831,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-23T10:21:24.312Z",
+  "savedAt": "2026-11-23T16:29:48.911Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
@@ -14901,7 +14901,7 @@
       "cut-2": true,
       "cut-1": true
     },
-    "selectedCutId": "cut-4",
+    "selectedCutId": "cut-1",
     "subtitles": {
       "cut-3": [
         {
@@ -14921,7 +14921,33 @@
     "audioUrls": {},
     "audioTexts": {},
     "g3Confirmed": {},
-    "focusCutId": null
+    "focusCutId": null,
+    "voiceTabs": {
+      "cut-3": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ]
+    },
+    "tracks": {
+      "cut-3__v1": [
+        {
+          "id": "track_1795451481102_w6cc",
+          "type": "dialogue",
+          "text": "너 오늘 선크림 안 발랐지?어떻게 알았어?",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ]
+    }
   },
   "voiceInsertState": {
     "tracks": {}
