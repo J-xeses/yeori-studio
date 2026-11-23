@@ -931,6 +931,9 @@ export async function finalizeReel(p) {
         font: font || style.font,
         fontSize: cfg.fontPx || Math.round(style.fontSize * 0.6),
         positionRatio: cfg.y != null ? cfg.y : (key === 'en' ? Math.max(0.05, mainY - 0.07) : Math.max(0.05, mainY - 0.14)),
+        // 2026-11-23: 메인 캡션과 같은 색이라 구분이 안 된다는 지적 — 언어별 독립 글자색
+        // (영상 탭 색상 피커, reelOverrides._style.en/.ja.color). 안 고르면 메인 색 그대로.
+        color: cfg.color || style.color,
         outlineScale: 0.09,
       }
       const workDirLang = path.join(tmp, `drawtext_${key}`)

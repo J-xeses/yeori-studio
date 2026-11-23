@@ -1,5 +1,5 @@
 {
-  "activeTab": "video",
+  "activeTab": "monitor",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -14831,12 +14831,27 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-23T08:27:15.035Z",
+  "savedAt": "2026-11-23T09:25:41.262Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
         {
-          "url": "blob:http://localhost:5173/7b8c12f3-a8e2-41de-9301-fbab1f61676b",
+          "url": "blob:http://localhost:5173/cdee2723-75cc-47f4-8f03-e1d19e9119b7",
+          "name": "Woman_applying_skincare_at_mirror_68b7b296_1080p.mp4",
+          "duration": 7.93,
+          "trimStart": 0,
+          "trimEnd": 7.93,
+          "useFullDuration": false,
+          "ratio": "9:16",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1795420393332,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R11\\04_making\\raw\\cut_01_clip_1.mp4"
+        }
+      ],
+      "cut-2": [
+        {
+          "url": "blob:http://localhost:5173/833737ce-3bf0-4dff-9ac1-c021e996858c",
           "name": "Woman_applying_sheet_mask_relaxing_ec58387d_1080p.mp4",
           "duration": 7.93,
           "trimStart": 0,
@@ -14846,21 +14861,6 @@
           "staging": false,
           "keepAudio": true,
           "createdAt": 1795420398390,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R11\\04_making\\raw\\cut_01_clip_1.mp4"
-        }
-      ],
-      "cut-2": [
-        {
-          "url": "blob:http://localhost:5173/c86c87b3-b86b-4780-bff0-2c531e537363",
-          "name": "Woman_applying_skincare_at_mirror_68b7b296_1080p.mp4",
-          "duration": 7.93,
-          "trimStart": 0,
-          "trimEnd": 7.93,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "staging": false,
-          "keepAudio": true,
-          "createdAt": 1795420393332,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R11\\04_making\\raw\\cut_02_clip_1.mp4"
         }
       ],

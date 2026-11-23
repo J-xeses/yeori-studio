@@ -654,9 +654,10 @@ export default function VideoTab() {
     setReelStyle({ endCard: nextEndCard })
   }
   // 영어/일본어 자막 병기(2026-11-23) — 엔딩 카드와 같은 패턴(reelOverrides._style.en/.ja =
-  // {enabled,fontPx,y}, 독립 크기·세로위치). server/lib/reelFinalize.js가 cut.subtitleEn/
-  // subtitleJa를 이 스타일로 메인 캡션과 별개 drawtext 체인으로 번인한다. 기본은 꺼짐 —
-  // 모든 에피소드가 병기를 쓰는 게 아니라서 명시적으로 켜야 함.
+  // {enabled,fontPx,y,color}, 독립 크기·세로위치·글자색). server/lib/reelFinalize.js가
+  // cut.subtitleEn/subtitleJa를 이 스타일로 메인 캡션과 별개 drawtext 체인으로 번인한다.
+  // 기본은 꺼짐 — 모든 에피소드가 병기를 쓰는 게 아니라서 명시적으로 켜야 함. color
+  // 미지정 시 메인 캡션 색(globalVideoSettings.color)을 그대로 따름(하위호환).
   const reelEnStyle = reelStyle.en || {}
   const reelJaStyle = reelStyle.ja || {}
   const setLangStyle = (key, patch) => {
@@ -1042,6 +1043,37 @@ export default function VideoTab() {
     })
     ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0
 
+    // 영어/일본어 자막 병기 미리보기(2026-11-23) — server/lib/reelFinalize.js buildLangFilter와
+    // 같은 공식(기본 크기=메인 캡션의 60%, 기본 세로위치=메인보다 7%p/14%p 위, 세그 타이밍과
+    // 무관하게 컷 전체 구간에 한 줄). 지금까지는 토글·크기·위치만 있고 실제 미리보기 화면엔
+    // 전혀 안 그려졌다("자막이 화면에 안 뜬다" 지적) — 메인 캡션과 같은 캔버스에 겹쳐 그린다.
+    const drawLangLine = (langText, cfg, fontFamily, defaultY) => {
+      const t = String(langText || '').trim()
+      if (!cfg?.enabled || !t) return
+      const langFSize = Math.max(8, Math.round((cfg.fontPx || Math.round(reelFontPx * 0.6)) * scale))
+      ctx.font = `${langFSize}px "${fontFamily}",sans-serif`
+      ctx.textAlign = 'center'
+      const langLines = wrapCanvasText(ctx, t, maxTextWidth)
+      const langLineHeight = langFSize * lineGap
+      const langCenterY = H * (cfg.y != null ? cfg.y : defaultY)
+      const langTotalHeight = langLineHeight * langLines.length
+      const langTop = Math.max(langCenterY - langTotalHeight / 2, 4)
+      const langColor = cfg.color || color
+      ctx.lineJoin = 'round'
+      ctx.lineWidth = Math.max(2, Math.round(langFSize * 0.09))
+      ctx.strokeStyle = isLightColor(langColor) ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.85)'
+      ctx.fillStyle = langColor
+      ctx.textBaseline = 'middle'
+      langLines.forEach((l, i) => {
+        const lineCenterY = langTop + langLineHeight * (i + 0.5)
+        ctx.strokeText(l, subX, lineCenterY)
+        ctx.fillText(l, subX, lineCenterY)
+      })
+    }
+    const mainYForLang = reelStyle.y || 0.66
+    drawLangLine(selCutForText?.subtitleEn, reelEnStyle, font, Math.max(0.05, mainYForLang - 0.07))
+    drawLangLine(selCutForText?.subtitleJa, reelJaStyle, 'Yu Gothic', Math.max(0.05, mainYForLang - 0.14))
+
     // 엔딩 카드 미리보기(2026-11-16, 성준님 요청) — 실제 번인은 에피소드 전체 타임라인의
     // "마지막 2초"에만 들어가므로, 마지막 컷을 보고 있을 때만 겹쳐 그린다. "자막보다 굵게 +
     // 테두리 추가"로 구분하라는 요청 — bold 글꼴 + 더 두꺼운 외곽선(server/lib/subtitleBurn.js
@@ -1072,7 +1104,7 @@ export default function VideoTab() {
         })
       }
     }
-  }, [subtitleEnabled, font, color, bgStyle, boxColor, previewText, selectedCutId, subtitles, reelStyle.captionStyle, reelFontPx, reelStyle.y, gaeguReady, aspectRatio, selCutForText?.dialogue, selCutForText?.no, state.cuts, reelEndCardStyle.text, reelEndCardStyle.fontPx, reelEndCardStyle.y, endCardDefault])
+  }, [subtitleEnabled, font, color, bgStyle, boxColor, previewText, selectedCutId, subtitles, reelStyle.captionStyle, reelFontPx, reelStyle.y, gaeguReady, aspectRatio, selCutForText?.dialogue, selCutForText?.no, selCutForText?.subtitleEn, selCutForText?.subtitleJa, reelEnStyle.enabled, reelEnStyle.fontPx, reelEnStyle.y, reelEnStyle.color, reelJaStyle.enabled, reelJaStyle.fontPx, reelJaStyle.y, reelJaStyle.color, state.cuts, reelEndCardStyle.text, reelEndCardStyle.fontPx, reelEndCardStyle.y, endCardDefault])
 
   useEffect(() => { drawPreview() }, [drawPreview, subtitleEditMode])
 
@@ -2246,15 +2278,31 @@ export default function VideoTab() {
                             disabled={!subtitleEnabled}
                             onChange={e => setLangStyle(key, { y: parseInt(e.target.value) / 100 })} />
                         </div>
+                        {/* 2026-11-23: 메인 캡션과 같은 색이라 구분이 안 된다는 지적 — 언어별로
+                            독립 글자색 지정. 안 고르면(기본값) 메인 캡션 색과 동일하게 유지(하위호환). */}
+                        <div className={s.field}>
+                          <label>{label} 자막 색상</label>
+                          <div className={s.colorRow}>
+                            <input type="color" value={cur.color || color} disabled={!subtitleEnabled}
+                              onChange={e => setLangStyle(key, { color: e.target.value })} className={s.colorPicker} />
+                            <span className={s.colorVal}>{cur.color || color}</span>
+                            {cur.color && (
+                              <button type="button" onClick={() => setLangStyle(key, { color: undefined })}
+                                style={{ fontSize: 10.5 }} title="메인 자막과 같은 색으로 되돌리기">
+                                초기화
+                              </button>
+                            )}
+                          </div>
+                        </div>
                       </>
                     )}
                   </div>
                 )
               })}
               <div style={{ fontSize: 11, color: "var(--text-3)", lineHeight: 1.5 }}>
-                텍스트 자체는 대본 탭의 EN(영어 자막)/JP(일본어 자막) 입력칸에서 컷마다 수정합니다.
-                기본 크기·위치는 메인 자막과 겹치지 않도록 띄워뒀지만, 자막 줄 수에 따라 겹칠 수 있어
-                슬라이더로 직접 맞출 수 있습니다.
+                텍스트 자체는 아래 컷 카드의 EN/JP 입력칸(또는 대본 탭 EN/JP 입력칸)에서 컷마다
+                수정합니다 — 같은 값을 공유합니다. 기본 크기·위치는 메인 자막과 겹치지 않도록
+                띄워뒀지만, 자막 줄 수에 따라 겹칠 수 있어 슬라이더로 직접 맞출 수 있습니다.
               </div>
               </>
               )}
@@ -3103,6 +3151,27 @@ export default function VideoTab() {
                     <span style={{ minWidth: 26 }}>{Math.round((selCut.sfxVolume ?? 1) * 100)}%</span>
                   </label>
                   </>)}
+                </div>
+                {/* 영어/일본어 자막 "내용" — 사이드바 "자막 디자인 설정"의 영어/일본어 자막 병기
+                    토글은 켤지·크기·세로위치만 정할 뿐, 실제 문구를 입력할 칸이 거기 없어서
+                    "병기 설정은 있는데 내용 입력창이 없다"는 지적(2026-11-23). 대본 탭 EN/JP
+                    입력칸과 같은 cut.subtitleEn/subtitleJa 값을 그대로 공유 — 여기서 고치면
+                    대본 탭에도, 대본 탭에서 고치면 여기도 즉시 반영된다. */}
+                <div onClick={e => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', gap: 6, margin: '0 0 8px', fontSize: 11 }}>
+                  <label title="영어 자막(화면 번인) — 컷 전체 구간에 한 줄로 표시" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    🇺🇸 EN
+                    <input type="text" style={{ flex: 1, fontSize: 11.5, background: '#000', color: '#fff', border: '1px solid #444', borderRadius: 4, padding: '3px 6px' }}
+                      value={selCut.subtitleEn || ''}
+                      placeholder="영어 자막 (없으면 비워둠)"
+                      onChange={e => dispatch({ type: 'UPDATE_CUT', id: selCut.id, p: { subtitleEn: e.target.value } })} />
+                  </label>
+                  <label title="일본어 자막(화면 번인) — 컷 전체 구간에 한 줄로 표시" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    🇯🇵 JP
+                    <input type="text" style={{ flex: 1, fontSize: 11.5, background: '#000', color: '#fff', border: '1px solid #444', borderRadius: 4, padding: '3px 6px' }}
+                      value={selCut.subtitleJa || ''}
+                      placeholder="일본어 자막 (없으면 비워둠)"
+                      onChange={e => dispatch({ type: 'UPDATE_CUT', id: selCut.id, p: { subtitleJa: e.target.value } })} />
+                  </label>
                 </div>
                 {/* 목소리 결(register) 수동 지정 + 음성 검수(발음·애드립) — 결과는 영상 저장 직후 자동 실행, 여기서 다시 돌릴 수 있다 */}
                 <div onClick={e => e.stopPropagation()} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, margin: '0 0 8px', fontSize: 11, color: 'var(--text-3)' }}>
