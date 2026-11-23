@@ -94,6 +94,13 @@ export const PIPELINE_ICON_PATHS = {
       <path d="M9.6 17.5V5.5l9-2v10" {...STROKE} />
     </>
   ),
+  // 자막 — 화면 프레임 + 하단 자막 줄 2단(2026-11-23 같은 스타일로 신규 제작, KR/EN·JA 2단 병기를 표현)
+  subtitle: (
+    <>
+      <rect x="3" y="4" width="18" height="16" rx="2" {...STROKE} />
+      <path d="M7 14.5h10M7 17.5h6" {...STROKE} />
+    </>
+  ),
   // 에이전트 리더(pipeline-leader.js) — 지휘체계: 위의 리더 1 → 아래 에이전트 3 으로 갈라지는 지휘선(2026-11-12 같은 스타일로 신규 제작)
   conductor: (
     <>

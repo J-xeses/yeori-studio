@@ -80,6 +80,11 @@ export const PIPELINE_NODES = [
       // episodeBgmBrief()가 이 문구를 태그로 변환해 후보 매칭에 쓴다 — 지금까지 그래프엔
       // 이 출발점이 전혀 없었다.
       { port: 'bgmMood', kind: 'text', text: '헤더·컷별 "BGM:" 문구(분위기 초안, tagsFromText 매칭 대상)' },
+      // 2026-11-23(성준님 지적 — "자막 관련 흐름이 모니터에 안 보인다"): CP(자막)·EN·JP 필드는
+      // scriptParserV3.js 가 이미 파싱하고 있었지만(CP는 전부터, EN/JP는 이번에 신설) 그래프엔
+      // 출발점이 없었다 — 아래 신설 caption 노드가 받는 입력으로 여기 두 포트를 새로 연다.
+      { port: 'cpText', kind: 'text', text: '컷별 자막(CP) 원문 — 대사·나레이션과 별개로 화면에 쓸 문구' },
+      { port: 'enJaText', kind: 'text', text: '컷별 EN/JP 번역 병기 문구(EN:/JP: 필드, "수정 요청" 재생성 시에도 유지)' },
     ],
     vars: [
       { key: 'format', label: '대본 포맷', type: 'select', options: ['v8 (CT·파이프 헤더)'], value: 'v8 (CT·파이프 헤더)' },
@@ -121,6 +126,48 @@ export const PIPELINE_NODES = [
     ],
     vars: [
       { key: 'mode', label: 'BGM 결정 방식', type: 'select', options: ['보유 곡에서만(library)', '자동 생성 포함(auto)', '없음(none)', '직접 선택(보유곡 중)'], value: '보유 곡에서만(library)' },
+    ],
+  },
+  // ── 자막(CP·EN·JA) — 2026-11-23 성준님 지적: "자막관련 실행파일의 노드와 작성·제작 흐름이
+  //   파이프라인 모니터에 표시되어 있나?" 실제로 조사해보니 안 보였다 — 자막 번인(subtitleBurn.js)은
+  //   06(미리듣기)·07(최종화) 두 노드의 code 목록에 참조만 끼어 있었고, 전용 노드·포트는 없었다.
+  //   bgm 노드와 같은 모양으로 분리: 대본 단계에서 "쓰여지는" 문구(script.cpText·enJaText)와
+  //   합성된 영상(compose.cutVideo)을 입력으로 받아 "내용+스타일+타이밍이 확정된 자막"을
+  //   출력하고, 그 확정본을 06·07 두 소비 노드가 실제로 drawtext 번인한다(실행은 소비 노드 쪽
+  //   코드에 그대로 남아있음 — bgm.decided 를 finalize 가 실행만 하는 것과 같은 구조).
+  //   메이킹 탭의 CapCut식 모션 자막(yeori_subtitle.py, cut_NN_subtitle.mp4)은 drawtext 번인과는
+  //   완전히 다른 별도 엔진이라 code 목록에만 적어두고 입출력 포트로는 안 그린다 — 그 결과물은
+  //   compose(05) 산출물 자체를 덮어쓰는 식으로 들어가서(pickCutSource 가 더 최신 파일을 고름)
+  //   compose 보다 앞단이 아니라 옆에서 같은 cut_NN.mp4 자리를 놓고 경쟁하는 입력이기 때문.
+  //   아직 pipelineHealth.js 실측은 없음(bgm 노드와 같은 이유로 보류) — 코드 경로 확인만 끝난 상태.
+  {
+    id: 'caption', no: 'CP', icon: 'subtitle', label: '자막', sub: 'KR/EN/JA 작성 → 스타일·타이밍 → 번인', tab: 'video',
+    code: [
+      'src/tabs/ScriptGenTab.jsx (CP·EN·JP 작성/수정 입력란)',
+      'server/lib/scriptParserV3.js (CP·EN·JP 파싱)',
+      'src/tabs/VideoTab.jsx (KR/EN/JA 위치·크기·스타일 슬라이더, 엔딩카드)',
+      'server/lib/reelOverrides.js (_style.en / _style.ja / _style.endCard 저장)',
+      'server/proxy.js · /api/reel-finalize/sync-captions (대사 음성에 맞춘 KR 세그 타이밍 자동동기화)',
+      'server/lib/subtitleBurn.js (drawtext 필터 빌더 — KR·EN·JA 공용, Yu Gothic 등 폰트 매핑)',
+      'server/lib/reelFinalize.js · buildLangFilter (EN/JA 독립 레이어 합성)',
+      '(별도 엔진) scripts/yeori_subtitle.py + server/proxy.js · /api/subtitle/render — CapCut식 모션 자막, drawtext와 무관',
+    ],
+    inputs: [
+      { port: 'cpText', kind: 'text', from: 'script.cpText', text: '컷별 자막(KR) 원문' },
+      { port: 'enJaText', kind: 'text', from: 'script.enJaText', text: '컷별 EN/JP 번역 병기 문구' },
+      { port: 'cutVideo', kind: 'video', from: 'compose.cutVideo', text: '번인 대상 영상(05_video/cut_NN.mp4)' },
+    ],
+    outputs: [
+      // 2026-11-23(성준님 지적): 처음엔 compose.cutVideo 가 이 노드로도 들어오고 06·07로도
+      // 따로 직결돼 있어서, 영상이 캡션 단계를 "거치지 않고" 옆으로 새는 것처럼 보였다 —
+      // compose → caption → {06, 07} 한 줄로 이어지게 영상도 여기서 그대로 다시 내보낸다
+      // (실제 drawtext 굽기 코드는 여전히 06·07 쪽에 있음 — 여긴 "다음 단계로 넘겨준다"는
+      // 배선만 명확히 하는 패스스루, script.scriptTxt 가 여러 단계에 그대로 재사용되는 것과 같은 성격).
+      { port: 'cutVideo', kind: 'video', text: '자막 확정 후 다음 단계로 넘기는 영상(05_video/cut_NN.mp4, 내용은 compose와 동일)' },
+      { port: 'styleDecided', kind: 'text', text: '확정된 자막 내용+스타일(KR 세그 타이밍, EN/JA 위치·크기·on/off) — 06·07이 그대로 번인' },
+    ],
+    vars: [
+      { key: 'langs', label: '병기 언어', type: 'select', options: ['KR만', 'KR+EN', 'KR+JA', 'KR+EN+JA'], value: 'KR만' },
     ],
   },
   {
@@ -187,8 +234,13 @@ export const PIPELINE_NODES = [
     id: 'preview', no: '06', icon: 'headphones', label: '나레이션 미리듣기', sub: '영상 탭 · 나레이션+효과음', tab: 'video', health: true, path: '06_publishing',
     code: ['src/tabs/VideoTab.jsx', 'server/lib/subtitleBurn.js', 'server/lib/reelOverrides.js'],
     inputs: [
-      { port: 'cutVideo', kind: 'video', from: 'compose.cutVideo', text: '05_video/cut_NN.mp4' },
+      // 2026-11-23: compose 에서 직결하던 것을 caption 을 거쳐 받도록 바꿨다(아래 caption 포트와
+      // 같은 이유) — 합성된 컷 영상은 캡션 단계를 지나 "자막까지 확정된 상태"로 이 노드에 들어온다.
+      { port: 'cutVideo', kind: 'video', from: 'caption.cutVideo', text: '05_video/cut_NN.mp4(자막 확정 후, caption 경유)' },
       { port: 'narrationMp3', kind: 'audio', from: 'tts.narrationMp3', text: '03_audio/cut_NN_nr.mp3' },
+      // subtitleBurn.js 참조는 전부터 code 목록에 있었는데 입력 포트가 없었다 —
+      // 확정된 자막(caption 노드)을 받아 이 미리듣기 ffmpeg(/api/run-ffmpeg)가 drawtext로 굽는다.
+      { port: 'caption', kind: 'text', from: 'caption.styleDecided', text: '확정된 자막(KR+EN+JA) — 이 미리듣기에도 같은 drawtext로 번인' },
     ],
     outputs: [
       { port: 'previewFile', kind: 'video', text: '06_publishing/cut_NN_preview.mp4 (미리듣기 전용)' },
@@ -201,13 +253,18 @@ export const PIPELINE_NODES = [
     id: 'finalize', no: '07', icon: 'rocket', label: '최종화', sub: 'G5 · 최종 영상 조립', tab: 'making', gate: 'g5', health: true, path: '07_output',
     code: ['server/lib/reelFinalize.js', 'server/lib/bgmSelect.js', 'server/lib/reelOverrides.js', 'server/proxy.js · /api/reel-finalize'],
     inputs: [
-      { port: 'cutVideo', kind: 'video', from: 'compose.cutVideo', text: '05_video 컷 영상 전체' },
+      // 2026-11-23: preview와 같은 이유로 compose 직결을 caption 경유로 바꿨다.
+      { port: 'cutVideo', kind: 'video', from: 'caption.cutVideo', text: '05_video 컷 영상 전체(자막 확정 후, caption 경유)' },
       { port: 'narrationMp3', kind: 'audio', from: 'tts.narrationMp3', text: '나레이션 음성(직접 믹스)' },
       { port: 'previewFile', kind: 'video', from: 'preview.previewFile', text: '미리듣기 결과(원본보다 최신일 때만 사용)' },
       // 2026-11-19: 이전엔 trendRadar.bgm(원곡 라이브러리)을 여기로 바로 연결해 "자동 선곡"만
       // 보이는 그림이었다 — 실제로는 bgm 노드(후보선곡·최종 결정)를 거친 결과를 쓴다. BGM
       // 결정 방식 선택(vars)도 그 노드로 옮겼다 — finalize는 이미 결정된 값을 실행만 한다.
       { port: 'bgm', kind: 'audio', from: 'bgm.decided', text: '최종 결정된 BGM(직접 지정 또는 자동 선곡)' },
+      // 2026-11-23: 기존엔 vars 의 "자막 번인 켜기/끄기" 토글만 있고 실제 자막 내용·스타일이
+      // 어디서 오는지는 그래프에 안 보였다 — reelFinalize.js 의 decideCut·buildLangFilter가
+      // 실제로 쓰는 입력(caption 노드의 확정본)을 명시한다.
+      { port: 'caption', kind: 'text', from: 'caption.styleDecided', text: '확정된 자막(KR+EN+JA) — buildLangFilter가 최종본에 번인' },
     ],
     outputs: [
       { port: 'finalOutput', kind: 'video', text: '07_output/{CODE}_final.mp4' },
