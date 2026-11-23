@@ -161,14 +161,15 @@ function parseCuts(raw, n) {
         id: `cut-${block.trim()}`,
         no: parseInt(block.trim()),
         scene: '', action: '', character: '서여리',
-        dialogue: '', narration: '', subtitle: '', imagePrompt: '', videoPrompt: '', duration: 5
+        dialogue: '', narration: '', subtitle: '', subtitleEn: '', subtitleJa: '',
+        imagePrompt: '', videoPrompt: '', duration: 5
       }
     } else if (cur) {
       // 멀티라인 파싱 (다음 필드 키워드가 나올 때까지 수집)
       // 2026-10-08: 공간코드/캐릭터코드/카메라/감정/동작코드/룩ID/영상 프롬프트 필드 추가
       // (generateScript 프롬프트의 출력 형식과 반드시 함께 유지 — 여기 없는 키워드가 필드
       // 값 중간에 섞이면 getField가 다음 필드까지 통째로 삼켜버린다).
-      const FIELD_STOP_RE = /\n(씬|공간코드|공간설명\(한글\)|캐릭터코드|캐릭터설명\(한글\)|카메라설명\(한글\)|카메라|감정설명\(한글\)|감정|동작코드|동작설명\(한글\)|룩ID|액션|캐릭터|대사|나레이션|자막|샷\s*타입|샷설명\(한글\)|이미지 프롬프트|영상 프롬프트|컷 길이|컷 타입|PIP_TARGET|그래픽 도구)[:：]/
+      const FIELD_STOP_RE = /\n(씬|공간코드|공간설명\(한글\)|캐릭터코드|캐릭터설명\(한글\)|카메라설명\(한글\)|카메라|감정설명\(한글\)|감정|동작코드|동작설명\(한글\)|룩ID|액션|캐릭터|대사|나레이션|영어 자막|일본어 자막|자막|샷\s*타입|샷설명\(한글\)|이미지 프롬프트|영상 프롬프트|컷 길이|컷 타입|PIP_TARGET|그래픽 도구)[:：]/
       const getField = (startRegex) => {
         const m = block.match(startRegex)
         if (!m) return ''
@@ -185,6 +186,8 @@ function parseCuts(raw, n) {
       cur.dialogue   = stripShotDirective(getField(/대사[:：]\s*/))
       cur.narration  = stripShotDirective(getField(/나레이션[:：](?:\s*\(VO\))?\s*/) || getField(/나레이션[:：]\s*/))
       cur.subtitle   = getField(/자막[:：]\s*/) || getField(/CP[:：]\s*/)
+      cur.subtitleEn = getField(/영어 자막[:：]\s*/)
+      cur.subtitleJa = getField(/일본어 자막[:：]\s*/)
       const rawShot = (getField(/샷 타입[:：]\s*/) || '').trim().toUpperCase()
       cur.shotType = rawShot.includes('CLOSE') ? 'CLOSEUP' : 'FULLBODY'
       // cutType: "컷 타입:" 필드 우선, 없으면 "샷 타입:" 값이 파이프라인 타입인지 체크
@@ -246,7 +249,7 @@ function parseCuts(raw, n) {
   if (cuts.length === 0) {
     return Array.from({ length: n }, (_, i) => ({
       id: `cut-${i+1}`, no: i+1, scene: '', action: '', character: '서여리',
-      dialogue: '', narration: '', subtitle: '', imagePrompt: '', duration: 5,
+      dialogue: '', narration: '', subtitle: '', subtitleEn: '', subtitleJa: '', imagePrompt: '', duration: 5,
     }))
   }
   return cuts
@@ -1451,6 +1454,8 @@ ${episode.storyBrief.trim()}
 캐릭터: 서여리
 대사: 실제 대사 (자연스러운 한국어, 없으면 "없음" 으로 표기)
 나레이션: 보이스오버 나레이션 (감성적으로)
+영어 자막: 대사 있으면 대사 번역, 없으면 나레이션 번역 — 직역 대신 영어권 시청자에게 자연스러운 문장 (없으면 "없음")
+일본어 자막: 영어 자막과 같은 기준, 일본어권 시청자에게 자연스러운 문장 (없으면 "없음")
 샷 타입: CLOSEUP 또는 FULLBODY (반드시 명시)
 샷설명(한글): 샷을 한글로 (예: 와이드샷 — 테라스 전체 구도)
 컷 타입: YEORI 또는 BROLL 또는 GRAPHIC 또는 CAPCUT 또는 PIP (반드시 명시)
@@ -1481,6 +1486,8 @@ ${episode.storyBrief.trim()}
 캐릭터: 서여리
 대사:
 나레이션:
+영어 자막:
+일본어 자막:
 샷 타입:
 샷설명(한글):
 컷 타입:
@@ -1504,6 +1511,8 @@ ${episode.storyBrief.trim()}
 캐릭터: 서여리
 대사:
 나레이션:
+영어 자막:
+일본어 자막:
 샷 타입:
 샷설명(한글):
 컷 타입:
@@ -1516,9 +1525,10 @@ ${episode.storyBrief.trim()}
 
 ⚠️ 절대 지킬 것:
 - 마크다운 ** ## --- 완전 금지
-- 각 필드는 반드시 "씬:" "공간코드:" "공간설명(한글):" "캐릭터코드:" "캐릭터설명(한글):" "카메라:" "카메라설명(한글):" "감정:" "감정설명(한글):" "동작코드:" "동작설명(한글):" "룩ID:" "액션:" "캐릭터:" "대사:" "나레이션:" "샷 타입:" "샷설명(한글):" "컷 타입:" "이미지 프롬프트:" "영상 프롬프트:" 로 시작
+- 각 필드는 반드시 "씬:" "공간코드:" "공간설명(한글):" "캐릭터코드:" "캐릭터설명(한글):" "카메라:" "카메라설명(한글):" "감정:" "감정설명(한글):" "동작코드:" "동작설명(한글):" "룩ID:" "액션:" "캐릭터:" "대사:" "나레이션:" "영어 자막:" "일본어 자막:" "샷 타입:" "샷설명(한글):" "컷 타입:" "이미지 프롬프트:" "영상 프롬프트:" 로 시작
 - [CUT 번호] 형식 정확히 유지
 - 대사 없는 컷은 대사: 없음 으로 표기
+- 영어 자막: / 일본어 자막: 은 모든 컷에 반드시 채움(둘 다 없으면 "없음") — 대사·나레이션과 동급의 필드, 빈칸으로 비워두지 말 것
 - 컷 타입: 필드 반드시 명시 (YEORI/BROLL/GRAPHIC/CAPCUT/PIP 중 정확히 하나)
 - PIP 컷에는 PIP_TARGET: [배경 컷 번호] 추가 (예: PIP_TARGET: 3)
 - GRAPHIC·CAPCUT 컷은 이미지 프롬프트: 없음, 영상 프롬프트: 없음 으로 표기
@@ -2858,16 +2868,6 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                       )
                     })()}
                     <div className={s.v3MiniField}>
-                      <label>EN (영어 자막)</label>
-                      <textarea rows={2} placeholder="없음 — DL(대사) 있으면 대사 번역, 없으면 NR(나레이션) 번역. 직역 대신 자연스러운 영어 문장으로."
-                        value={cut?.subtitleEn || ''} onChange={e => updateCut(cut.id, 'subtitleEn', e.target.value)} />
-                    </div>
-                    <div className={s.v3MiniField}>
-                      <label>JP (일본어 자막)</label>
-                      <textarea rows={2} placeholder="없음 — EN과 같은 기준, 일본어권 시청자에게 자연스러운 문장으로."
-                        value={cut?.subtitleJa || ''} onChange={e => updateCut(cut.id, 'subtitleJa', e.target.value)} />
-                    </div>
-                    <div className={s.v3MiniField}>
                       <label>CP (자막·손글씨 오버레이)</label>
                       <textarea rows={2} placeholder="없음 — 이 컷에 손글씨 자막을 얹을 텍스트(순수 텍스트). 메이킹 탭에서 위치·말풍선·타이밍을 형성."
                         value={cut?.subtitle || ''} onChange={e => updateCut(cut.id, 'subtitle', e.target.value)} />
@@ -2885,6 +2885,16 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                           ))}
                         </div>
                       )}
+                    </div>
+                    <div className={s.v3MiniField}>
+                      <label>EN (영어 자막)</label>
+                      <textarea rows={2} placeholder="없음 — DL(대사) 있으면 대사 번역, 없으면 NR(나레이션) 번역. 직역 대신 자연스러운 영어 문장으로."
+                        value={cut?.subtitleEn || ''} onChange={e => updateCut(cut.id, 'subtitleEn', e.target.value)} />
+                    </div>
+                    <div className={s.v3MiniField}>
+                      <label>JP (일본어 자막)</label>
+                      <textarea rows={2} placeholder="없음 — EN과 같은 기준, 일본어권 시청자에게 자연스러운 문장으로."
+                        value={cut?.subtitleJa || ''} onChange={e => updateCut(cut.id, 'subtitleJa', e.target.value)} />
                     </div>
 
                     <div className={s.v3Divider} />

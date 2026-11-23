@@ -187,6 +187,10 @@ export function enrichCutsFromScript(cuts, raw) {
     if (!body) return c
     const cp = pick(body, /CP\s*\(자막\)\s*[:：]\s*(.+)/)
       || pick(body, /^\s*CP\s*[:：]\s*(.+)/m)
+    // EN/JP — 자막 영어/일본어 번역(2026-11-23) — CP와 같은 패턴. 클라이언트가 보낸 cuts에
+    // subtitleEn/subtitleJa가 비어있을 때(구버전 상태로 열린 세션 등) 원본 대본 파일에서 복구.
+    const en = pick(body, /^\s*EN\s*[:：]\s*(.+)/m)
+    const ja = pick(body, /^\s*JP\s*[:：]\s*(.+)/m)
     // 메인 필드 "NR:" 가 우선. 메인이 "없음"이면 한글 확인 블록의 "NR(나레이션): (화면 자막)…/DM 글자" 는 음성 나레이션이 아니므로 쓰지 않는다
     // (IG_R05 에서 화면 자막·DM 문구가 나레이션으로 잡혀 5컷 모두 "나레이션 음성 없음" 오경고, 2026-09-25)
     const mainNr = pick(body, /^\s*NR\s*[:：]\s*(.+)/m)
@@ -197,6 +201,8 @@ export function enrichCutsFromScript(cuts, raw) {
     const merged = { ...c }
     if (!notNone(merged.subtitle) && notNone(cp)) merged.subtitle = cp
     if (!notNone(merged.narration) && notNone(nr)) merged.narration = nr
+    if (!notNone(merged.subtitleEn) && notNone(en)) merged.subtitleEn = en
+    if (!notNone(merged.subtitleJa) && notNone(ja)) merged.subtitleJa = ja
     const mc = { ...(merged.masterCode || {}) }
     const audio = { ...(mc.audio || { bgm: '', voice: '', sfx: '', ambience: '' }) }
     if (!audio.bgm) audio.bgm = ax('BGM')
