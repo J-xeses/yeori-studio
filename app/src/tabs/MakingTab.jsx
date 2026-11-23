@@ -1182,6 +1182,37 @@ export default function MakingTab() {
   }
   useEffect(() => { if (/^IG_R/i.test(String(episodeCode || ''))) loadBgmSegments(); else setBgmSegmentsState([]) }, [episode?.number, episodeCode])
 
+  // 2026-11-23 성준님 지적: "선곡 메이킹 탭에서 최초 선곡을 하면, 그 bgm이 영상에 맞는
+  // 오디오파일로 변환되기 전까지 선곡상태를 유지해야 하는데, 컷별 영상이 모두 제작된
+  // 후에야 선곡설정 및 파일생성이 가능하다." — reelBgm은 지금까지 평범한 useState라
+  // 탭을 닫았다 열거나 새로고침하면 'library' 기본값으로 매번 리셋됐다(실제 조립
+  // 버튼을 누를 때만 읽히고, 고르는 즉시 저장되는 곳이 없었음). _bgm 오버라이드에
+  // gainSegments와 같은 자리(choice)로 저장해 "고르는 즉시 영구 저장 → 컷 영상이 다
+  // 끝나 조립 버튼을 실제로 누를 수 있게 된 시점에도 그 선택이 그대로 남아있게" 한다.
+  // 이 패널은 IG_R 전용이 아니라 모든 포맷(IG_R/SF_E/LF_T)이 쓰므로 포맷 제한 없이 로드.
+  useEffect(() => {
+    if (!episode?.number) return
+    (async () => {
+      try {
+        const r = await fetch(`${YEORI_SERVER}/api/reel-finalize/overrides?epNum=${episode.number}`)
+        const d = await r.json()
+        const saved = d.overrides?._bgm?.choice
+        if (saved) setReelBgm(saved)
+      } catch { /* noop */ }
+    })()
+  }, [episode?.number])
+
+  // 선곡 드롭다운이 바뀌는 즉시(컷 영상 완성 여부와 무관하게) 영구 저장 — 위 useEffect가
+  // 다음에 열었을 때 이 값을 그대로 복원한다. UI는 즉시 반응하고 서버 저장은 그 뒤에.
+  const setReelBgmPersisted = (v) => {
+    setReelBgm(v)
+    if (!episode?.number) return
+    fetch(`${YEORI_SERVER}/api/reel-finalize/override`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ epNum: episode.number, cutNo: '_bgm', patch: { choice: v } }),
+    }).catch(() => { /* noop — 다음 변경 때 다시 시도됨 */ })
+  }
+
   // rows 전체를 그대로 저장(구간 추가/삭제/수정 공용) — 값이 없는 구간([])은 _bgm 키 자체를 지운다(reelOverrides.js).
   const saveBgmSegments = async (rows) => {
     setBgmSegmentsState(rows)
@@ -4389,7 +4420,7 @@ export default function MakingTab() {
                   </button>
                   <label className={s.durationField}>
                     BGM
-                    <select value={reelBgm} onFocus={loadBgmLibrary} onChange={e => setReelBgm(e.target.value)}>
+                    <select value={reelBgm} onFocus={loadBgmLibrary} onChange={e => setReelBgmPersisted(e.target.value)}>
                       <option value="library">자동 — 보유 곡에서만 고름(없으면 BGM 없이)</option>
                       <option value="auto">자동 — 맞는 곡 없으면 새로 생성(ElevenLabs 크레딧 사용)</option>
                       <option value="none">BGM 없이</option>

@@ -2220,11 +2220,21 @@ export default function VideoTab() {
               <>
               <div className={s.field} style={{ marginTop: 10, paddingTop: 10, borderTop: '1px dashed var(--border)' }}>
                 <label>🏁 엔딩 카드 문구 (한 줄에 한 문장 · 비우면 대본 원본 사용)</label>
-                <textarea rows={2} disabled={!subtitleEnabled}
-                  value={reelEndCardStyle.text || ''}
-                  placeholder={endCardDefault.length ? endCardDefault.join('\n') : '(이 에피소드 대본엔 [엔딩 카드] 섹션이 없습니다)'}
+                {/* 2026-11-23 성준님 지적 3종 — ① 대본 원본이 placeholder(회색 안내문구)로만
+                    보여서 실제로 클릭해 오타만 고칠 수 없고(전체를 다시 타이핑해야 "편집"됨),
+                    ② rows=2라 여러 줄 엔딩카드는 내용이 잘려 보이고, ③ 배경/글자색을 따로
+                    안 줘서 브라우저 기본값(흰 배경+검은 글씨)이 어두운 테마와 안 어울림.
+                    value를 placeholder 대신 실제 대본 원본으로 채워서 바로 고칠 수 있게 하되,
+                    오버라이드가 비어있는 한(reelEndCardStyle.text 미설정) 저장은 안 되므로
+                    "비우면 대본 원본을 계속 따라간다" 동작 자체는 그대로 유지된다. */}
+                <textarea rows={4} disabled={!subtitleEnabled}
+                  value={reelEndCardStyle.text || endCardDefault.join('\n')}
+                  placeholder="(이 에피소드 대본엔 [엔딩 카드] 섹션이 없습니다)"
                   onChange={e => setEndCardStyle({ text: e.target.value })}
-                  style={{ width: '100%', resize: 'vertical', fontFamily: 'inherit', fontSize: 12.5, padding: 6, boxSizing: 'border-box' }} />
+                  style={{
+                    width: '100%', resize: 'vertical', fontFamily: 'inherit', fontSize: 12.5, padding: 6, boxSizing: 'border-box',
+                    background: 'var(--surface1)', color: 'var(--text1)', border: '1px solid var(--border)', borderRadius: 4,
+                  }} />
               </div>
               <div className={s.field}>
                 <label>🏁 엔딩 카드 자막 크기 <span className={s.val}>

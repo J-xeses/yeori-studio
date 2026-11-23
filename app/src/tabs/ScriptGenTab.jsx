@@ -752,6 +752,24 @@ export function parseV3GlobalHeader(raw) {
   return { masterCode, epHeaderRaw }
 }
 
+// 마지막 [CUT N] 블록 뒤에 붙는 자유형식 섹션([엔딩 카드]/[캡션]/[해시태그]/[고정 댓글]/[체크] 등) —
+// 컷 단위 구조(SC/DL/NR/…)로 파싱되지 않고 cuts 배열 밖에 남는 텍스트라, 지금까지 파일을
+// 불러왔다가 "대본 다운로드"로 다시 내보내면 buildV3ScriptText가 cuts만 직렬화해서 통째로
+// 사라졌다(2026-11-23 성준님 지적: "대본 다운 시 엔딩카드 문구가 누락"). 업로드 시점에 원문
+// 그대로 떼어 episode.scriptTailRaw에 보관해뒀다가, 다운로드 때 그대로 다시 붙여 넣는다.
+function extractScriptTail(raw) {
+  if (!raw) return ''
+  const cutHeaderRe = /^\[CUT\s+\d+\]/gm
+  let lastIdx = -1, m
+  while ((m = cutHeaderRe.exec(raw))) lastIdx = m.index
+  if (lastIdx === -1) return ''
+  const rest = raw.slice(lastIdx)
+  // "[CUT N]"이 아닌 다음 대괄호 섹션 헤더(줄 맨앞)부터가 꼬리 섹션의 시작.
+  const tailMatch = rest.match(/^\[(?!CUT\s)[^\]]+\]/m)
+  if (!tailMatch) return ''
+  return rest.slice(rest.indexOf(tailMatch[0])).trim()
+}
+
 // ── Claude 수정 요청(handleRevision)용 — v3 필드 어휘로 컷 직렬화 / 응답 병합 ──
 // 옛 "씬:/액션:/샷 타입:" 포맷 대신 v3 코드 필드(SP/PL/SH/CA/MD/AC)와 메이킹 소스
 // 필드(CT/HTML/GTPL/SRC/URL/BQ/CLIP/MOTION)를 그대로 주고받아, 코드·자동화 필드까지
@@ -953,7 +971,9 @@ export function buildV3ScriptText(cuts, episode) {
     eq,
   ].join('\n')
 
-  return `${header}\n\n\n${blocks.join('\n\n\n')}\n`
+  const body = `${header}\n\n\n${blocks.join('\n\n\n')}\n`
+  const tail = String(episode?.scriptTailRaw || '').trim()
+  return tail ? `${body}${eq}\n\n\n${tail}\n` : body
 }
 
 export default function ScriptGenTab() {
@@ -1838,7 +1858,8 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
         }
         dispatch({ type: 'SET_CUTS', p: parsedV3 })
         const { masterCode, epHeaderRaw } = parseV3GlobalHeader(text)
-        if (masterCode || epHeaderRaw) dispatch({ type: 'SET_EPISODE', p: { masterCode, epHeaderRaw } })
+        const scriptTailRaw = extractScriptTail(text)
+        if (masterCode || epHeaderRaw || scriptTailRaw) dispatch({ type: 'SET_EPISODE', p: { masterCode, epHeaderRaw, scriptTailRaw } })
         parsedV3.forEach(c => setGPoint(episodeCode, c.no, 'g1', !!(c.dialogue || c.narration || c.scene)))
         setGData(loadGPoints())
         setActiveCut(0)

@@ -2545,19 +2545,191 @@
   "IG_R11": {
     "cut_1": {
       "g1": true,
-      "updatedAt": "2026-11-23T08:31:16.897Z"
+      "updatedAt": "2026-11-23T10:22:27.351Z",
+      "g4": true,
+      "g2Checklist": {
+        "0": {
+          "filename": "cut_01_a.jpg",
+          "scores": {
+            "face": 2,
+            "outfit": 2,
+            "proportion": 2,
+            "hair": 1,
+            "action": 2,
+            "mood": 2,
+            "shot": 1,
+            "camera": 2,
+            "background": 2,
+            "propContinuity": 2,
+            "trend": 1
+          },
+          "total": 90,
+          "note": "",
+          "scoredAt": "2026-11-23T10:22:26.351Z"
+        },
+        "1": {
+          "filename": "cut_01_b.jpg",
+          "scores": {
+            "face": 2,
+            "outfit": 2,
+            "proportion": 2,
+            "hair": 1,
+            "action": 2,
+            "mood": 2,
+            "shot": 2,
+            "camera": 2,
+            "background": 2,
+            "propContinuity": 2,
+            "trend": 1
+          },
+          "total": 93,
+          "note": "",
+          "scoredAt": "2026-11-23T10:22:26.351Z"
+        }
+      },
+      "g2": true,
+      "selectedImage": "cut_01_b.jpg"
     },
     "cut_2": {
       "g1": true,
-      "updatedAt": "2026-11-23T08:31:16.899Z"
+      "updatedAt": "2026-11-23T10:23:24.522Z",
+      "g4": true,
+      "g2Checklist": {
+        "0": {
+          "filename": "cut_02_a.jpg",
+          "scores": {
+            "face": 2,
+            "outfit": 2,
+            "proportion": 1,
+            "hair": 2,
+            "action": 1,
+            "mood": 2,
+            "shot": 2,
+            "camera": 2,
+            "background": 2,
+            "propContinuity": 2,
+            "trend": 1
+          },
+          "total": 86,
+          "note": "",
+          "scoredAt": "2026-11-23T10:23:21.117Z"
+        },
+        "1": {
+          "filename": "cut_02_b.jpg",
+          "scores": {
+            "face": 2,
+            "outfit": 2,
+            "proportion": 2,
+            "hair": 1,
+            "action": 2,
+            "mood": 2,
+            "shot": 2,
+            "camera": 2,
+            "background": 2,
+            "propContinuity": 2,
+            "trend": 1
+          },
+          "total": 93,
+          "note": "",
+          "scoredAt": "2026-11-23T10:23:21.117Z"
+        }
+      },
+      "g2": true,
+      "selectedImage": "cut_02_b.jpg"
     },
     "cut_3": {
       "g1": true,
-      "updatedAt": "2026-11-23T08:31:16.900Z"
+      "updatedAt": "2026-11-23T10:24:04.633Z",
+      "g4": true,
+      "g2Checklist": {
+        "0": {
+          "filename": "cut_03_a.jpg",
+          "scores": {
+            "face": 2,
+            "outfit": 1,
+            "proportion": 2,
+            "hair": 2,
+            "action": 2,
+            "mood": 2,
+            "shot": 1,
+            "camera": 2,
+            "background": 1,
+            "propContinuity": 2,
+            "trend": 1
+          },
+          "total": 84,
+          "note": "",
+          "scoredAt": "2026-11-23T10:24:01.873Z"
+        },
+        "1": {
+          "filename": "cut_03_b.jpg",
+          "scores": {
+            "face": 2,
+            "outfit": 2,
+            "proportion": 2,
+            "hair": 1,
+            "action": 2,
+            "mood": 2,
+            "shot": 2,
+            "camera": 2,
+            "background": 2,
+            "propContinuity": 2,
+            "trend": 1
+          },
+          "total": 93,
+          "note": "",
+          "scoredAt": "2026-11-23T10:24:01.873Z"
+        }
+      },
+      "g2": true,
+      "selectedImage": "cut_03_b.jpg"
     },
     "cut_4": {
       "g1": true,
-      "updatedAt": "2026-11-23T08:31:16.901Z"
+      "updatedAt": "2026-11-23T10:24:44.480Z",
+      "g4": true,
+      "g2Checklist": {
+        "0": {
+          "filename": "cut_04_a.jpg",
+          "scores": {
+            "face": 2,
+            "outfit": 1,
+            "proportion": 2,
+            "hair": 2,
+            "action": 2,
+            "mood": 2,
+            "shot": 1,
+            "camera": 2,
+            "background": 2,
+            "propContinuity": 2,
+            "trend": 1
+          },
+          "total": 88,
+          "note": "",
+          "scoredAt": "2026-11-23T10:24:41.772Z"
+        },
+        "1": {
+          "filename": "cut_04_b.jpg",
+          "scores": {
+            "face": 2,
+            "outfit": 2,
+            "proportion": 2,
+            "hair": 1,
+            "action": 2,
+            "mood": 2,
+            "shot": 2,
+            "camera": 2,
+            "background": 2,
+            "propContinuity": 2,
+            "trend": 1
+          },
+          "total": 93,
+          "note": "",
+          "scoredAt": "2026-11-23T10:24:41.772Z"
+        }
+      },
+      "g2": true,
+      "selectedImage": "cut_04_b.jpg"
     }
   }
 }

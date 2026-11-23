@@ -1,5 +1,5 @@
 {
-  "activeTab": "monitor",
+  "activeTab": "editmeta",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -14396,10 +14396,10 @@
           "scene": "영상통화 알림(화면은 흐리게), 지아 목소리만 들림 — 선크림 안 발랐다고 알아맞히고 여리가 머쓱해함.",
           "action": "0~4초 영상통화 알림이 뜨고 받는 서여리, 폰 화면은 흐리게 처리(지아 얼굴 비노출) → 4~8초 지아의 목소리(전화 너머)를 듣고 머쓱한 표정으로 대답",
           "character": "서여리",
-          "dialogue": "(지아, 전화 너머) 너 오늘 선크림 안 발랐지? / (여리, 온카메라)어떻게 알았어?",
+          "dialogue": "(지아, 전화 너머) 너 오늘 선크림 안 발랐지? / (여리, 온카메라)...어떻게 알았어?",
           "narration": "",
-          "subtitle": "너 오늘 선크림 안 발랐지? / …어떻게 알았어?",
-          "subtitleEn": "You skipped sunscreen today, didn't you? / …How did you know?",
+          "subtitle": "너 오늘 선크림 안 발랐지? / 어떻게 알았어?",
+          "subtitleEn": "You skipped sunscreen today, didn't you? / How did you know?",
           "subtitleJa": "今日、日焼け止め塗らなかったでしょ? / …なんでわかるの?",
           "imagePrompt": "MEDIUM CLOSE-UP — the same young Korean woman, same face, same lounge t-shirt, \nsitting on the living room sofa in the evening, holding up her phone with a video call screen softly blurred and not legible (no other face visible), a surprised sheepish expression forming, \nwarm soft indoor evening lighting, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text on phone screen, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine, Barefoot or socks only, no shoes worn (indoor home setting).",
           "videoPrompt": "Visual: [0-4s] She answers a video call on her phone, the call screen softly blurred and not legible (no other face visible), listening with a neutral curious expression, mouth closed, not speaking on camera. [4-8s] Her expression shifts into a sheepish, caught-out smile; she looks at the phone and speaks.\n\nAudio:\n- 0.0s-4.0s: a separate off-screen voice coming through the phone speaker (muffled, slightly tinny call quality, not belonging to the woman on screen), playful and confident, says in Korean: \"너 오늘 선크림 안 발랐지?\" The woman on screen stays silent, mouth closed, listening.\n- 4.0s-8.0s: she speaks directly on camera, lips synced to her words, sheepish and surprised (반말, close friend tone), in Korean: \"…어떻게 알았어?\"\n\nNo on-screen subtitle text or captions — Korean + Japanese two-line subtitles and the English line are added in post. Barefoot or socks only, no shoes worn (indoor home setting).",
@@ -14436,8 +14436,8 @@
           },
           "overrides": {
             "dialogue": {
-              "value": "(지아, 전화 너머) 너 오늘 선크림 안 발랐지? / (여리, 온카메라)어떻게 알았어?",
-              "at": "2026-11-23T08:05:02.986Z",
+              "value": "(지아, 전화 너머) 너 오늘 선크림 안 발랐지? / (여리, 온카메라)...어떻게 알았어?",
+              "at": "2026-11-23T09:50:56.026Z",
               "reason": "스튜디오 화면에서 직접 수정"
             }
           }
@@ -14616,10 +14616,10 @@
       "scene": "영상통화 알림(화면은 흐리게), 지아 목소리만 들림 — 선크림 안 발랐다고 알아맞히고 여리가 머쓱해함.",
       "action": "0~4초 영상통화 알림이 뜨고 받는 서여리, 폰 화면은 흐리게 처리(지아 얼굴 비노출) → 4~8초 지아의 목소리(전화 너머)를 듣고 머쓱한 표정으로 대답",
       "character": "서여리",
-      "dialogue": "(지아, 전화 너머) 너 오늘 선크림 안 발랐지? / (여리, 온카메라)어떻게 알았어?",
+      "dialogue": "(지아, 전화 너머) 너 오늘 선크림 안 발랐지? / (여리, 온카메라)...어떻게 알았어?",
       "narration": "",
-      "subtitle": "너 오늘 선크림 안 발랐지? / …어떻게 알았어?",
-      "subtitleEn": "You skipped sunscreen today, didn't you? / …How did you know?",
+      "subtitle": "너 오늘 선크림 안 발랐지? / 어떻게 알았어?",
+      "subtitleEn": "You skipped sunscreen today, didn't you? / How did you know?",
       "subtitleJa": "今日、日焼け止め塗らなかったでしょ? / …なんでわかるの?",
       "imagePrompt": "MEDIUM CLOSE-UP — the same young Korean woman, same face, same lounge t-shirt, \nsitting on the living room sofa in the evening, holding up her phone with a video call screen softly blurred and not legible (no other face visible), a surprised sheepish expression forming, \nwarm soft indoor evening lighting, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text on phone screen, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine, Barefoot or socks only, no shoes worn (indoor home setting).",
       "videoPrompt": "Visual: [0-4s] She answers a video call on her phone, the call screen softly blurred and not legible (no other face visible), listening with a neutral curious expression, mouth closed, not speaking on camera. [4-8s] Her expression shifts into a sheepish, caught-out smile; she looks at the phone and speaks.\n\nAudio:\n- 0.0s-4.0s: a separate off-screen voice coming through the phone speaker (muffled, slightly tinny call quality, not belonging to the woman on screen), playful and confident, says in Korean: \"너 오늘 선크림 안 발랐지?\" The woman on screen stays silent, mouth closed, listening.\n- 4.0s-8.0s: she speaks directly on camera, lips synced to her words, sheepish and surprised (반말, close friend tone), in Korean: \"…어떻게 알았어?\"\n\nNo on-screen subtitle text or captions — Korean + Japanese two-line subtitles and the English line are added in post. Barefoot or socks only, no shoes worn (indoor home setting).",
@@ -14656,8 +14656,8 @@
       },
       "overrides": {
         "dialogue": {
-          "value": "(지아, 전화 너머) 너 오늘 선크림 안 발랐지? / (여리, 온카메라)어떻게 알았어?",
-          "at": "2026-11-23T08:05:02.986Z",
+          "value": "(지아, 전화 너머) 너 오늘 선크림 안 발랐지? / (여리, 온카메라)...어떻게 알았어?",
+          "at": "2026-11-23T09:50:56.026Z",
           "reason": "스튜디오 화면에서 직접 수정"
         }
       }
@@ -14831,7 +14831,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-23T09:25:41.262Z",
+  "savedAt": "2026-11-23T10:21:24.312Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
@@ -14895,9 +14895,27 @@
         }
       ]
     },
-    "g4Approved": {},
-    "selectedCutId": "cut-1",
-    "subtitles": {}
+    "g4Approved": {
+      "cut-4": true,
+      "cut-3": true,
+      "cut-2": true,
+      "cut-1": true
+    },
+    "selectedCutId": "cut-4",
+    "subtitles": {
+      "cut-3": [
+        {
+          "start": 0,
+          "end": 4.6,
+          "text": "너 오늘 선크림 안 발랐지?"
+        },
+        {
+          "start": 4.6,
+          "end": 8,
+          "text": "어떻게 알았어?"
+        }
+      ]
+    }
   },
   "ttsTabState": {
     "audioUrls": {},

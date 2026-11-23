@@ -63,7 +63,12 @@ export function extractEndCard(raw) {
   const m = String(raw || '').replace(/\r/g, '')
     .match(/^\s*\[엔딩\s*카드\][^\n]*\n([\s\S]*?)(?=\n\s*\[[^\]]+\]\s*\n|(?![\s\S]))/m)
   if (!m) return []
-  return m[1].split('\n').map((l) => l.trim()).filter(Boolean).map((l) => l.replace(/^"(.*)"$/, '$1'))
+  // 2026-11-23 성준님 지적: "EN:"/"JP:"/"하단:"은 대본 작성자가 보는 필드 라벨일 뿐인데,
+  // 지금까지 라벨까지 그대로 화면/번인 텍스트에 섞여 나왔다("EN: Which would you try
+  // first?..."가 영상에 그대로 구워짐). CP/DL/NR처럼 라벨은 떼고 내용만 남긴다.
+  return m[1].split('\n').map((l) => l.trim()).filter(Boolean)
+    .map((l) => l.replace(/^(EN|JP|하단)\s*[:：]\s*/, ''))
+    .map((l) => l.replace(/^"(.*)"$/, '$1'))
 }
 
 // ── 효과음 규칙 — "AI연구소 효과음 모음집" 가이드(_shared/sfx/SFX_GUIDE.md) 기반 ─────
