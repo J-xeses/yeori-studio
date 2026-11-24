@@ -1,9 +1,9 @@
 {
-  "activeTab": "monitor",
+  "activeTab": "script",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
-    "remainingChars": 88814
+    "remainingChars": 88742
   },
   "activeEpisodeId": "ep_1795346971939",
   "openTabIds": [
@@ -14339,7 +14339,8 @@
               "ac": "0~4초 세안 후 수건으로 얼굴을 가볍게 닦음 → 4~8초 세럼을 손으로 가볍게 두드려 바르며 나레이션",
               "md": "편안함, 차분함"
             }
-          }
+          },
+          "captionBurnedIntoBase": false
         },
         {
           "id": "cut-2",
@@ -14386,7 +14387,8 @@
               "ac": "0~3초 마스크팩을 얼굴에 올리는 손 → 3~8초 소파에 편하게 앉아 폰 타이머를 맞추고 눈을 감으며 쉬는 모습, 나레이션",
               "md": "편안함, 느긋함"
             }
-          }
+          },
+          "captionBurnedIntoBase": false
         },
         {
           "id": "cut-3",
@@ -14440,7 +14442,8 @@
               "at": "2026-11-23T09:50:56.026Z",
               "reason": "스튜디오 화면에서 직접 수정"
             }
-          }
+          },
+          "captionBurnedIntoBase": false
         },
         {
           "id": "cut-4",
@@ -14487,7 +14490,8 @@
               "ac": "0~4초 거울 속 자신을 보며 피식 웃음 → 4~6초 정적, 거울을 보며 가만히 → 6~8초 카메라를 보며 나레이션",
               "md": "따뜻함, 다짐"
             }
-          }
+          },
+          "captionBurnedIntoBase": false
         }
       ],
       "scriptRaw": "",
@@ -14559,7 +14563,8 @@
           "ac": "0~4초 세안 후 수건으로 얼굴을 가볍게 닦음 → 4~8초 세럼을 손으로 가볍게 두드려 바르며 나레이션",
           "md": "편안함, 차분함"
         }
-      }
+      },
+      "captionBurnedIntoBase": false
     },
     {
       "id": "cut-2",
@@ -14606,7 +14611,8 @@
           "ac": "0~3초 마스크팩을 얼굴에 올리는 손 → 3~8초 소파에 편하게 앉아 폰 타이머를 맞추고 눈을 감으며 쉬는 모습, 나레이션",
           "md": "편안함, 느긋함"
         }
-      }
+      },
+      "captionBurnedIntoBase": false
     },
     {
       "id": "cut-3",
@@ -14660,7 +14666,8 @@
           "at": "2026-11-23T09:50:56.026Z",
           "reason": "스튜디오 화면에서 직접 수정"
         }
-      }
+      },
+      "captionBurnedIntoBase": false
     },
     {
       "id": "cut-4",
@@ -14707,7 +14714,8 @@
           "ac": "0~4초 거울 속 자신을 보며 피식 웃음 → 4~6초 정적, 거울을 보며 가만히 → 6~8초 카메라를 보며 나레이션",
           "md": "따뜻함, 다짐"
         }
-      }
+      },
+      "captionBurnedIntoBase": false
     }
   ],
   "scriptRaw": "",
@@ -14831,7 +14839,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-24T04:21:34.794Z",
+  "savedAt": "2026-11-24T05:00:59.292Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
@@ -14901,11 +14909,11 @@
       "cut-2": true,
       "cut-1": true
     },
-    "selectedCutId": "cut-1",
+    "selectedCutId": "cut-3",
     "subtitles": {
       "cut-3": [
         {
-          "start": 0,
+          "start": 1,
           "end": 4.6,
           "text": "너 오늘 선크림 안 발랐지?"
         },
@@ -14936,9 +14944,9 @@
         {
           "id": "track_1795451481102_w6cc",
           "type": "dialogue",
-          "text": "너 오늘 선크림 안 발랐지~!",
+          "text": "너, 오늘 선크림 안 발랐지~!!",
           "speaker": null,
-          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R11/03_audio/tts-previews/cut_03_track_1795451481102_w6cc.mp3?t=1795494409468",
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R11/03_audio/tts-previews/cut_03_track_1795451481102_w6cc.mp3?t=1795495748385",
           "voiceId": "5n5gqmaQi9Ewevrz7bOS",
           "settings": {
             "speed": 0.9,
@@ -14954,6 +14962,12 @@
   },
   "voiceInsertState": {
     "tracks": {},
+    "segFix": {
+      "cut-3": {
+        "start": 0,
+        "end": 2
+      }
+    },
     "activeCutId": "cut-3"
   },
   "studioTabState": {

@@ -148,14 +148,31 @@ export default function VoiceTab() {
   // ── 컷 영상 자체 오디오 구간 교체(2026-11-23) — 두 캐릭터가 번갈아 말하는 대사 컷에서
   // 한쪽 목소리만 이상하게 생성됐을 때, 그 구간만 시간으로 잘라 TTS로 다시 끼워넣는다.
   // 화자가 겹쳐 말하는(동시발화) 구간엔 못 쓴다 — 음원 분리가 아니라 시간상 분리 전용.
-  const [segFix, setSegFix] = useState({})   // cutId -> { duration, start, end, text, speaker, previewUrl, previewBlob, previewBusy, applyBusy, videoBust }
+  // 2026-11-24 수정(성준님 제보 — "탭을 벗어났다 돌아오니 만들어둔 TTS 이력이 없다"): 아래
+  // segFixPersist(start/end/text/speaker/적용이력)는 voiceInsertState로 저장되어 탭 전환·
+  // 새로고침에도 남는다. duration/미리듣기(blob URL)처럼 다시 만들기 쉽고 직렬화도 안 되는
+  // 값만 segFixLocal(컴포넌트 로컬 state)에 남겨 분리한다 — EditMetaTab의 동일 패턴 참고.
+  const segFixPersist = state.voiceInsertState?.segFix || {}
+  const [segFixLocal, setSegFixLocal] = useState({})
   const segVideoRef = useRef(null)
-  const sf = cut ? (segFix[cut.id] || {}) : {}
-  const setSf = (patch) => { if (cut) setSegFix(p => ({ ...p, [cut.id]: { ...p[cut.id], ...patch } })) }
+  const sf = cut ? { ...(segFixPersist[cut.id] || {}), ...(segFixLocal[cut.id] || {}) } : {}
+  const PERSIST_SF_KEYS = new Set(['start', 'end', 'text', 'speaker', 'appliedAt', 'appliedFactor', 'appliedBackupPath'])
+  const setSf = (patch) => {
+    if (!cut) return
+    const pPatch = {}, lPatch = {}
+    for (const k of Object.keys(patch)) (PERSIST_SF_KEYS.has(k) ? pPatch : lPatch)[k] = patch[k]
+    if (Object.keys(pPatch).length) {
+      dispatch({ type: 'UPDATE_TAB_FIELD', slice: 'voiceInsertState', field: 'segFix', key: cut.id, updater: (prev) => ({ ...(prev || {}), ...pPatch }) })
+    }
+    if (Object.keys(lPatch).length) {
+      setSegFixLocal(p => ({ ...p, [cut.id]: { ...(p[cut.id] || {}), ...lPatch } }))
+    }
+  }
 
   const onSegVideoMeta = (e) => {
-    if (sf.duration) return
     const d = e.target.duration
+    const already = segFixPersist[cut?.id]
+    if (already && already.start != null && already.end != null) { setSf({ duration: d }); return }
     setSf({ duration: d, start: 0, end: Math.min(2, d) })
   }
 
@@ -219,7 +236,10 @@ export default function VoiceTab() {
       const res = await replaceCutAudioSegment(state.episode?.number, cut.no, sf.start, sf.end, sf.previewBlob)
       const data = await res.json().catch(() => ({}))
       if (!res.ok || !data.success) throw new Error(data.error || '적용 실패')
-      setSf({ applyBusy: false, videoBust: data.mtimeMs, previewUrl: null, previewBlob: null })
+      setSf({
+        applyBusy: false, videoBust: data.mtimeMs, previewUrl: null, previewBlob: null,
+        appliedAt: Date.now(), appliedFactor: data.factor ?? null, appliedBackupPath: data.backupPath || null,
+      })
       alert('✅ 적용 완료 — 영상의 해당 구간 음성이 교체되었습니다(원본은 _backup에 보관).')
     } catch (err) {
       setSf({ applyBusy: false })
@@ -312,6 +332,14 @@ export default function VoiceTab() {
                       <button type="button" disabled={sf.applyBusy} onClick={applySegFix}>
                         {sf.applyBusy ? '⏳ 적용 중…' : '✅ 이 구간에 적용'}
                       </button>
+                    </div>
+                  )}
+
+                  {!sf.previewUrl && sf.appliedAt && (
+                    <div style={{ fontSize: 11, opacity: 0.75, marginTop: 6 }}>
+                      ✅ 마지막 적용: {new Date(sf.appliedAt).toLocaleString('ko-KR')}
+                      {sf.appliedFactor != null && sf.appliedFactor !== 1 ? ` · 배속 ${sf.appliedFactor}x(TTS가 구간보다 길어 압축됨)` : ' · 원래 속도 그대로'}
+                      {' · 원본 백업: '}<a href={sf.appliedBackupPath} target="_blank" rel="noreferrer">보기</a>
                     </div>
                   )}
                 </>

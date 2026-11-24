@@ -8987,14 +8987,21 @@ app.post('/api/replace-cut-audio-segment', (req, res) => {
     }
 
     const targetDur = end - start
-    // atempo=factor 를 걸면 결과 길이가 newDur/factor 가 된다 — factor를 newDur/targetDur 로
-    // 두면 정확히 구간 길이에 맞춰진다. ffmpeg atempo 유효범위(0.5~100)보다는 훨씬 좁게
-    // 0.5~3.0으로만 쓰고, 그 밖이면(TTS 문장이 구간과 너무 안 맞음) 무음 패딩/트림으로 대신한다.
+    // TTS가 구간보다 짧으면 "속도는 그대로 두고" 뒤를 무음으로 채워 구간 길이를 맞춘다 — 예전엔
+    // atempo<1(배속<1배)로 늘려 재생해서, 방금 미리들은 속도보다 부자연스럽게 느려져 들렸다
+    // (2026-11-24, 성준님 실측 제보: "구간 교체 적용본이 미리듣기보다 많이 느리게 들린다").
+    // TTS가 구간보다 길 때만 배속(atempo>1)으로 압축한다 — 영상은 안 건드리므로(위 -c:v copy)
+    // 구간을 늘릴 방법이 없어, 이 경우엔 불가피하게 속도를 올린다. ffmpeg atempo 유효범위
+    // (0.5~100)보다 훨씬 좁게 최대 3배까지만 쓰고, 그보다 더 길면(TTS가 너무 김) 배속만으론
+    // 알아듣기 힘들어지므로 최후 수단으로 자른다.
     const factor = newDur / targetDur
     const AFMT = 'aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo'
-    const segCore = (factor >= 0.5 && factor <= 3.0)
-      ? `atempo=${factor.toFixed(4)}`
-      : (newDur < targetDur ? `apad=whole_dur=${targetDur.toFixed(3)}` : `atrim=0:${targetDur.toFixed(3)}`)
+    const segCore = newDur <= targetDur
+      ? `apad=whole_dur=${targetDur.toFixed(3)}`
+      : (factor <= 3.0 ? `atempo=${factor.toFixed(4)}` : `atrim=0:${targetDur.toFixed(3)}`)
+    // 응답에 보고할 "실제 적용된 배속" — apad/atrim 분기는 속도를 안 건드리므로 1(또는 null)로
+    // 보고해야 위 factor(원시 newDur/targetDur 비율)와 혼동되지 않는다(UI 이력 표시용).
+    const appliedTempo = newDur <= targetDur ? 1 : (factor <= 3.0 ? +factor.toFixed(3) : null)
 
     const backupDir = path.join(videoDir, '_backup')
     fs.mkdirSync(backupDir, { recursive: true })
@@ -9022,7 +9029,7 @@ app.post('/api/replace-cut-audio-segment', (req, res) => {
       }
       fs.renameSync(outPath, target)
       const st = fs.statSync(target)
-      res.json({ success: true, mtimeMs: st.mtimeMs, backupPath: mp.toMediaUrl(backupPath), factor: +factor.toFixed(3) })
+      res.json({ success: true, mtimeMs: st.mtimeMs, backupPath: mp.toMediaUrl(backupPath), factor: appliedTempo })
     })
     proc.on('error', e => {
       try { fs.unlinkSync(newAudioPath) } catch { /* noop */ }

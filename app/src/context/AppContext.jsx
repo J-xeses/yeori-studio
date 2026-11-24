@@ -98,7 +98,7 @@ const defaultState = {
   savedAt: null,
   videoTabState: { videoClips: {}, g4Approved: {}, selectedCutId: null, subtitles: {} },
   ttsTabState: { audioUrls: {}, audioTexts: {}, g3Confirmed: {}, focusCutId: null },
-  voiceInsertState: { tracks: {} },
+  voiceInsertState: { tracks: {}, segFix: {} },
   studioTabState: { imageRatio: {} },   // `${cutId}_${idx}` → '9:16' | '16:9' (비교뷰 레이아웃, 에피소드 유형 기본값)
 }
 
@@ -569,6 +569,7 @@ function migrateState(saved, init) {
   }
   saved.voiceInsertState = {
     tracks: {},
+    segFix: {},
     ...(saved.voiceInsertState || {}),
   }
   // 에피소드별 탭 상태 1회 마이그레이션(2026-09-21): 예전 저장본은 탭 상태가 앱 전체에 하나뿐이었다.
