@@ -997,6 +997,24 @@ export function spliceEndCardIntoTail(tailRaw, ec) {
   return raw.trim() ? `${block}\n\n${raw.trim()}` : block
 }
 
+// 2026-11-24 — 시작 카드(온스크린 자막) 버전. 엔딩 카드와 달리 트레일링 섹션이 아니라 첫
+// [CUT N] 블록 "안쪽"에 있는 한 줄(OSD(...))이라, 트레일링 텍스트가 아니라 조립된 본문
+// 전체(buildV3ScriptText 결과)에 대고 그 줄만 찾아 바꾸거나(없으면) 첫 컷 헤더 바로 다음에
+// 끼워 넣는다.
+export function spliceStartCardIntoBody(text, sc) {
+  const en = String(sc?.textEn || '').trim()
+  const ja = String(sc?.textJa || '').trim()
+  if (!en && !ja) return text
+  const line = `OSD(첫 3초 온스크린 텍스트): ${[en && `EN "${en}"`, ja && `JP "${ja}"`].filter(Boolean).join(' / ')}`
+  const body = String(text || '')
+  const re = /^OSD\([^)]*\)\s*[:：].*$/m
+  if (re.test(body)) return body.replace(re, line)
+  const m = body.match(/^\[CUT\s*\d+\][^\n]*\n/m)
+  if (!m) return body
+  const idx = m.index + m[0].length
+  return body.slice(0, idx) + line + '\n' + body.slice(idx)
+}
+
 export default function ScriptGenTab() {
   const { state, dispatch, flushSave } = useApp()
   const codebook = useCodebook()   // 코드 한글 풀이·레퍼런스(scripts/codebook.json)
@@ -1877,6 +1895,7 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
     // 가져와 scriptTailRaw의 [엔딩 카드] 섹션을 최신 값으로 갈아끼운다(성준님 지적: "엔딩카드
     // 자막 입력이 안되어 있어서 텍스트 파일 최종본 전체 내용을 확인할 수 없는 문제").
     let episodeForExport = episode
+    let startCardOv = null
     const epNum = episode?.number
     if (epNum != null) {
       try {
@@ -1885,9 +1904,13 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
         const ec = d?.overrides?._style?.endCard
         const patchedTail = spliceEndCardIntoTail(episode?.scriptTailRaw, ec)
         if (patchedTail !== episode?.scriptTailRaw) episodeForExport = { ...episode, scriptTailRaw: patchedTail }
+        startCardOv = d?.overrides?._style?.startCard || null
       } catch { /* 실패하면 기존 scriptTailRaw 그대로 다운로드 — 다운로드 자체를 막지 않음 */ }
     }
-    const text = buildV3ScriptText(cuts, episodeForExport)
+    // 2026-11-24 — 시작 카드(온스크린 자막, CUT 1 "OSD(...)" 줄)도 엔딩 카드와 같은 이유로
+    // 영상 탭에서 고친 최신 값을 다운로드 직전에 갈아끼운다. OSD는 트레일링 섹션이 아니라
+    // 첫 [CUT N] 블록 "안쪽" 한 줄이라 scriptTailRaw가 아니라 본문(body)에 직접 스플라이스.
+    const text = spliceStartCardIntoBody(buildV3ScriptText(cuts, episodeForExport), startCardOv)
     const blob = new Blob([text], { type: 'text/plain;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')

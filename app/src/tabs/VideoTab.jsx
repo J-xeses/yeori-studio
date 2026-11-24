@@ -1108,7 +1108,13 @@ export default function VideoTab() {
     // 2026-11-24 추가(성준님 지적 — "온스크린 자막은 영어·일본어 스타트 카드로, 첫 컷 맨 앞
     // 몇 초간 나타났다 사라지는 효과") — 엔딩 카드와 같은 패턴을 타임라인 맨 앞에 적용.
     // KR 없음(대본 OSD 줄 자체가 EN/JP 전용, 성준님 요청도 "영어, 일본어"만 명시).
-    if (isFirstCut) {
+    // 2026-11-24 수정(성준님 실측 제보 — "시작카드가 본자막 타이밍과 같이 뜨고 있다"): 처음엔
+    // isFirstCut이기만 하면 무조건 그려서, 실제 번인(0~durationSec만 보임)과 달리 미리보기는
+    // 컷 전체 내내(스크럽 위치 무관) 떠 있었다. previewT(현재 재생 위치, 컷 로컬 초)가 설정한
+    // 표시 길이를 넘으면 더 이상 그리지 않게 시간 게이트를 추가 — 본 자막(captionVisibleNow)이
+    // 이미 쓰는 것과 같은 방식.
+    const scDur = reelStartCardStyle.durationSec || 3
+    if (isFirstCut && previewT <= scDur) {
       const scParts = [reelStartCardStyle.textEn, reelStartCardStyle.textJa].filter(t => typeof t === 'string' && t.trim())
       const scRaw = scParts.join('\n') || [startCardDefault.en, startCardDefault.ja].filter(Boolean).join('\n')
       if (scRaw.trim()) {
@@ -1133,7 +1139,13 @@ export default function VideoTab() {
         })
       }
     }
-    if (isLastCut) {
+    // 2026-11-24 수정 — 시작 카드와 같은 이유로 시간 게이트 추가(이전엔 isLastCut이기만 하면
+    // 컷 전체 내내 떠 있었음, 실제 번인은 마지막 durationSec초만). 컷 길이를 모르면(duration
+    // 미설정) 게이트 없이 기존 동작 유지.
+    const ecDur = reelEndCardStyle.durationSec || 2
+    const cutDurForGate = Number(selCutForText?.duration)
+    const endCardTimeOk = !Number.isFinite(cutDurForGate) || cutDurForGate <= 0 || previewT >= cutDurForGate - ecDur
+    if (isLastCut && endCardTimeOk) {
       // 2026-11-24 — textKr/textEn/textJa/textBottom 4칸으로 분리. 하나라도 입력돼 있으면 그걸
       // 우선 쓰고(순서 KR→EN→JP→하단 고정, 빈 칸은 건너뜀), 전부 비었으면 레거시 text(한 칸
       // 저장분, 하위호환) → 그것도 없으면 대본 원본 기본값 순으로 폴백.
@@ -1164,7 +1176,7 @@ export default function VideoTab() {
         })
       }
     }
-  }, [subtitleEnabled, font, color, bgStyle, boxColor, previewText, selectedCutId, subtitles, reelStyle.captionStyle, reelFontPx, reelStyle.y, gaeguReady, aspectRatio, selCutForText?.dialogue, selCutForText?.no, selCutForText?.subtitleEn, selCutForText?.subtitleJa, reelEnStyle.enabled, reelEnStyle.fontPx, reelEnStyle.y, reelEnStyle.color, reelJaStyle.enabled, reelJaStyle.fontPx, reelJaStyle.y, reelJaStyle.color, state.cuts, reelEndCardStyle.text, reelEndCardStyle.textKr, reelEndCardStyle.textEn, reelEndCardStyle.textJa, reelEndCardStyle.textBottom, reelEndCardStyle.fontPx, reelEndCardStyle.y, endCardDefault, reelStartCardStyle.textEn, reelStartCardStyle.textJa, reelStartCardStyle.fontPx, reelStartCardStyle.y, startCardDefault])
+  }, [subtitleEnabled, font, color, bgStyle, boxColor, previewText, selectedCutId, subtitles, reelStyle.captionStyle, reelFontPx, reelStyle.y, gaeguReady, aspectRatio, selCutForText?.dialogue, selCutForText?.no, selCutForText?.subtitleEn, selCutForText?.subtitleJa, reelEnStyle.enabled, reelEnStyle.fontPx, reelEnStyle.y, reelEnStyle.color, reelJaStyle.enabled, reelJaStyle.fontPx, reelJaStyle.y, reelJaStyle.color, state.cuts, reelEndCardStyle.text, reelEndCardStyle.textKr, reelEndCardStyle.textEn, reelEndCardStyle.textJa, reelEndCardStyle.textBottom, reelEndCardStyle.fontPx, reelEndCardStyle.y, reelEndCardStyle.durationSec, endCardDefault, reelStartCardStyle.textEn, reelStartCardStyle.textJa, reelStartCardStyle.fontPx, reelStartCardStyle.y, reelStartCardStyle.durationSec, startCardDefault, previewT])
 
   useEffect(() => { drawPreview() }, [drawPreview, subtitleEditMode])
 
@@ -2316,6 +2328,15 @@ export default function VideoTab() {
                   value={Math.round((reelStartCardStyle.y != null ? reelStartCardStyle.y : (reelStyle.y || 0.66)) * 100)}
                   onChange={e => setStartCardStyle({ y: parseInt(e.target.value) / 100 })} />
               </div>
+              <div className={s.field}>
+                {/* 2026-11-24 추가(성준님 지적 — "대본상 2~3초 지시문이 있으나 적용되지 않고
+                    있음") — 대본 OSD 줄의 "첫 3초"는 관례 문구일 뿐 실제로 조절할 방법이
+                    없었다. 최종본(reelFinalize.js)이 그대로 읽는 durationSec 슬라이더. */}
+                <label>🎬 시작 카드 표시 길이 <span className={s.val}>{(reelStartCardStyle.durationSec || 3).toFixed(1)}초</span></label>
+                <input type="range" min="1" max="6" step="0.5" disabled={!subtitleEnabled}
+                  value={reelStartCardStyle.durationSec || 3}
+                  onChange={e => setStartCardStyle({ durationSec: parseFloat(e.target.value) })} />
+              </div>
               <div className={s.field} style={{ marginTop: 10, paddingTop: 10, borderTop: '1px dashed var(--border)' }}>
                 <label>🏁 엔딩 카드 문구 — 언어별 (비우면 대본 원본 사용)</label>
                 {/* 2026-11-23 성준님 지적 3종 — ① 대본 원본이 placeholder(회색 안내문구)로만
@@ -2372,9 +2393,17 @@ export default function VideoTab() {
                   disabled={!subtitleEnabled}
                   onChange={e => setEndCardStyle({ y: parseInt(e.target.value) / 100 })} />
               </div>
+              <div className={s.field}>
+                {/* 2026-11-24 추가 — 시작 카드와 같은 이유(대본 "마지막 2~3초" 지시문이 실제로는
+                    적용될 방법이 없었음). 최종본(reelFinalize.js)이 그대로 읽는 durationSec 슬라이더. */}
+                <label>엔딩 카드 표시 길이 <span className={s.val}>{(reelEndCardStyle.durationSec || 2).toFixed(1)}초</span></label>
+                <input type="range" min="1" max="6" step="0.5" disabled={!subtitleEnabled}
+                  value={reelEndCardStyle.durationSec || 2}
+                  onChange={e => setEndCardStyle({ durationSec: parseFloat(e.target.value) })} />
+              </div>
               <div style={{ fontSize: 11, color: "var(--text-3)", lineHeight: 1.5 }}>
-                대본 [엔딩 카드] 섹션(마지막 2초 공유·팔로우 유도 문구)의 크기·위치 — 건드리지 않으면
-                위 자막 크기·세로 위치와 똑같이 번인됩니다. 이 에피소드에 [엔딩 카드]가 없으면 효과 없음.
+                대본 [엔딩 카드] 섹션(마지막 공유·팔로우 유도 문구)의 크기·위치·길이 — 건드리지 않으면
+                위 자막 크기·세로 위치와 똑같이, 길이는 2초로 번인됩니다. 이 에피소드에 [엔딩 카드]가 없으면 효과 없음.
               </div>
               {/* 영어/일본어 자막 병기 — 대본(ScriptGenTab)의 EN:/JP: 필드를 메인 캡션과 독립된
                   크기·세로위치로 번인. 텍스트 자체는 여기서 입력하지 않고(대본 탭에서 컷마다
@@ -3257,7 +3286,10 @@ export default function VideoTab() {
                   </label>
                   <label title="나레이션 시작(초)" style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
                     🎙⏱
-                    <input type="number" min={0} step={0.1} value={defaultNarrationStart(selCut)} style={{ width: 32 }}
+                    {/* 2026-11-24 성준님 지적 — 폭이 좁아 숫자가 잘 안 보임(32px) + 입력창 배경을
+                        검은색+흰 글씨로 통일. */}
+                    <input type="number" min={0} step={0.1} value={defaultNarrationStart(selCut)}
+                      style={{ width: 52, background: '#000', color: '#fff', border: '1px solid #444', borderRadius: 4, padding: '2px 4px' }}
                       onChange={e => dispatch({ type: 'UPDATE_CUT', id: selCut.id, p: { narrationStart: parseFloat(e.target.value) || 0 } })} />
                   </label>
                   <label title="나레이션 음량" style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>

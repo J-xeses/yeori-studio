@@ -951,7 +951,11 @@ export async function finalizeReel(p) {
     let startCardFilter = ''
     let startCardTempFiles = []
     if (startCardLines.length) {
-      const SC_DUR = 3   // 대본 OSD 표기("첫 3초") 관례와 동일
+      // 2026-11-24 수정(성준님 지적 — "대본상 2~3초 지시문이 있으나 적용되지 않고 있음"):
+      // 대본 OSD 표기("첫 3초")는 관례일 뿐 고정값이 아니었는데 SC_DUR가 하드코딩돼 있었다.
+      // 영상 탭 "표시 길이" 슬라이더(_style.startCard.durationSec)로 조절 가능하게 하고,
+      // 설정 안 하면 대본 관례값(3초) 그대로 — 기존 동작과 하위호환.
+      const SC_DUR = Number(scOv.durationSec) > 0 ? Number(scOv.durationSec) : 3
       const startCardStyle = {
         ...style,
         fontSize: scOv.fontPx || style.fontSize,
@@ -969,7 +973,9 @@ export async function finalizeReel(p) {
     let endCardFilter = ''
     let endCardTempFiles = []
     if (endCardLines.length) {
-      const CARD_DUR = 2
+      // 2026-11-24 수정 — 시작 카드와 같은 이유로 하드코딩 제거, 영상 탭 "표시 길이" 슬라이더
+      // (_style.endCard.durationSec)로 조절. 설정 안 하면 기존 기본값(2초) 그대로.
+      const CARD_DUR = Number(ecOv.durationSec) > 0 ? Number(ecOv.durationSec) : 2
       const endCardStyle = {
         ...style,
         fontSize: capStyle.endCard?.fontPx || style.fontSize,

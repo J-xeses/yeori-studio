@@ -185,13 +185,19 @@ export default function CheckupTab() {
   // 같은 API(end-card-default)와 같은 오버라이드(_style.endCard)를 읽어, 마지막 컷의 마지막
   // 2초 구간에 똑같이 겹쳐 그린다.
   const [endCardDefault, setEndCardDefault] = useState({ kr: '', en: '', ja: '', bottom: '' })
+  // 2026-11-24 추가 — 시작 카드(온스크린 자막, 첫 컷 첫 몇 초 EN/JP 타이틀) 미리보기도 엔딩
+  // 카드와 같은 패턴으로 추가(성준님 요청 — "시작카드 미리보기 추가해주고").
+  const [startCardDefault, setStartCardDefault] = useState({ en: '', ja: '' })
   const [reelStyleOv, setReelStyleOv] = useState({})
   useEffect(() => {
     setEndCardDefault({ kr: '', en: '', ja: '', bottom: '' })
+    setStartCardDefault({ en: '', ja: '' })
     setReelStyleOv({})
     if (epNum == null) return
     fetch(`${SERVER}/api/reel-finalize/end-card-default?epNum=${epNum}`)
       .then(r => r.json()).then(d => setEndCardDefault({ kr: d.kr || '', en: d.en || '', ja: d.ja || '', bottom: d.bottom || '' })).catch(() => {})
+    fetch(`${SERVER}/api/reel-finalize/start-card-default?epNum=${epNum}`)
+      .then(r => r.json()).then(d => setStartCardDefault({ en: d.en || '', ja: d.ja || '' })).catch(() => {})
     fetch(`${SERVER}/api/reel-finalize/overrides?epNum=${epNum}`)
       .then(r => r.json()).then(d => {
         setReelStyleOv(d.overrides?._style || {})
@@ -503,8 +509,22 @@ export default function CheckupTab() {
   const endCardRaw = endCardOvParts.length
     ? endCardOvParts.join('\n')
     : (endCardOv.text || '').trim() || [endCardDefault.kr, endCardDefault.en, endCardDefault.ja, endCardDefault.bottom].filter(Boolean).join('\n')
+  // 2026-11-24 수정(성준님 지적 — "대본상 2~3초 지시문이 있으나 적용되지 않고 있음") — 길이가
+  // reelFinalize.js처럼 2초로 고정돼 있었다. 영상 탭 durationSec 슬라이더를 그대로 읽는다.
+  const endCardDur = Number(endCardOv.durationSec) > 0 ? Number(endCardOv.durationSec) : 2
   const showEndCard = activeCutNo != null && activeCutNo === lastPlayableNo &&
-    !!endCardRaw.trim() && duration > 0 && elapsedInActive >= duration - 2
+    !!endCardRaw.trim() && duration > 0 && elapsedInActive >= duration - endCardDur
+
+  // 시작 카드(온스크린 자막) — "첫 컷의 첫 N초"에만 보여준다(reelFinalize.js와 동일 우선순위·타이밍).
+  const firstPlayableNo = playable.length ? playable[0].no : null
+  const startCardOv = reelStyleOv.startCard || {}
+  const startCardOvParts = [startCardOv.textEn, startCardOv.textJa].filter(t => typeof t === 'string' && t.trim())
+  const startCardRaw = startCardOvParts.length
+    ? startCardOvParts.join('\n')
+    : [startCardDefault.en, startCardDefault.ja].filter(Boolean).join('\n')
+  const startCardDur = Number(startCardOv.durationSec) > 0 ? Number(startCardOv.durationSec) : 3
+  const showStartCard = activeCutNo != null && activeCutNo === firstPlayableNo &&
+    !!startCardRaw.trim() && elapsedInActive <= startCardDur
 
   // forcePlay=true(기본) — "이 컷을 재생해줘" 의도(▶ 전체 이어보기, 컷 자동 연결, 사이드바
   // 컷 클릭)는 지금 멈춰 있어도 재생을 시작해야 맞다. 반면 타임라인을 그냥 클릭해 위치만
@@ -665,6 +685,22 @@ export default function CheckupTab() {
                           paintOrder: 'stroke fill',
                         }}>
                         {captionText}
+                      </div>
+                    </div>
+                  )}
+                  {/* 2026-11-24 추가(성준님 요청 — "시작카드 미리보기 추가해주고") — 엔딩 카드와
+                      같은 패턴(같은 CSS 클래스 재사용, 위치만 첫 컷 첫 N초로 뒤집음). VideoTab과
+                      같은 API·같은 오버라이드 우선순위. */}
+                  {showStartCard && (
+                    <div className={s.endCardBand} style={{ top: `${(startCardOv.y != null ? startCardOv.y : 0.66) * 100}%` }}>
+                      <div className={s.endCardOverlay}
+                        style={{
+                          color: color || '#fff', fontFamily: font ? `"${font}",sans-serif` : undefined,
+                          fontSize: startCardOv.fontPx ? `${(startCardOv.fontPx / 2400) * 100}cqh` : `${(22 / 2400) * 100}cqh`,
+                          WebkitTextStroke: `${Math.max(1, (startCardOv.fontPx || 22) * 0.07)}px ${isLightColor(color || '#fff') ? 'rgba(0,0,0,0.9)' : 'rgba(255,255,255,0.9)'}`,
+                          paintOrder: 'stroke fill',
+                        }}>
+                        {startCardRaw}
                       </div>
                     </div>
                   )}
