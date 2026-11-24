@@ -235,20 +235,18 @@ function subtitleSeed(cut) {
   return first.length > 32 ? `${first.slice(0, 32)}…` : first
 }
 function loadSubtitleCfg(cut) {
-  const seed = subtitleSeed(cut)
-  // 2026-11-05 수정(성준님 제보 — SF_E01 컷4: "나레이션 타이밍도 설정않은 상태로 덮어쓰기가
-  // 되는 시스템"): 영상 만들기 탭에서 사람이 직접 맞춘 나레이션/자막 타이밍(cut.captionSegTiming)이
-  // 있으면 그걸 기본 시드로 쓴다. 전엔 하드코딩된 0.3~3초만 써서, 이 패널에서 "합성 시작"을
-  // 누르면 영상 탭 타이밍과 무관한 값이 그대로 구워져(pickCutSource가 cut_NN_subtitle.mp4를
-  // 더 새 파일로 보고 최종본으로 승격) 나레이션·자막이 서로 어긋나는 사고로 이어졌다. 두
-  // 시스템이 "따로 놀지" 않게 하나를 기본 시드로 공유 — 사람이 여기서 다시 고치면 그 값이 유지됨.
-  const timedSeg = Array.isArray(cut.captionSegTiming) ? cut.captionSegTiming[0] : null
+  // 2026-11-24 수정(성준님 지적 — "메이킹 탭 자막은 별도 지정 외에는 항상 적용 제외인데,
+  // 기본값이 실제 대사·타이밍으로 미리 채워져 있어서 마치 이미 설정된 것처럼 보인다"):
+  // 예전엔(아래 subtitleSeed) 대본 대사·나레이션을 VALUE로 바로 채워 넣어, 손 댄 적 없는
+  // 컷도 그럴듯한 문구+시간이 입력돼 있는 것처럼 보였다. 이제 사람이 직접 저장한 적 없으면
+  // (cut.subtitleCfgSaved 없음) 값 자체는 비워 두고(문구 없음·0.0~0.0·폰트 최소 24px),
+  // 시드는 placeholder로만 보여준다(입력창 UI에서 subtitleSeed(cut)를 placeholder로 사용) —
+  // 그래야 "아직 아무것도 지정 안 함"이 한눈에 보이고, 실수로 그대로 "합성 시작"을 눌러도
+  // 빈 문구·0초 구간이라 눈에 띄는 자막이 찍히지 않는다.
   const base = {
     ...DEFAULT_SUBTITLE,
-    style: { ...DEFAULT_SUBTITLE.style },
-    entries: (seed
-      ? [{ text: seed, start: timedSeg ? timedSeg[0] : 0.3, end: timedSeg ? timedSeg[1] : Math.min(3, cutDuration(cut)) }]
-      : [{ ...DEFAULT_SUBTITLE.entries[0], end: Math.min(2, cutDuration(cut)) }]),
+    style: { ...DEFAULT_SUBTITLE.style, font_size: 24 },
+    entries: [{ text: '', start: 0, end: 0 }],
   }
   // 컷에 저장된 값(cut.subtitleCfgSaved)이 있으면 그걸 기본값 위에 덮어씀 — 이전엔 이 함수가
   // 항상 새 기본값(position:'bottom')만 반환해서, 탭 전환/새로고침으로 subtitleCfg(로컬 state)가
@@ -3033,30 +3031,46 @@ export default function MakingTab() {
         )}
 
         <div className={s.settingLabel}>자막 목록 — 문구 · 시작(초) ~ 끝(초)</div>
-        <div className={s.emptyHint}>대본의 자막/대사/나레이션에서 자동으로 초안이 채워집니다 — 그대로 미리보기하거나 실제 문구로 수정하세요. 시작·끝은 이 컷 안에서의 시각입니다.</div>
-        {cfg.entries.map((e, i) => (
+        <div className={s.emptyHint}>
+          {/* 2026-11-24 수정 — "대본에서 자동으로 채워진다"는 안내가 이제 맞지 않음(값은 더 이상
+              자동으로 안 채움, 회색 placeholder로 대본 초안만 힌트로 보여줌). 아래 입력칸에
+              직접 적어야 "합성 시작"을 눌렀을 때 실제로 반영됨 — 비워두면(기본 상태) 항상
+              제외된다는 점을 명확히 함. */}
+          기본은 비어있는 상태(회색 문구는 대본에서 뽑은 힌트일 뿐, 실제 값 아님)입니다 — 이 패널은
+          직접 입력하고 "✅ 합성 시작"을 눌러야만 최종본에 반영되며, 그 외에는 항상 제외됩니다.
+        </div>
+        {cfg.entries.map((e, i) => {
+          const seedHint = i === 0 ? subtitleSeed(cut) : ''
+          const inputStyle = { background: '#000', color: '#fff', border: '1px solid #444', borderRadius: 4, padding: '3px 6px' }
+          return (
           <div key={i} className={s.subEntryRow}>
-            <input className={s.subTextInput} value={e.text} placeholder="자막 문구"
+            <input className={s.subTextInput} value={e.text} placeholder={seedHint || '자막 문구'}
+              style={inputStyle}
               onChange={ev => setEntry(i, { text: ev.target.value })} />
             <input className={s.subTimeInput} type="number" step="0.1" min="0" value={e.start}
+              style={inputStyle}
               onChange={ev => setEntry(i, { start: parseFloat(ev.target.value) || 0 })} title="시작(초)" />
             <span className={s.subTimeSep}>~</span>
             <input className={s.subTimeInput} type="number" step="0.1" min="0" value={e.end}
+              style={inputStyle}
               onChange={ev => setEntry(i, { end: parseFloat(ev.target.value) || 0 })} title="끝(초)" />
             <button className={s.subDelBtn} disabled={cfg.entries.length <= 1}
               onClick={() => patchSubCfg(cut.no, { entries: cfg.entries.filter((_, k) => k !== i) })}>✕</button>
           </div>
-        ))}
+          )
+        })}
         <button className={s.previewBtn}
           onClick={() => {
             const last = cfg.entries[cfg.entries.length - 1]
             patchSubCfg(cut.no, { entries: [...cfg.entries, { text: '', start: +(last.end).toFixed(1), end: +(last.end + 1.8).toFixed(1) }] })
           }}>+ 자막 추가</button>
 
+        {/* 2026-11-24 — 입력창 배경·글자색 통일(검은색+흰 글씨), 다른 탭 입력칸들과 같은 스타일. */}
         <div className={s.editorActions}>
           <label className={s.durationField}>폰트
             <input type="number" min="24" max="160" value={cfg.style.font_size}
-              onChange={e => patchSubCfg(cut.no, { style: { ...cfg.style, font_size: parseInt(e.target.value) || 72 } })} />
+              style={{ background: '#000', color: '#fff', border: '1px solid #444', borderRadius: 4, padding: '3px 6px' }}
+              onChange={e => patchSubCfg(cut.no, { style: { ...cfg.style, font_size: parseInt(e.target.value) || 24 } })} />
           </label>
           <label className={s.durationField}>색상
             <input type="color" value={cfg.style.color}
@@ -3064,6 +3078,7 @@ export default function MakingTab() {
           </label>
           <label className={s.durationField}>글씨체
             <select value={cfg.style.font || 'gothic'}
+              style={{ background: '#000', color: '#fff', border: '1px solid #444', borderRadius: 4, padding: '3px 6px' }}
               onChange={e => patchSubCfg(cut.no, { style: { ...cfg.style, font: e.target.value } })}>
               <option value="gothic">고딕(굵게)</option>
               <option value="gaegu">손글씨 — 둥근체(Gaegu)</option>
@@ -3072,6 +3087,7 @@ export default function MakingTab() {
           </label>
           <label className={s.durationField}>위치
             <select value={cfg.style.position}
+              style={{ background: '#000', color: '#fff', border: '1px solid #444', borderRadius: 4, padding: '3px 6px' }}
               onChange={e => patchSubCfg(cut.no, { style: { ...cfg.style, position: e.target.value } })}>
               {SUBTITLE_POSITIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
             </select>

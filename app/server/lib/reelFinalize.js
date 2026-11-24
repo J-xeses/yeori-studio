@@ -917,6 +917,13 @@ export async function finalizeReel(p) {
   if (startCardLines.length) log(`시작 카드(OSD) 발견 — "${startCardLines.join(' / ')}"${scParts.length ? '(영상 탭 입력값)' : '(대본 원본)'}`)
   if (captionStyle === 'text' && (capCount > 0 || endCardLines.length || startCardLines.length || hasEnJa)) {
     const allSegs = []
+    // 2026-11-24 추가(성준님 지적 — "영어/일본어 자막이 한글 자막 타이밍을 따르지 않고 컷
+    // 처음부터 끝까지 켜진 채로 구워짐"): EN/JA는 원래 컷 전체 구간[시작~끝]에 그냥 떠 있었다
+    // (아래 buildLangFilter 옛 주석 "캡션 세그 타이밍과 일치시킬 필요가 없음" 참고) — 이제
+    // 한글 자막이 실제로 보이는 구간([첫 세그 시작, 마지막 세그 끝])을 컷별로 기록해뒀다가
+    // EN/JA도 그 구간에만 켜지게 맞춘다. 한글 자막 자체가 없는 컷(캡션 꺼짐)은 따라갈 기준이
+    // 없으므로 기존처럼 컷 전체 구간 그대로 둔다(krWindowByCut에 없음 → buildLangFilter가 폴백).
+    const krWindowByCut = new Map()
     for (const d of decisions) {
       if (!d.caption) continue
       const segs = d.caption.segments
@@ -924,13 +931,17 @@ export async function finalizeReel(p) {
       const timings = (d.captionSegTiming && d.captionSegTiming.length === segs.length)
         ? d.captionSegTiming.map(([s, e]) => ({ start: s - off, end: e - off }))
         : computeSegmentTimings(segs, d.durSec - off)
+      let winStart = null, winEnd = null
       segs.forEach((seg, i) => {
         const st = d.startSec + off + timings[i].start + SEG_LEAD_SEC
         const en = d.startSec + off + (i === segs.length - 1 ? d.durSec - off : timings[i].end) - SEG_TRAIL_GUARD_SEC
         const shown = d.caption.stack ? segs.slice(0, i + 1) : [seg]
         const text = shown.map((s) => s.overlay.text.replace(/^"|"$/g, '')).join('\n')
         allSegs.push({ text, start: st, end: en, isDialogue: seg.overlay.plate === true })
+        if (winStart == null || st < winStart) winStart = st
+        if (winEnd == null || en > winEnd) winEnd = en
       })
+      if (winStart != null) krWindowByCut.set(d.no, { start: winStart, end: winEnd })
     }
     const { width: vW, height: vH } = await ffprobeVideoSize(concat)
     const style = {
@@ -993,18 +1004,29 @@ export async function finalizeReel(p) {
       if (endCardFilter) log(`엔딩 카드 번인 — ${endCardStyle.fontSize || 32}px · y=${endCardStyle.positionRatio ?? '(캡션과 동일)'}`)
     }
 
-    // EN/JA 레이어 — 엔딩 카드와 같은 패턴(별도 drawtext 체인, 독립 스타일). 세그 단위로
-    // 쪼개지 않고 컷 전체 구간[시작~끝]에 한 줄로 띄운다(번역은 그 컷 전체에 대한 것이라
-    // 캡션 세그 타이밍과 일치시킬 필요가 없음, 2026-11-23). 기본 크기는 메인 캡션의 60%,
-    // 기본 세로 위치는 메인 캡션(보통 하단)보다 위로 7%p/14%p 띄워 겹치지 않게 함 — 실제
-    // 줄 수·길이에 따라 겹칠 수 있어 영상 탭 슬라이더로 사람이 최종 조정(엔딩 카드와 동일 철학).
+    // EN/JA 레이어 — 엔딩 카드와 같은 패턴(별도 drawtext 체인, 독립 스타일). 기본 크기는
+    // 메인 캡션의 60%, 기본 세로 위치는 메인 캡션(보통 하단)보다 위로 7%p/14%p 띄워 겹치지
+    // 않게 함 — 실제 줄 수·길이에 따라 겹칠 수 있어 영상 탭 슬라이더로 사람이 최종 조정
+    // (엔딩 카드와 동일 철학).
+    // 2026-11-24 수정(성준님 지적 — "영어/일본어 자막이 한글 자막 타이밍을 따르지 않고 컷
+    // 처음부터 끝까지 켜진 채로 구워짐"): 예전엔 "번역은 컷 전체에 대한 것"이라며 일부러
+    // 컷 전체 구간[시작~끝]에 그대로 띄웠는데(세그 타이밍과 무관), 실제로 보니 한글 자막은
+    // 꺼져 있는 구간에 EN/JA만 덩그러니 떠 있어 부자연스러웠다 — 이제 한글 자막이 실제로
+    // 보이는 구간(krWindowByCut, 위에서 계산)에 맞춘다. 한글 자막이 없는 컷(캡션 꺼짐)은
+    // 따라갈 기준이 없으므로 기존처럼 컷 전체 구간 그대로.
     const mainY = typeof style.positionRatio === 'number' ? style.positionRatio : 0.93
     const buildLangFilter = (key, textField, font) => {
       const cfg = capStyle[key]
       if (!cfg?.enabled) return { filter: '', tempFiles: [] }
-      const segs = decisions.filter((d) => d[textField]).map((d) => ({
-        text: d[textField], start: d.startSec, end: d.startSec + d.durSec, isDialogue: false,
-      }))
+      const segs = decisions.filter((d) => d[textField]).map((d) => {
+        const win = krWindowByCut.get(d.no)
+        return {
+          text: d[textField],
+          start: win ? win.start : d.startSec,
+          end: win ? win.end : d.startSec + d.durSec,
+          isDialogue: false,
+        }
+      })
       if (!segs.length) return { filter: '', tempFiles: [] }
       const langStyle = {
         ...style,

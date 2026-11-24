@@ -1039,32 +1039,39 @@ export default function VideoTab() {
     // 2026-11-16(성준님 확정): 나레이션 자막은 배경박스를 적용하지 않고 대사 자막과 구분한다 —
     // server/lib/subtitleBurn.js의 isDialogue 게이트와 같은 규칙(isDialogueSeg).
     const isDialogue = isDialogueSeg(text, selCutForText?.dialogue)
-    if (bgStyle === '반투명 직각 박스' && isDialogue) {
-      let maxLineWidth = 0
-      lines.forEach(l => { maxLineWidth = Math.max(maxLineWidth, ctx.measureText(l).width) })
-      const bw = maxLineWidth + padX * 2
-      ctx.fillStyle = hexToRgba(boxColor || '#000000', 0.68)
-      ctx.fillRect(subX - bw / 2, boxTop, bw, boxHeight)
-    } else if (bgStyle === '그림자') {
-      ctx.shadowColor = 'rgba(0,0,0,0.95)'
-      ctx.shadowBlur = Math.max(4, Math.round(fSize * 0.28))
-      ctx.shadowOffsetX = 1; ctx.shadowOffsetY = 1
-    }
+    // 2026-11-24 수정(성준님 실측 제보 — 시작카드 미리보기 안 뜨던 버그 고치며 발견): 이 메인
+    // 자막은 지금까지 "지금 보여야 하는가"(captionSegTiming 기반 captionVisibleNow)를 캔버스
+    // 안에서 직접 체크한 적이 없고, 바깥 wrapper div의 visibility:hidden에만 의존했다. 그
+    // wrapper를 (시작카드·엔딩카드·EN/JA가 같이 숨겨지는 문제 때문에) 항상 보이게 바꿨으므로,
+    // 이제 여기서 직접 체크해야 captionSegTiming으로 늦춘 구간에 자막이 먼저 새어나오지 않는다.
+    if (captionVisibleNow && text.trim()) {
+      if (bgStyle === '반투명 직각 박스' && isDialogue) {
+        let maxLineWidth = 0
+        lines.forEach(l => { maxLineWidth = Math.max(maxLineWidth, ctx.measureText(l).width) })
+        const bw = maxLineWidth + padX * 2
+        ctx.fillStyle = hexToRgba(boxColor || '#000000', 0.68)
+        ctx.fillRect(subX - bw / 2, boxTop, bw, boxHeight)
+      } else if (bgStyle === '그림자') {
+        ctx.shadowColor = 'rgba(0,0,0,0.95)'
+        ctx.shadowBlur = Math.max(4, Math.round(fSize * 0.28))
+        ctx.shadowOffsetX = 1; ctx.shadowOffsetY = 1
+      }
 
-    // 배경이 밝거나 복잡한 화면에서도 글자가 읽히도록, 배경 스타일(박스/그림자)과 별개로
-    // 항상 외곽선을 한 겹 깐다(2026-09-15 확정). 글자색이 밝으면 검은 테두리, 어두우면 흰
-    // 테두리로 자동 반전.
-    ctx.lineJoin = 'round'
-    ctx.lineWidth = Math.max(2, Math.round(fSize * 0.09))
-    ctx.strokeStyle = isLightColor(color) ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.85)'
-    ctx.fillStyle = color
-    ctx.textBaseline = 'middle'
-    lines.forEach((l, i) => {
-      const lineCenterY = boxTop + padY + lineHeight * (i + 0.5)
-      ctx.strokeText(l, subX, lineCenterY)
-      ctx.fillText(l, subX, lineCenterY)
-    })
-    ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0
+      // 배경이 밝거나 복잡한 화면에서도 글자가 읽히도록, 배경 스타일(박스/그림자)과 별개로
+      // 항상 외곽선을 한 겹 깐다(2026-09-15 확정). 글자색이 밝으면 검은 테두리, 어두우면 흰
+      // 테두리로 자동 반전.
+      ctx.lineJoin = 'round'
+      ctx.lineWidth = Math.max(2, Math.round(fSize * 0.09))
+      ctx.strokeStyle = isLightColor(color) ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.85)'
+      ctx.fillStyle = color
+      ctx.textBaseline = 'middle'
+      lines.forEach((l, i) => {
+        const lineCenterY = boxTop + padY + lineHeight * (i + 0.5)
+        ctx.strokeText(l, subX, lineCenterY)
+        ctx.fillText(l, subX, lineCenterY)
+      })
+      ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0
+    }
 
     // 영어/일본어 자막 병기 미리보기(2026-11-23) — server/lib/reelFinalize.js buildLangFilter와
     // 같은 공식(기본 크기=메인 캡션의 60%, 기본 세로위치=메인보다 7%p/14%p 위, 세그 타이밍과
@@ -1093,9 +1100,16 @@ export default function VideoTab() {
         ctx.fillText(l, subX, lineCenterY)
       })
     }
+    // 2026-11-24 수정(성준님 지적 — "영어/일본어 자막 타이밍 설정이 한글 자막을 안 따르고 컷
+    // 처음부터 끝까지 켜진 채로 구워짐"): server/lib/reelFinalize.js의 buildLangFilter와 같은
+    // 변경 — 한글 자막이 실제로 보이는 구간에만 EN/JA도 같이 보이게 한다(captionVisibleNow가
+    // 이미 그 구간 판정을 하고 있으므로 그대로 재사용). 한글 자막 자체가 없는 컷(텍스트 없음)은
+    // captionVisibleNow가 기본 true라 기존처럼 컷 전체에서 계속 보임(따라갈 기준이 없으므로).
     const mainYForLang = reelStyle.y || 0.66
-    drawLangLine(selCutForText?.subtitleEn, reelEnStyle, font, Math.max(0.05, mainYForLang - 0.07))
-    drawLangLine(selCutForText?.subtitleJa, reelJaStyle, 'Yu Gothic', Math.max(0.05, mainYForLang - 0.14))
+    if (captionVisibleNow) {
+      drawLangLine(selCutForText?.subtitleEn, reelEnStyle, font, Math.max(0.05, mainYForLang - 0.07))
+      drawLangLine(selCutForText?.subtitleJa, reelJaStyle, 'Yu Gothic', Math.max(0.05, mainYForLang - 0.14))
+    }
 
     // 엔딩 카드 미리보기(2026-11-16, 성준님 요청) — 실제 번인은 에피소드 전체 타임라인의
     // "마지막 2초"에만 들어가므로, 마지막 컷을 보고 있을 때만 겹쳐 그린다. "자막보다 굵게 +
@@ -1176,7 +1190,7 @@ export default function VideoTab() {
         })
       }
     }
-  }, [subtitleEnabled, font, color, bgStyle, boxColor, previewText, selectedCutId, subtitles, reelStyle.captionStyle, reelFontPx, reelStyle.y, gaeguReady, aspectRatio, selCutForText?.dialogue, selCutForText?.no, selCutForText?.subtitleEn, selCutForText?.subtitleJa, reelEnStyle.enabled, reelEnStyle.fontPx, reelEnStyle.y, reelEnStyle.color, reelJaStyle.enabled, reelJaStyle.fontPx, reelJaStyle.y, reelJaStyle.color, state.cuts, reelEndCardStyle.text, reelEndCardStyle.textKr, reelEndCardStyle.textEn, reelEndCardStyle.textJa, reelEndCardStyle.textBottom, reelEndCardStyle.fontPx, reelEndCardStyle.y, reelEndCardStyle.durationSec, endCardDefault, reelStartCardStyle.textEn, reelStartCardStyle.textJa, reelStartCardStyle.fontPx, reelStartCardStyle.y, reelStartCardStyle.durationSec, startCardDefault, previewT])
+  }, [subtitleEnabled, font, color, bgStyle, boxColor, previewText, selectedCutId, subtitles, reelStyle.captionStyle, reelFontPx, reelStyle.y, gaeguReady, aspectRatio, selCutForText?.dialogue, selCutForText?.no, selCutForText?.subtitleEn, selCutForText?.subtitleJa, reelEnStyle.enabled, reelEnStyle.fontPx, reelEnStyle.y, reelEnStyle.color, reelJaStyle.enabled, reelJaStyle.fontPx, reelJaStyle.y, reelJaStyle.color, state.cuts, reelEndCardStyle.text, reelEndCardStyle.textKr, reelEndCardStyle.textEn, reelEndCardStyle.textJa, reelEndCardStyle.textBottom, reelEndCardStyle.fontPx, reelEndCardStyle.y, reelEndCardStyle.durationSec, endCardDefault, reelStartCardStyle.textEn, reelStartCardStyle.textJa, reelStartCardStyle.fontPx, reelStartCardStyle.y, reelStartCardStyle.durationSec, startCardDefault, previewT, captionVisibleNow])
 
   useEffect(() => { drawPreview() }, [drawPreview, subtitleEditMode])
 
@@ -2795,7 +2809,16 @@ export default function VideoTab() {
                         // 됐다") — 세로 위치는 이제 캔버스 내부(drawPreview, H*reelStyle.y)가 전부
                         // 계산하므로, 이 바깥 틀은 영상 전체 높이를 다 덮게 하고(top/height 인라인
                         // 오버라이드) 더는 bottom%로 따로 밀어 올리지 않는다.
-                        style={{ top: 0, bottom: 0, height: '100%', visibility: captionVisibleNow ? 'visible' : 'hidden', pointerEvents: 'none' }}
+                        // 2026-11-24 수정(성준님 실측 제보 — "최종 영상엔 시작카드가 들어가 있는데
+                        // 영상 탭 미리보기에선 안 보인다"): 이 wrapper 전체를 captionVisibleNow
+                        // (한글 메인 자막이 지금 보여야 하는가)로만 visibility를 껐다/켰다 했는데,
+                        // 캔버스 하나에 메인 자막·EN·JA·시작카드·엔딩카드가 전부 같이 그려진다 —
+                        // 한글 자막이 안 뜨는 구간(예: captionSegTiming으로 늦게 시작 설정한 경우,
+                        // 또는 시작카드만 떠야 하는 0~3초)엔 이 wrapper 자체가 숨겨져서 시작카드·
+                        // EN/JA·엔딩카드까지 전부 같이 안 보였다. drawPreview 내부에서 이미 각자
+                        // 독립적으로 "그릴지 말지"를 판단해 clearRect 후 필요한 것만 그리므로,
+                        // 바깥 wrapper는 항상 보이게 두고 실제 표시 여부는 캔버스 내용에 맡긴다.
+                        style={{ top: 0, bottom: 0, height: '100%', pointerEvents: 'none' }}
                       >
                         {/* 2026-11-16: 캔버스 고유 해상도를 실제 미리보기 중인 비율(9:16/16:9)에 맞춤 —
                             전엔 항상 1920×1080(16:9)이라 세로형일 땐 캔버스가 영상 박스의 아래쪽

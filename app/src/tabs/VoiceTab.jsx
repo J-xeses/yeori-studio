@@ -310,18 +310,26 @@ export default function VoiceTab() {
                     <button type="button" onClick={playSegOriginal}>▶ 이 구간 들어보기</button>
                   </div>
 
+                  {/* 2026-11-24 성준님 요청 — 구간 자막 입력·설정·생성 버튼 배경/글자색을 검은색+흰
+                      글씨로 통일(다른 탭 입력칸들과 같은 스타일). */}
                   <textarea rows={2} placeholder="이 구간에서 다시 말할 대사를 입력하세요"
-                    style={{ width: '100%', marginTop: 8, boxSizing: 'border-box' }}
+                    style={{
+                      width: '100%', marginTop: 8, boxSizing: 'border-box',
+                      background: '#000', color: '#fff', border: '1px solid #444', borderRadius: 4, padding: '4px 6px',
+                    }}
                     value={sf.text || ''} onChange={e => setSf({ text: e.target.value })} />
 
                   <div style={{ display: 'flex', gap: 6, marginTop: 6, alignItems: 'center' }}>
-                    <select value={sf.speaker || ''} onChange={e => setSf({ speaker: e.target.value || null })}>
+                    <select value={sf.speaker || ''} onChange={e => setSf({ speaker: e.target.value || null })}
+                      style={{ background: '#000', color: '#fff', border: '1px solid #444', borderRadius: 4, padding: '4px 6px' }}>
                       <option value="">기본 목소리</option>
                       {Object.keys(state.ttsSettings?.speakerVoices || {}).map(name => (
                         <option key={name} value={name}>{name}</option>
                       ))}
                     </select>
-                    <button type="button" disabled={sf.previewBusy} onClick={genSegPreview} style={{ flex: 1 }}>
+                    <button type="button" disabled={sf.previewBusy} onClick={genSegPreview} style={{
+                      flex: 1, background: '#000', color: '#fff', border: '1px solid #444', borderRadius: 4, padding: '4px 6px',
+                    }}>
                       {sf.previewBusy ? '⏳ 생성 중…' : '🔊 미리듣기 생성'}
                     </button>
                   </div>

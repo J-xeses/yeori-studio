@@ -1,5 +1,5 @@
 {
-  "activeTab": "video",
+  "activeTab": "publishing",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -14780,25 +14780,25 @@
     "shadowColor": "#000000",
     "bold": true,
     "textY": 70,
-    "ratio": "16:9",
+    "ratio": "9:16",
     "bgImageUrl": "",
     "posterLayers": []
   },
   "publishing": {
     "youtube": {
-      "title": "",
-      "description": "",
-      "tags": ""
+      "title": "일상공감 | 5분 스킨케어, 사실 선크림이 핵심이었어요 🧴",
+      "description": "일상공감 가득한 5분 스킨케어 루틴을 담았어요 💧\n세럼 바르고, 마스크팩 올리고, 가만히 쉬는 것까지 모두 루틴이 될 수 있어요.\n근데 솔직히 선크림은 맨날 깜빡하죠 😅 그 감정표현 너무 현실 아닌가요?\n\n친구한테 선크림 안 바른 거 딱 걸린 그 순간, 여러분도 공감되셨나요?\n작은 습관 하나가 쌓이는 과정, 그 감정표현 그대로 담으려고 했어요.\n\n한국에선 선크림이 매일 아침 습관이라고 하더라고요.\n저도 내일부터 꼭 해볼게요 🌞\n\n#스킨케어 #선크림 #일상공감 #뷰티루틴 #마스크팩",
+      "tags": "일상공감, 감정표현, 스킨케어루틴, 선크림, 5분스킨케어, 마스크팩, 뷰티루틴, 데일리스킨케어, 스킨케어추천, 일상브이로그, 뷰티쇼츠, 스킨케어쇼츠, 공감영상, 일상공유, 뷰티일상"
     },
     "instagram": {
-      "title": "",
-      "description": "",
-      "tags": ""
+      "title": "5분 스킨케어, 선크림만 빼먹었어요 😅",
+      "description": "세럼 바르고 마스크팩 올리고 — 이 작은 루틴이 하루를 마무리해줘요 🌙\n일상공감 100%인 순간, 친구한테 선크림 안 바른 거 딱 걸렸을 때 그 표정 😂\n사실 그 감정표현이 너무 솔직해서 편집을 못 지웠어요.\n\n스킨케어 루틴, 완벽하지 않아도 괜찮아요.\n내일부터 선크림 한 가지만 추가해보는 건 어떨까요? ☀️\n\n일상 속 작은 감정표현들이 모여서 콘텐츠가 되는 것 같아요 🤍\n\n👇 선크림 맨날 깜빡하는 사람 손!",
+      "tags": "#일상공감 #감정표현 #스킨케어루틴 #선크림 #5분스킨케어 #마스크팩 #데일리스킨케어 #뷰티루틴 #스킨케어추천 #일상브이로그 #뷰티일상 #공감스타그램 #스킨케어스타그램 #릴스 #뷰티릴스"
     },
     "tiktok": {
-      "title": "",
-      "description": "",
-      "tags": ""
+      "title": "선크림 안 바른 거 친구한테 걸렸다 😂 #일상공감",
+      "description": "5분 스킨케어 하면서 선크림만 쏙 빼먹는 일상공감 콘텐츠 🧴\n그 순간의 감정표현, 너무 현실적이지 않나요 😅?\n마스크팩 올리고 쉬는 것도 루틴이라는 거 — 오늘부터 같이 해요 🌙\n내일은 꼭 선크림까지 ☀️",
+      "tags": "#일상공감 #감정표현 #스킨케어 #선크림 #5분스킨케어 #마스크팩 #뷰티루틴 #데일리루틴 #스킨케어루틴 #틱톡뷰티 #공감영상 #일상브이로그 #뷰티틱톡 #스킨케어추천 #현실공감"
     }
   },
   "channelKeywords": [
@@ -14839,7 +14839,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-24T07:28:14.856Z",
+  "savedAt": "2026-11-24T08:22:24.766Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
@@ -14874,7 +14874,7 @@
       ],
       "cut-3": [
         {
-          "url": "blob:http://localhost:5173/5e057e1b-e99d-4f52-8645-0a18cfe43bc5",
+          "url": "blob:http://localhost:5173/9b23292a-9745-45d0-bd4d-f9d1dbd8b1c3",
           "name": "Woman_answering_video_call_b39fa9de_1080p.mp4",
           "duration": 7.93,
           "trimStart": 0,
@@ -14986,13 +14986,13 @@
     "tracks": {},
     "segFix": {
       "cut-3": {
-        "start": 0,
+        "start": 0.5,
         "end": 4,
-        "text": "너, 오늘 선크림 안 발랐지~!!",
+        "text": "너.. 오늘 선크림 안 발랐지~!!",
         "speaker": "한지아",
-        "appliedAt": 1795501354571,
+        "appliedAt": 1795508300095,
         "appliedFactor": 1,
-        "appliedBackupPath": "/downloads/seoyeori/IG/IG_R/IG_R11/05_video/_backup/cut_03_1795501353882.mp4"
+        "appliedBackupPath": "/downloads/seoyeori/IG/IG_R/IG_R11/05_video/_backup/cut_03_1795508299825.mp4"
       }
     },
     "activeCutId": "cut-3"
