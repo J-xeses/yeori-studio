@@ -4006,7 +4006,24 @@ app.get('/api/reel-finalize/end-card-default', async (req, res) => {
     const { ep, epId } = findEpisodeByNumOrThrow(req.query.epNum)
     const code = resolveEpisodeCode(ep.episode, epId)
     const { extractEndCard, loadEpisodeScriptRaw } = await import('./lib/reelFinalize.js')
-    res.json({ code, lines: extractEndCard(loadEpisodeScriptRaw(code)) })
+    // 2026-11-24 — kr/en/ja/bottom 로 분리(이전엔 lines 배열 하나뿐이라 어느 줄이 어느 언어인지
+    // 호출부가 알 수 없었음). lines는 하위호환용으로 계속 같이 내려준다.
+    const ec = extractEndCard(loadEpisodeScriptRaw(code))
+    res.json({ code, ...ec, lines: Object.values(ec).filter(Boolean) })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
+// GET — 대본 CUT 1의 "OSD(첫 3초 온스크린 텍스트): EN "..." / JP "..."" 줄 그대로(오버라이드
+// 적용 전) — 엔딩 카드와 같은 패턴, 시작 카드(첫 몇 초 나타났다 사라지는 EN/JP 타이틀) 전용
+// (2026-11-24, 성준님 지적 — "온스크린 자막은 스타트 카드로, 엔딩카드처럼 설정돼야 한다").
+app.get('/api/reel-finalize/start-card-default', async (req, res) => {
+  try {
+    const { ep, epId } = findEpisodeByNumOrThrow(req.query.epNum)
+    const code = resolveEpisodeCode(ep.episode, epId)
+    const { extractStartCard, loadEpisodeScriptRaw } = await import('./lib/reelFinalize.js')
+    res.json({ code, ...extractStartCard(loadEpisodeScriptRaw(code)) })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message })
   }

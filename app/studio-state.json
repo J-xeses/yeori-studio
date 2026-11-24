@@ -1,5 +1,5 @@
 {
-  "activeTab": "script",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -14839,7 +14839,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-24T05:00:59.292Z",
+  "savedAt": "2026-11-24T06:20:04.947Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
@@ -14909,7 +14909,7 @@
       "cut-2": true,
       "cut-1": true
     },
-    "selectedCutId": "cut-3",
+    "selectedCutId": "cut-1",
     "subtitles": {
       "cut-3": [
         {
@@ -14937,6 +14937,13 @@
           "label": "목소리 1",
           "voiceId": "RmYuvmCbqOMBJxDLW4k8"
         }
+      ],
+      "cut-2": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
       ]
     },
     "tracks": {
@@ -14954,6 +14961,21 @@
             "similarity": 73
           }
         }
+      ],
+      "cut-2__v1": [
+        {
+          "id": "track_1795501303671_hy1h",
+          "type": "narration",
+          "text": "마스크팩을 올리고 가만히 쉬는 것도 루틴이에요.",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.85,
+            "stability": 55,
+            "similarity": 75
+          }
+        }
       ]
     },
     "mergedUrls": {
@@ -14965,7 +14987,12 @@
     "segFix": {
       "cut-3": {
         "start": 0,
-        "end": 2
+        "end": 4,
+        "text": "너, 오늘 선크림 안 발랐지~!!",
+        "speaker": "한지아",
+        "appliedAt": 1795501354571,
+        "appliedFactor": 1,
+        "appliedBackupPath": "/downloads/seoyeori/IG/IG_R/IG_R11/05_video/_backup/cut_03_1795501353882.mp4"
       }
     },
     "activeCutId": "cut-3"

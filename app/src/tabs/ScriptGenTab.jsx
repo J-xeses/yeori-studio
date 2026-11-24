@@ -976,6 +976,27 @@ export function buildV3ScriptText(cuts, episode) {
   return tail ? `${body}${eq}\n\n\n${tail}\n` : body
 }
 
+// 2026-11-24 — 대본 다운로드 시 [엔딩 카드] 섹션을 영상 탭에서 실제로 쓰이고 있는 최신 값
+// (reel-overrides _style.endCard.textKr/En/Ja/Bottom)으로 갈아끼운다. scriptTailRaw는 "맨 처음
+// 업로드/생성된 시점의 스냅샷"이라, 그 뒤 영상 탭에서 엔딩 카드 문구를 고쳐도 다운로드 파일엔
+// 반영이 안 돼 "최종본 전체 내용을 텍스트로 확인할 수 없는" 문제가 있었다(성준님 지적) — 이
+// 함수가 다운로드 직전에 그 간극을 메운다. 값이 하나도 없으면(아직 영상 탭에서 안 건드린
+// 경우) tailRaw를 그대로 둔다 — 원본(또는 AI가 막 생성한 값)이 이미 최신이므로 손댈 필요 없음.
+export function spliceEndCardIntoTail(tailRaw, ec) {
+  const parts = [
+    ec?.textKr && `KR: ${ec.textKr.trim()}`,
+    ec?.textEn && `EN: ${ec.textEn.trim()}`,
+    ec?.textJa && `JP: ${ec.textJa.trim()}`,
+    ec?.textBottom && `하단: ${ec.textBottom.trim()}`,
+  ].filter(Boolean)
+  if (!parts.length) return tailRaw
+  const block = `[엔딩 카드] (마지막 2~3초, 오버레이, 엔딩 B)\n${parts.join('\n')}`
+  const raw = String(tailRaw || '')
+  const re = /\[엔딩\s*카드\][^\n]*\n[\s\S]*?(?=\n\s*\[[^\]]+\]\s*\n|$)/
+  if (re.test(raw)) return raw.replace(re, block)
+  return raw.trim() ? `${block}\n\n${raw.trim()}` : block
+}
+
 export default function ScriptGenTab() {
   const { state, dispatch, flushSave } = useApp()
   const codebook = useCodebook()   // 코드 한글 풀이·레퍼런스(scripts/codebook.json)
@@ -1456,6 +1477,7 @@ ${episode.storyBrief.trim()}
   실제로 등록된 코드만 써서 채우세요 — 지어낸 코드 금지, 애매하면 가장 가까운 기존 코드를 고르세요.
 
 [CUT 1]
+OSD(첫 3초 온스크린 텍스트): EN "영상 전체를 한 문장으로 요약한 영어 훅 카피" / JP "같은 내용의 일본어 훅 카피"
 씬: INT/EXT. 장소 - 시간대, 그리고 이 컷에서 실제로 벌어지는 사건·줄거리를 한두 문장으로 구체적으로 서술
   (장소·시간대만 쓰지 말 것 — 예: INT. 집 거실 저녁 — 서여리, 단톡방 캡처를 다시 보다가 웃음을 참지 못하고 터뜨린다.
   전체목록에서 이 줄만 쭉 읽어도 에피소드 전개가 머리에 그려져야 함)
@@ -1547,12 +1569,25 @@ ${episode.storyBrief.trim()}
 - 마크다운 ** ## --- 완전 금지
 - 각 필드는 반드시 "씬:" "공간코드:" "공간설명(한글):" "캐릭터코드:" "캐릭터설명(한글):" "카메라:" "카메라설명(한글):" "감정:" "감정설명(한글):" "동작코드:" "동작설명(한글):" "룩ID:" "액션:" "캐릭터:" "대사:" "나레이션:" "영어 자막:" "일본어 자막:" "샷 타입:" "샷설명(한글):" "컷 타입:" "이미지 프롬프트:" "영상 프롬프트:" 로 시작
 - [CUT 번호] 형식 정확히 유지
+- [CUT 1]에만 OSD(...) 줄을 맨 위에 추가(다른 컷엔 쓰지 않음) — 영상 시작 3초간 나타났다
+  사라지는 영어/일본어 타이틀 카드용, 형식 그대로 EN "..." / JP "..." 유지
 - 대사 없는 컷은 대사: 없음 으로 표기
 - 영어 자막: / 일본어 자막: 은 모든 컷에 반드시 채움(둘 다 없으면 "없음") — 대사·나레이션과 동급의 필드, 빈칸으로 비워두지 말 것
 - 컷 타입: 필드 반드시 명시 (YEORI/BROLL/GRAPHIC/CAPCUT/PIP 중 정확히 하나)
 - PIP 컷에는 PIP_TARGET: [배경 컷 번호] 추가 (예: PIP_TARGET: 3)
 - GRAPHIC·CAPCUT 컷은 이미지 프롬프트: 없음, 영상 프롬프트: 없음 으로 표기
 - 이미지 프롬프트 끝에 ✅ 룰셋 통과 또는 ⚠️ [항목명] 확인 필요 표시
+
+마지막 컷([CUT ${episode.cutCount}] 또는 분할돼 늘어난 경우 그 마지막 컷) 바로 다음 줄에,
+아래 형식 그대로 엔딩 카드 섹션을 반드시 추가하세요(영상 마지막 2~3초에 오버레이로 들어갈
+문구 — 지금까지 이 섹션 자체가 비어 있어서 대본 다운로드 시 엔딩 문구를 확인할 방법이
+없었습니다, 2026-11-24 성준님 지적):
+[엔딩 카드] (마지막 2~3초, 오버레이, 엔딩 B)
+KR: 한국어로 시청자에게 던지는 질문/제안 한두 문장 (예: 둘 중 뭐부터 해볼래? 댓글로 알려줘)
+EN: 위 KR과 같은 내용을 영어권 시청자에게 자연스러운 문장으로
+JP: 위 KR과 같은 내용을 일본어권 시청자에게 자연스러운 문장으로
+하단: Follow for everyday Korean life with Seoyeori (고정 팔로우 유도 문구, 매 에피소드 동일)
+※ KR/EN/JP/하단 네 줄 모두 빈칸 없이 채우세요 — 생략 금지.
 
 대사는 구어체로 자연스럽게, 나레이션은 감성적으로 작성하세요.
 이미지 프롬프트는 영어로, 룰셋의 체크리스트를 모두 통과한 상태로 작성하세요.
@@ -1571,6 +1606,12 @@ ${hasDraft ? '\n⚠️ 다시 한번 강조: 위에 제공된 [CUT N] 초안의 
       dispatch({ type: 'SET_SCRIPT_RAW', p: raw })
       const parsed = parseCuts(raw, episode.cutCount)
       dispatch({ type: 'SET_CUTS', p: parsed })
+      // 2026-11-24 — v3 업로드(handleScriptFileUpload)만 scriptTailRaw를 뽑아뒀고, 여기(AI
+      // 생성)는 전혀 안 뽑아서 [엔딩 카드] 등 트레일링 섹션이 항상 비어 대본 다운로드 시
+      // 확인할 방법이 없었다(성준님 지적). 위 프롬프트가 이제 엔딩 카드를 생성하므로, 같은
+      // 방식으로 뽑아 보관해둔다.
+      const scriptTailRaw = extractScriptTail(raw)
+      if (scriptTailRaw) dispatch({ type: 'SET_EPISODE', p: { scriptTailRaw } })
 
       // ── 룰셋 자동 체크 ──────────────────────────────────
       let passCount = 0, failItems = []
@@ -1830,9 +1871,23 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
     }
   }
 
-  const downloadScript = () => {
+  const downloadScript = async () => {
     if (!cuts.length) { alert('컷이 없습니다. 대본을 먼저 생성하세요.'); return }
-    const text = buildV3ScriptText(cuts, episode)
+    // 2026-11-24 — 다운로드 직전에 영상 탭에서 실제로 쓰고 있는 엔딩 카드 문구(reel-overrides)를
+    // 가져와 scriptTailRaw의 [엔딩 카드] 섹션을 최신 값으로 갈아끼운다(성준님 지적: "엔딩카드
+    // 자막 입력이 안되어 있어서 텍스트 파일 최종본 전체 내용을 확인할 수 없는 문제").
+    let episodeForExport = episode
+    const epNum = episode?.number
+    if (epNum != null) {
+      try {
+        const r = await fetch(`http://localhost:3001/api/reel-finalize/overrides?epNum=${epNum}`)
+        const d = await r.json()
+        const ec = d?.overrides?._style?.endCard
+        const patchedTail = spliceEndCardIntoTail(episode?.scriptTailRaw, ec)
+        if (patchedTail !== episode?.scriptTailRaw) episodeForExport = { ...episode, scriptTailRaw: patchedTail }
+      } catch { /* 실패하면 기존 scriptTailRaw 그대로 다운로드 — 다운로드 자체를 막지 않음 */ }
+    }
+    const text = buildV3ScriptText(cuts, episodeForExport)
     const blob = new Blob([text], { type: 'text/plain;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')

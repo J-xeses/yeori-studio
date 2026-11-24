@@ -59,16 +59,44 @@ export function loadEpisodeScriptRaw(code) {
   } catch { /* noop */ }
   return ''
 }
+// 2026-11-23 성준님 지적: "EN:"/"JP:"/"하단:"은 대본 작성자가 보는 필드 라벨일 뿐인데,
+// 지금까지 라벨까지 그대로 화면/번인 텍스트에 섞여 나왔다("EN: Which would you try
+// first?..."가 영상에 그대로 구워짐). CP/DL/NR처럼 라벨은 떼고 내용만 남긴다.
+// 2026-11-24 수정(성준님 요청 — "엔딩 자막(한,영,일) 작성 설정"): 라벨별로 묶어 언어별 필드로
+// 반환 — 영상 탭이 KR/EN/JP/하단을 각각 독립 입력칸으로 보여주고 수정할 수 있게 한다(이전엔
+// 라벨을 버리고 한 줄짜리 배열로만 반환해, 어느 줄이 어느 언어인지 호출부가 알 수 없었음).
+// 라벨 없는 줄(과거 포맷 호환)은 직전에 채워진 필드에 이어붙인다.
 export function extractEndCard(raw) {
   const m = String(raw || '').replace(/\r/g, '')
     .match(/^\s*\[엔딩\s*카드\][^\n]*\n([\s\S]*?)(?=\n\s*\[[^\]]+\]\s*\n|(?![\s\S]))/m)
-  if (!m) return []
-  // 2026-11-23 성준님 지적: "EN:"/"JP:"/"하단:"은 대본 작성자가 보는 필드 라벨일 뿐인데,
-  // 지금까지 라벨까지 그대로 화면/번인 텍스트에 섞여 나왔다("EN: Which would you try
-  // first?..."가 영상에 그대로 구워짐). CP/DL/NR처럼 라벨은 떼고 내용만 남긴다.
-  return m[1].split('\n').map((l) => l.trim()).filter(Boolean)
-    .map((l) => l.replace(/^(EN|JP|하단)\s*[:：]\s*/, ''))
-    .map((l) => l.replace(/^"(.*)"$/, '$1'))
+  const out = { kr: '', en: '', ja: '', bottom: '' }
+  if (!m) return out
+  const LABEL = { KR: 'kr', EN: 'en', JP: 'ja', 하단: 'bottom' }
+  let lastKey = 'en'
+  for (const raw0 of m[1].split('\n').map((l) => l.trim()).filter(Boolean)) {
+    const mm = raw0.match(/^(KR|EN|JP|하단)\s*[:：]\s*(.*)$/)
+    const key = mm ? LABEL[mm[1]] : lastKey
+    const text = (mm ? mm[2] : raw0).replace(/^"(.*)"$/, '$1')
+    out[key] = out[key] ? `${out[key]}\n${text}` : text
+    lastKey = key
+  }
+  return out
+}
+
+// 2026-11-24 추가 — "시작 카드"(OSD): 대본 CUT 1 블록 안의
+// "OSD(첫 3초 온스크린 텍스트): EN "..." / JP "..."" 줄에서 EN/JP를 뽑는다(KR 없음 — 대본
+// 포맷 자체가 EN/JP 전용). 엔딩 카드([엔딩 카드] 섹션, 트레일링)와 달리 이 줄은 CUT 블록
+// "안쪽"에 있어 섹션 경계 매칭이 아니라 줄 자체를 패턴으로 찾는다 — 대본 전체에서 첫 번째
+// OSD(...) 줄 하나만 쓴다(여러 컷에 중복되는 경우는 없다고 가정, 있으면 첫 번째 우선).
+export function extractStartCard(raw) {
+  const out = { en: '', ja: '' }
+  const m = String(raw || '').replace(/\r/g, '').match(/^OSD\([^)]*\)\s*[:：]\s*(.*)$/m)
+  if (!m) return out
+  const enM = m[1].match(/EN\s+"([^"]*)"/)
+  const jaM = m[1].match(/JP\s+"([^"]*)"/)
+  if (enM) out.en = enM[1].trim()
+  if (jaM) out.ja = jaM[1].trim()
+  return out
 }
 
 // ── 효과음 규칙 — "AI연구소 효과음 모음집" 가이드(_shared/sfx/SFX_GUIDE.md) 기반 ─────
@@ -854,19 +882,40 @@ export async function finalizeReel(p) {
   // 지적(성준님) — 캡션용 drawtext와 별도 filter 체인으로 분리해서, 크기·세로 위치를 독립적으로
   // 가질 수 있게 했다(reelOverrides._style.endCard = {fontPx, y}, 없으면 캡션과 같은 기본값
   // 그대로 — 지금까지 동작과 하위호환). 폰트·색·배경 스타일은 당장은 캡션과 공유(요청 범위 밖).
-  // 2026-11-16 추가: 영상 탭에 엔딩 카드 문구 입력창 신설 — reelOverrides._style.endCard.text에
+  // 2026-11-16 추가: 영상 탭에 엔딩 카드 문구 입력창 신설 — reelOverrides._style.endCard에
   // 직접 입력한 값이 있으면 그걸 최우선으로 쓰고(줄바꿈=줄 구분), 비어있으면 대본 원본 그대로.
-  const endCardOverrideText = typeof capStyle.endCard?.text === 'string' ? capStyle.endCard.text : ''
-  const endCardLines = endCardOverrideText.trim()
-    ? endCardOverrideText.split('\n').map((l) => l.trim()).filter(Boolean)
-    : extractEndCard(loadEpisodeScriptRaw(code))
-  if (endCardLines.length) log(`엔딩 카드 발견 — "${endCardLines.join(' / ')}"${endCardOverrideText.trim() ? '(영상 탭 입력값)' : '(대본 원본)'}`)
+  // 2026-11-24 수정 — endCard.text(한 칸짜리 레거시 저장분)를 KR/EN/JP/하단 4개 입력칸
+  // (textKr/textEn/textJa/textBottom)으로 분리했다. 언어별 칸에 값이 하나라도 있으면 그걸
+  // 우선 쓰고(각 칸 자체도 줄바꿈 여러 줄 가능), 전부 비어 레거시 text만 있으면 그걸로
+  // 폴백(기존 저장본과 하위호환), 둘 다 없으면 대본 원본에서 뽑는다.
+  const ecOv = capStyle.endCard || {}
+  const ecParts = [ecOv.textKr, ecOv.textEn, ecOv.textJa, ecOv.textBottom]
+    .filter((t) => typeof t === 'string' && t.trim())
+  const endCardLines = ecParts.length
+    ? ecParts.flatMap((t) => t.split('\n').map((l) => l.trim()).filter(Boolean))
+    : (typeof ecOv.text === 'string' && ecOv.text.trim())
+      ? ecOv.text.split('\n').map((l) => l.trim()).filter(Boolean)
+      : Object.values(extractEndCard(loadEpisodeScriptRaw(code))).filter(Boolean)
+  if (endCardLines.length) log(`엔딩 카드 발견 — "${endCardLines.join(' / ')}"${ecParts.length || (ecOv.text || '').trim() ? '(영상 탭 입력값)' : '(대본 원본)'}`)
   // 영어/일본어 자막 병기(2026-11-23, capStyle.en/.ja = {enabled,fontPx,y}, 영상 탭에서 설정) —
   // CP(캡션) 유무와 무관하게 subtitleEn/subtitleJa가 있는 컷이면 켤 수 있어야 해서, 이 블록
   // 자체를 여는 조건에도 반영한다(안 그러면 CP도 엔딩카드도 없는 컷은 블록을 통째로 건너뛰어
   // EN/JA가 있어도 절대 안 구워짐).
   const hasEnJa = (capStyle.en?.enabled && decisions.some((d) => d.subtitleEn)) || (capStyle.ja?.enabled && decisions.some((d) => d.subtitleJa))
-  if (captionStyle === 'text' && (capCount > 0 || endCardLines.length || hasEnJa)) {
+  // 2026-11-24 추가(성준님 지적 — "온스크린 자막은 영어·일본어 스타트 카드로, 첫 컷 맨 앞
+  // 몇 초간 나타났다 사라지는 효과") — 대본엔 CUT 1 블록 안에 이미
+  // "OSD(첫 3초 온스크린 텍스트): EN "..." / JP "..."" 줄로 의도가 적혀 있었지만, 어느
+  // 파서도 이 줄을 읽지 않고 번인·영상 탭 설정 둘 다 없었다(그래서 "기능이 추가된 듯 한데
+  // 설정이 없다"로 보임). 엔딩 카드와 완전히 같은 패턴(독립 drawtext 체인, 영상 탭 오버라이드
+  // 우선 → 없으면 대본 원본)으로 구현하되, 위치만 타임라인 맨 앞(0~SC_DUR)으로 뒤집는다.
+  // KR은 없음 — 대본 OSD 줄 자체가 EN/JP 전용 포맷이고, 성준님 요청도 "영어, 일본어"만 명시.
+  const scOv = capStyle.startCard || {}
+  const scParts = [scOv.textEn, scOv.textJa].filter((t) => typeof t === 'string' && t.trim())
+  const startCardLines = scParts.length
+    ? scParts.flatMap((t) => t.split('\n').map((l) => l.trim()).filter(Boolean))
+    : Object.values(extractStartCard(loadEpisodeScriptRaw(code))).filter(Boolean)
+  if (startCardLines.length) log(`시작 카드(OSD) 발견 — "${startCardLines.join(' / ')}"${scParts.length ? '(영상 탭 입력값)' : '(대본 원본)'}`)
+  if (captionStyle === 'text' && (capCount > 0 || endCardLines.length || startCardLines.length || hasEnJa)) {
     const allSegs = []
     for (const d of decisions) {
       if (!d.caption) continue
@@ -894,12 +943,32 @@ export async function finalizeReel(p) {
       ? buildSubtitleDrawtextFilter(allSegs, style, workDir, vH, vW)
       : { filter: '', tempFiles: [] }
 
+    // drawtext(이 엔진)는 handwriting_overlay.py 경로와 달리 컬러 이모지 폰트 폴백이 없어서
+    // 💬 같은 글자가 네모(두부)로 깨진다(실측 확인, 2026-11-16) — 번인 텍스트에서만 제거.
+    // 엔딩/시작 카드 둘 다 쓰므로 공용으로 끌어올림(2026-11-24).
+    const stripEmoji = (t) => t.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, '').replace(/[ \t]+/g, ' ').trim()
+
+    let startCardFilter = ''
+    let startCardTempFiles = []
+    if (startCardLines.length) {
+      const SC_DUR = 3   // 대본 OSD 표기("첫 3초") 관례와 동일
+      const startCardStyle = {
+        ...style,
+        fontSize: scOv.fontPx || style.fontSize,
+        positionRatio: scOv.y != null ? scOv.y : style.positionRatio,
+        outlineScale: 0.16,   // 엔딩 카드와 동일 — 캡션보다 두꺼운 외곽선으로 구분
+      }
+      const scSegs = [{ text: startCardLines.map(stripEmoji).join('\n'), start: 0, end: Math.min(SC_DUR, totalDur), isDialogue: false }]
+      const scWorkDir = path.join(tmp, 'drawtext_startcard')
+      const scResult = buildSubtitleDrawtextFilter(scSegs, startCardStyle, scWorkDir, vH, vW)
+      startCardFilter = scResult.filter
+      startCardTempFiles = scResult.tempFiles
+      if (startCardFilter) log(`시작 카드 번인 — ${startCardStyle.fontSize || 32}px · y=${startCardStyle.positionRatio ?? '(캡션과 동일)'}`)
+    }
+
     let endCardFilter = ''
     let endCardTempFiles = []
     if (endCardLines.length) {
-      // drawtext(이 엔진)는 handwriting_overlay.py 경로와 달리 컬러 이모지 폰트 폴백이 없어서
-      // 💬 같은 글자가 네모(두부)로 깨진다(실측 확인, 2026-11-16) — 번인 텍스트에서만 제거.
-      const stripEmoji = (t) => t.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, '').replace(/[ \t]+/g, ' ').trim()
       const CARD_DUR = 2
       const endCardStyle = {
         ...style,
@@ -949,8 +1018,8 @@ export async function finalizeReel(p) {
     if (enResult.filter) log(`영어 자막 번인 — ${capStyle.en?.fontPx || Math.round(style.fontSize * 0.6)}px`)
     if (jaResult.filter) log(`일본어 자막 번인 — ${capStyle.ja?.fontPx || Math.round(style.fontSize * 0.6)}px`)
 
-    const filter = [capResult.filter, endCardFilter, enResult.filter, jaResult.filter].filter(Boolean).join(',')
-    const tempFiles = [...capResult.tempFiles, ...endCardTempFiles, ...enResult.tempFiles, ...jaResult.tempFiles]
+    const filter = [capResult.filter, startCardFilter, endCardFilter, enResult.filter, jaResult.filter].filter(Boolean).join(',')
+    const tempFiles = [...capResult.tempFiles, ...startCardTempFiles, ...endCardTempFiles, ...enResult.tempFiles, ...jaResult.tempFiles]
     if (filter) {
       const capOut = path.join(tmp, 'captioned_text.mp4')
       log(`자막 번인(기본 텍스트, drawtext) — 세그 ${allSegs.length}개 · ${style.font || '맑은 고딕'} ${style.fontSize || 32}px`)

@@ -611,14 +611,29 @@ export default function VideoTab() {
   }, [state.episode?.number])
   // 대본 원본 [엔딩 카드] 섹션(오버라이드 입력창을 비워뒀을 때 실제로 번인될 기본값) — 입력창
   // placeholder로 보여줘서 "지금 뭐가 들어가는지" 미리 보이게 함(2026-11-16).
-  const [endCardDefault, setEndCardDefault] = useState([])
+  // 2026-11-24 — kr/en/ja/bottom 4개 필드로 분리(이전엔 lines 배열 하나뿐이라 입력창도 언어
+  // 구분 없이 한 칸이었다 — 성준님 요청: "엔딩 자막(한,영,일) 작성 설정").
+  const [endCardDefault, setEndCardDefault] = useState({ kr: '', en: '', ja: '', bottom: '' })
   useEffect(() => {
     const epNum = state.episode?.number
-    if (epNum == null) { setEndCardDefault([]); return }
+    const empty = { kr: '', en: '', ja: '', bottom: '' }
+    if (epNum == null) { setEndCardDefault(empty); return }
     fetch(`http://localhost:3001/api/reel-finalize/end-card-default?epNum=${epNum}`)
       .then(r => r.json())
-      .then(d => setEndCardDefault(Array.isArray(d.lines) ? d.lines : []))
-      .catch(() => setEndCardDefault([]))
+      .then(d => setEndCardDefault({ kr: d.kr || '', en: d.en || '', ja: d.ja || '', bottom: d.bottom || '' }))
+      .catch(() => setEndCardDefault(empty))
+  }, [state.episode?.number])
+  // 대본 CUT 1 "OSD(첫 3초 온스크린 텍스트)" 줄 그대로(오버라이드 입력창을 비워뒀을 때 실제로
+  // 번인될 기본값) — 엔딩 카드와 같은 패턴(2026-11-24, 성준님 지적).
+  const [startCardDefault, setStartCardDefault] = useState({ en: '', ja: '' })
+  useEffect(() => {
+    const epNum = state.episode?.number
+    const empty = { en: '', ja: '' }
+    if (epNum == null) { setStartCardDefault(empty); return }
+    fetch(`http://localhost:3001/api/reel-finalize/start-card-default?epNum=${epNum}`)
+      .then(r => r.json())
+      .then(d => setStartCardDefault({ en: d.en || '', ja: d.ja || '' }))
+      .catch(() => setStartCardDefault(empty))
   }, [state.episode?.number])
   // 릴스(IG_R): 미리보기 자막을 최종본(reel-finalize → handwriting_overlay.py)과 똑같이 그린다 — Gaegu 손글씨·1920 기준 px·
   // 외곽 헤일로·하단 72% 안전선. 크기/세로위치는 오버라이드 _style 에 저장되어 최종본(G5)이 그대로 쓴다(2026-09-25, 성준님:
@@ -652,6 +667,14 @@ export default function VideoTab() {
   const setEndCardStyle = (patch) => {
     const nextEndCard = { ...reelEndCardStyle, ...patch }
     setReelStyle({ endCard: nextEndCard })
+  }
+  // 시작 카드(대본 CUT 1 "OSD" 줄, 첫 3초 EN/JP 타이틀) 전용 크기·세로위치(2026-11-24) —
+  // 엔딩 카드와 완전히 같은 패턴, 타임라인 맨 앞에 적용된다는 점만 다르다. KR 없음(대본
+  // OSD 포맷 자체가 EN/JP 전용).
+  const reelStartCardStyle = reelStyle.startCard || {}
+  const setStartCardStyle = (patch) => {
+    const nextStartCard = { ...reelStartCardStyle, ...patch }
+    setReelStyle({ startCard: nextStartCard })
   }
   // 영어/일본어 자막 병기(2026-11-23) — 엔딩 카드와 같은 패턴(reelOverrides._style.en/.ja =
   // {enabled,fontPx,y,color}, 독립 크기·세로위치·글자색). server/lib/reelFinalize.js가
@@ -1079,9 +1102,46 @@ export default function VideoTab() {
     // 테두리 추가"로 구분하라는 요청 — bold 글꼴 + 더 두꺼운 외곽선(server/lib/subtitleBurn.js
     // outlineScale=0.16과 같은 비율, 캡션의 0.09보다 두꺼움).
     const maxCutNo = (state.cuts || []).length ? Math.max(...(state.cuts || []).map(c => c.no)) : null
+    const minCutNo = (state.cuts || []).length ? Math.min(...(state.cuts || []).map(c => c.no)) : null
     const isLastCut = selCutForText && maxCutNo != null && selCutForText.no === maxCutNo
+    const isFirstCut = selCutForText && minCutNo != null && selCutForText.no === minCutNo
+    // 2026-11-24 추가(성준님 지적 — "온스크린 자막은 영어·일본어 스타트 카드로, 첫 컷 맨 앞
+    // 몇 초간 나타났다 사라지는 효과") — 엔딩 카드와 같은 패턴을 타임라인 맨 앞에 적용.
+    // KR 없음(대본 OSD 줄 자체가 EN/JP 전용, 성준님 요청도 "영어, 일본어"만 명시).
+    if (isFirstCut) {
+      const scParts = [reelStartCardStyle.textEn, reelStartCardStyle.textJa].filter(t => typeof t === 'string' && t.trim())
+      const scRaw = scParts.join('\n') || [startCardDefault.en, startCardDefault.ja].filter(Boolean).join('\n')
+      if (scRaw.trim()) {
+        const scFSize = Math.max(10, Math.round((reelStartCardStyle.fontPx || reelFontPx) * scale))
+        ctx.font = `bold ${scFSize}px "${font}",sans-serif`
+        ctx.textAlign = 'center'
+        const scMaxWidth = W * (aspectRatio === '16:9' ? 0.80 : 0.86)
+        const scLines = wrapCanvasText(ctx, scRaw, scMaxWidth)
+        const scLineHeight = scFSize * lineGap
+        const scCenterY = H * (reelStartCardStyle.y != null ? reelStartCardStyle.y : (reelStyle.y || 0.66))
+        const scTotalHeight = scLineHeight * scLines.length
+        const scTop = Math.max(scCenterY - scTotalHeight / 2, 8)
+        ctx.lineJoin = 'round'
+        ctx.lineWidth = Math.max(3, Math.round(scFSize * 0.16))
+        ctx.strokeStyle = isLightColor(color) ? 'rgba(0,0,0,0.9)' : 'rgba(255,255,255,0.9)'
+        ctx.fillStyle = color
+        ctx.textBaseline = 'middle'
+        scLines.forEach((l, i) => {
+          const lineCenterY = scTop + scLineHeight * (i + 0.5)
+          ctx.strokeText(l, subX, lineCenterY)
+          ctx.fillText(l, subX, lineCenterY)
+        })
+      }
+    }
     if (isLastCut) {
-      const ecRaw = (reelEndCardStyle.text || '').trim() ? reelEndCardStyle.text : endCardDefault.join('\n')
+      // 2026-11-24 — textKr/textEn/textJa/textBottom 4칸으로 분리. 하나라도 입력돼 있으면 그걸
+      // 우선 쓰고(순서 KR→EN→JP→하단 고정, 빈 칸은 건너뜀), 전부 비었으면 레거시 text(한 칸
+      // 저장분, 하위호환) → 그것도 없으면 대본 원본 기본값 순으로 폴백.
+      const ecParts = [reelEndCardStyle.textKr, reelEndCardStyle.textEn, reelEndCardStyle.textJa, reelEndCardStyle.textBottom]
+        .filter(t => typeof t === 'string' && t.trim())
+      const ecRaw = ecParts.length ? ecParts.join('\n')
+        : (reelEndCardStyle.text || '').trim() ? reelEndCardStyle.text
+        : [endCardDefault.kr, endCardDefault.en, endCardDefault.ja, endCardDefault.bottom].filter(Boolean).join('\n')
       if (ecRaw.trim()) {
         const ecFSize = Math.max(10, Math.round((reelEndCardStyle.fontPx || reelFontPx) * scale))
         ctx.font = `bold ${ecFSize}px "${font}",sans-serif`
@@ -1104,7 +1164,7 @@ export default function VideoTab() {
         })
       }
     }
-  }, [subtitleEnabled, font, color, bgStyle, boxColor, previewText, selectedCutId, subtitles, reelStyle.captionStyle, reelFontPx, reelStyle.y, gaeguReady, aspectRatio, selCutForText?.dialogue, selCutForText?.no, selCutForText?.subtitleEn, selCutForText?.subtitleJa, reelEnStyle.enabled, reelEnStyle.fontPx, reelEnStyle.y, reelEnStyle.color, reelJaStyle.enabled, reelJaStyle.fontPx, reelJaStyle.y, reelJaStyle.color, state.cuts, reelEndCardStyle.text, reelEndCardStyle.fontPx, reelEndCardStyle.y, endCardDefault])
+  }, [subtitleEnabled, font, color, bgStyle, boxColor, previewText, selectedCutId, subtitles, reelStyle.captionStyle, reelFontPx, reelStyle.y, gaeguReady, aspectRatio, selCutForText?.dialogue, selCutForText?.no, selCutForText?.subtitleEn, selCutForText?.subtitleJa, reelEnStyle.enabled, reelEnStyle.fontPx, reelEnStyle.y, reelEnStyle.color, reelJaStyle.enabled, reelJaStyle.fontPx, reelJaStyle.y, reelJaStyle.color, state.cuts, reelEndCardStyle.text, reelEndCardStyle.textKr, reelEndCardStyle.textEn, reelEndCardStyle.textJa, reelEndCardStyle.textBottom, reelEndCardStyle.fontPx, reelEndCardStyle.y, endCardDefault, reelStartCardStyle.textEn, reelStartCardStyle.textJa, reelStartCardStyle.fontPx, reelStartCardStyle.y, startCardDefault])
 
   useEffect(() => { drawPreview() }, [drawPreview, subtitleEditMode])
 
@@ -2218,23 +2278,83 @@ export default function VideoTab() {
                   §⑬-6) — 손글씨(handwriting) 모드에선 효과가 없어 혼선을 막으려 그때만 숨긴다. */}
               {reelStyle.captionStyle !== 'handwriting' && (
               <>
+              {/* 2026-11-24 추가(성준님 지적 — "온스크린 자막은 영어·일본어 스타트 카드로, 첫
+                  컷 맨 앞 몇 초간 나타났다 사라지는 효과, 엔딩카드처럼 설정이 되어야 한다") —
+                  대본 CUT 1 "OSD(첫 3초 온스크린 텍스트)" 줄을 영상 탭 설정+미리보기로 연결.
+                  엔딩 카드와 완전히 같은 UI 패턴(오버라이드 우선 → 없으면 대본 원본), KR 없음. */}
               <div className={s.field} style={{ marginTop: 10, paddingTop: 10, borderTop: '1px dashed var(--border)' }}>
-                <label>🏁 엔딩 카드 문구 (한 줄에 한 문장 · 비우면 대본 원본 사용)</label>
+                <label>🎬 시작 카드 문구 — 첫 3초 (비우면 대본 원본 사용)</label>
+                {[
+                  { key: 'textEn', dKey: 'en', label: '🇺🇸 영어' },
+                  { key: 'textJa', dKey: 'ja', label: '🇯🇵 일본어' },
+                ].map(({ key, dKey, label }) => (
+                  <div key={key} style={{ marginBottom: 6 }}>
+                    <label style={{ fontSize: 11, opacity: 0.8, display: 'block', marginBottom: 2 }}>{label}</label>
+                    <textarea rows={2} disabled={!subtitleEnabled}
+                      value={reelStartCardStyle[key] ?? startCardDefault[dKey] ?? ''}
+                      placeholder={`(대본 원본: ${startCardDefault[dKey] || '없음'})`}
+                      onChange={e => setStartCardStyle({ [key]: e.target.value })}
+                      style={{
+                        width: '100%', resize: 'vertical', fontFamily: 'inherit', fontSize: 12.5, padding: 6, boxSizing: 'border-box',
+                        background: 'var(--surface1)', color: 'var(--text1)', border: '1px solid var(--border)', borderRadius: 4,
+                      }} />
+                  </div>
+                ))}
+              </div>
+              <div className={s.field}>
+                <label>🎬 시작 카드 자막 크기 <span className={s.val}>
+                  {reelStartCardStyle.fontPx ? `${reelStartCardStyle.fontPx}px` : `캡션과 동일(${reelFontPx}px)`}
+                </span></label>
+                <input type="range" min="36" max="110" value={reelStartCardStyle.fontPx || reelFontPx} disabled={!subtitleEnabled}
+                  onChange={e => setStartCardStyle({ fontPx: parseInt(e.target.value) })} />
+              </div>
+              <div className={s.field}>
+                <label>🎬 시작 카드 세로 위치 <span className={s.val}>
+                  {reelStartCardStyle.y != null ? `${Math.round(reelStartCardStyle.y * 100)}%` : `캡션과 동일${reelStyle.y ? `(${Math.round(reelStyle.y * 100)}%)` : '(하단)'}`}
+                </span></label>
+                <input type="range" min="5" max="95" disabled={!subtitleEnabled}
+                  value={Math.round((reelStartCardStyle.y != null ? reelStartCardStyle.y : (reelStyle.y || 0.66)) * 100)}
+                  onChange={e => setStartCardStyle({ y: parseInt(e.target.value) / 100 })} />
+              </div>
+              <div className={s.field} style={{ marginTop: 10, paddingTop: 10, borderTop: '1px dashed var(--border)' }}>
+                <label>🏁 엔딩 카드 문구 — 언어별 (비우면 대본 원본 사용)</label>
                 {/* 2026-11-23 성준님 지적 3종 — ① 대본 원본이 placeholder(회색 안내문구)로만
                     보여서 실제로 클릭해 오타만 고칠 수 없고(전체를 다시 타이핑해야 "편집"됨),
                     ② rows=2라 여러 줄 엔딩카드는 내용이 잘려 보이고, ③ 배경/글자색을 따로
                     안 줘서 브라우저 기본값(흰 배경+검은 글씨)이 어두운 테마와 안 어울림.
                     value를 placeholder 대신 실제 대본 원본으로 채워서 바로 고칠 수 있게 하되,
-                    오버라이드가 비어있는 한(reelEndCardStyle.text 미설정) 저장은 안 되므로
-                    "비우면 대본 원본을 계속 따라간다" 동작 자체는 그대로 유지된다. */}
-                <textarea rows={4} disabled={!subtitleEnabled}
-                  value={reelEndCardStyle.text || endCardDefault.join('\n')}
-                  placeholder="(이 에피소드 대본엔 [엔딩 카드] 섹션이 없습니다)"
-                  onChange={e => setEndCardStyle({ text: e.target.value })}
-                  style={{
-                    width: '100%', resize: 'vertical', fontFamily: 'inherit', fontSize: 12.5, padding: 6, boxSizing: 'border-box',
-                    background: 'var(--surface1)', color: 'var(--text1)', border: '1px solid var(--border)', borderRadius: 4,
-                  }} />
+                    오버라이드가 비어있는 한(각 필드 미설정) 저장은 안 되므로 "비우면 대본
+                    원본을 계속 따라간다" 동작 자체는 그대로 유지된다.
+                    2026-11-24 수정(성준님 요청 — "엔딩 자막(한,영,일) 작성 설정"): 한 칸에
+                    언어를 섞어 적던 textarea를 KR/EN/JP/하단 4칸으로 분리 — 온스크린 자막
+                    (아래 컷별 KR/EN/JP 입력칸)과 같은 구조로 맞췄다. 예전에 한 칸으로 저장해둔
+                    값(reelEndCardStyle.text)은 지우지 않고 안내문으로 보여줘 내용을 잃지 않게
+                    하되, 새 입력은 전부 이 4칸으로 들어간다(reelFinalize.js도 이 순서로 조립). */}
+                {!!(reelEndCardStyle.text || '').trim()
+                  && !reelEndCardStyle.textKr && !reelEndCardStyle.textEn && !reelEndCardStyle.textJa && !reelEndCardStyle.textBottom && (
+                  <div style={{ fontSize: 11, color: 'var(--text-2)', margin: '4px 0 8px', padding: 6, background: 'var(--surface1)', border: '1px dashed var(--border)', borderRadius: 4 }}>
+                    ⚠️ 이전에 한 칸으로 저장해둔 문구가 있습니다 — 사라지지 않았으니, 아래 언어별 칸에 나눠 옮겨 적어주세요:
+                    <div style={{ whiteSpace: 'pre-wrap', marginTop: 4, opacity: 0.85 }}>{reelEndCardStyle.text}</div>
+                  </div>
+                )}
+                {[
+                  { key: 'textKr', dKey: 'kr', label: '🇰🇷 한국어', rows: 2 },
+                  { key: 'textEn', dKey: 'en', label: '🇺🇸 영어', rows: 2 },
+                  { key: 'textJa', dKey: 'ja', label: '🇯🇵 일본어', rows: 2 },
+                  { key: 'textBottom', dKey: 'bottom', label: '📌 하단 문구(팔로우 유도 등)', rows: 1 },
+                ].map(({ key, dKey, label, rows }) => (
+                  <div key={key} style={{ marginBottom: 6 }}>
+                    <label style={{ fontSize: 11, opacity: 0.8, display: 'block', marginBottom: 2 }}>{label}</label>
+                    <textarea rows={rows} disabled={!subtitleEnabled}
+                      value={reelEndCardStyle[key] ?? endCardDefault[dKey] ?? ''}
+                      placeholder={`(대본 원본: ${endCardDefault[dKey] || '없음'})`}
+                      onChange={e => setEndCardStyle({ [key]: e.target.value })}
+                      style={{
+                        width: '100%', resize: 'vertical', fontFamily: 'inherit', fontSize: 12.5, padding: 6, boxSizing: 'border-box',
+                        background: 'var(--surface1)', color: 'var(--text1)', border: '1px solid var(--border)', borderRadius: 4,
+                      }} />
+                  </div>
+                ))}
               </div>
               <div className={s.field}>
                 <label>🏁 엔딩 카드 자막 크기 <span className={s.val}>
@@ -2310,7 +2430,7 @@ export default function VideoTab() {
                 )
               })}
               <div style={{ fontSize: 11, color: "var(--text-3)", lineHeight: 1.5 }}>
-                텍스트 자체는 아래 컷 카드의 EN/JP 입력칸(또는 대본 탭 EN/JP 입력칸)에서 컷마다
+                텍스트 자체는 아래 컷 카드의 KR/EN/JP 입력칸(또는 대본 탭 EN/JP 입력칸)에서 컷마다
                 수정합니다 — 같은 값을 공유합니다. 기본 크기·위치는 메인 자막과 겹치지 않도록
                 띄워뒀지만, 자막 줄 수에 따라 겹칠 수 있어 슬라이더로 직접 맞출 수 있습니다.
               </div>
@@ -3168,6 +3288,16 @@ export default function VideoTab() {
                     입력칸과 같은 cut.subtitleEn/subtitleJa 값을 그대로 공유 — 여기서 고치면
                     대본 탭에도, 대본 탭에서 고치면 여기도 즉시 반영된다. */}
                 <div onClick={e => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', gap: 6, margin: '0 0 8px', fontSize: 11 }}>
+                  {/* 2026-11-24 추가(성준님 요청 — "온스크린 자막(한,영,일) 작성 설정") — KR은 cut.dialogue를
+                      그대로 편집하는 것과 같다(대본 탭 "대사" 칸과 완전히 같은 값, 별도 필드 아님). EN/JP
+                      옆에 나란히 두면 세 언어를 같은 자리에서 한 번에 고칠 수 있다. */}
+                  <label title="한국어 자막(=대사, 화면 번인) — 대본 탭 '대사' 칸과 같은 값" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    🇰🇷 KR
+                    <input type="text" style={{ flex: 1, fontSize: 11.5, background: '#000', color: '#fff', border: '1px solid #444', borderRadius: 4, padding: '3px 6px' }}
+                      value={selCut.dialogue || ''}
+                      placeholder="한국어 대사/자막 (없으면 비워둠)"
+                      onChange={e => dispatch({ type: 'UPDATE_CUT', id: selCut.id, p: { dialogue: e.target.value } })} />
+                  </label>
                   <label title="영어 자막(화면 번인) — 컷 전체 구간에 한 줄로 표시" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     🇺🇸 EN
                     <input type="text" style={{ flex: 1, fontSize: 11.5, background: '#000', color: '#fff', border: '1px solid #444', borderRadius: 4, padding: '3px 6px' }}

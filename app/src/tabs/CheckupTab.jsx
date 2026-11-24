@@ -184,14 +184,14 @@ export default function CheckupTab() {
   // 전혀 몰랐다 — 누락이 아니라 이 미리보기 자체에 그 개념이 없었던 것. VideoTab이 이미 쓰는
   // 같은 API(end-card-default)와 같은 오버라이드(_style.endCard)를 읽어, 마지막 컷의 마지막
   // 2초 구간에 똑같이 겹쳐 그린다.
-  const [endCardDefault, setEndCardDefault] = useState([])
+  const [endCardDefault, setEndCardDefault] = useState({ kr: '', en: '', ja: '', bottom: '' })
   const [reelStyleOv, setReelStyleOv] = useState({})
   useEffect(() => {
-    setEndCardDefault([])
+    setEndCardDefault({ kr: '', en: '', ja: '', bottom: '' })
     setReelStyleOv({})
     if (epNum == null) return
     fetch(`${SERVER}/api/reel-finalize/end-card-default?epNum=${epNum}`)
-      .then(r => r.json()).then(d => setEndCardDefault(Array.isArray(d.lines) ? d.lines : [])).catch(() => {})
+      .then(r => r.json()).then(d => setEndCardDefault({ kr: d.kr || '', en: d.en || '', ja: d.ja || '', bottom: d.bottom || '' })).catch(() => {})
     fetch(`${SERVER}/api/reel-finalize/overrides?epNum=${epNum}`)
       .then(r => r.json()).then(d => {
         setReelStyleOv(d.overrides?._style || {})
@@ -492,11 +492,17 @@ export default function CheckupTab() {
   const removeGainSegment = (i) => saveGainSegments(gainSegments.filter((_, si) => si !== i))
 
   // 엔딩 카드 — "마지막 컷의 마지막 2초"에만(reelFinalize.js CARD_DUR=2와 동일) 보여준다.
-  // VideoTab의 setReelStyle(cutNo='_style')이 저장한 endCard.text 오버라이드가 있으면 그걸,
-  // 없으면 대본 [엔딩 카드] 섹션 원본을 그대로 쓴다(VideoTab과 동일 우선순위).
+  // VideoTab의 setReelStyle(cutNo='_style')이 저장한 endCard 오버라이드가 있으면 그걸,
+  // 없으면 대본 [엔딩 카드] 섹션 원본을 그대로 쓴다(VideoTab·reelFinalize.js와 동일 우선순위).
+  // 2026-11-24 — endCard.text(레거시 한 칸)를 textKr/textEn/textJa/textBottom로 분리한 뒤에도
+  // 이 미리보기가 옛 값만 보고 멈추지 않게 같은 폴백 순서를 그대로 반영.
   const lastPlayableNo = playable.length ? playable[playable.length - 1].no : null
   const endCardOv = reelStyleOv.endCard || {}
-  const endCardRaw = (endCardOv.text || '').trim() || endCardDefault.join('\n')
+  const endCardOvParts = [endCardOv.textKr, endCardOv.textEn, endCardOv.textJa, endCardOv.textBottom]
+    .filter(t => typeof t === 'string' && t.trim())
+  const endCardRaw = endCardOvParts.length
+    ? endCardOvParts.join('\n')
+    : (endCardOv.text || '').trim() || [endCardDefault.kr, endCardDefault.en, endCardDefault.ja, endCardDefault.bottom].filter(Boolean).join('\n')
   const showEndCard = activeCutNo != null && activeCutNo === lastPlayableNo &&
     !!endCardRaw.trim() && duration > 0 && elapsedInActive >= duration - 2
 
