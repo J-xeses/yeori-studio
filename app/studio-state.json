@@ -1,5 +1,5 @@
 {
-  "activeTab": "tts",
+  "activeTab": "monitor",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -14831,7 +14831,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-23T16:29:48.911Z",
+  "savedAt": "2026-11-24T04:21:34.794Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
@@ -14936,21 +14936,25 @@
         {
           "id": "track_1795451481102_w6cc",
           "type": "dialogue",
-          "text": "너 오늘 선크림 안 발랐지?어떻게 알았어?",
+          "text": "너 오늘 선크림 안 발랐지~!",
           "speaker": null,
-          "url": null,
-          "voiceId": "",
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R11/03_audio/tts-previews/cut_03_track_1795451481102_w6cc.mp3?t=1795494409468",
+          "voiceId": "5n5gqmaQi9Ewevrz7bOS",
           "settings": {
-            "speed": 0.95,
-            "stability": 30,
-            "similarity": 75
+            "speed": 0.9,
+            "stability": 23,
+            "similarity": 73
           }
         }
       ]
+    },
+    "mergedUrls": {
+      "cut-3__v1": "blob:http://localhost:5173/f8824ddc-df07-4241-8c18-26f6c7e90606"
     }
   },
   "voiceInsertState": {
-    "tracks": {}
+    "tracks": {},
+    "activeCutId": "cut-3"
   },
   "studioTabState": {
     "imageRatio": {}
