@@ -9,6 +9,12 @@
   누워서 쉬는 시간까지 즐긴다. 사건(더워서 후퇴) → 감정(마지못해 따라함) → 선택(또 오고 싶어짐).
   문화 포인트: 입구에서 신발을 벗고, 목욕 후 같은 찜질복으로 갈아입은 뒤 가족·친구와 함께 쉬는 한국식 휴식 공간.
   실험: 반복 시청(완주율) 테스트.
+  언어 설계: 모든 컷 한국어 자막(나레이션/대사) + 일본어 자막(작은 글씨, 2단) + 영어 부제 한 줄(EN, 캡션·카드
+  참고용) — IG_R11부터 적용한 3개 국어 표기 기준을 그대로 적용.
+  ⚠️ EN/JP 라인은 scriptParserV3.js가 파싱하는 필드가 아님(참고용 텍스트) — 04_making 자막 단계에서 수동으로
+  한국어 위 / 일본어 아래 2단 레이아웃을 얹을 것. 일본어 문구는 게시 전 원어민 확인 필수.
+  나레이션(NR) 처리: 룰셋 ⑬-4(v1.4.7)에 따라 Flow 영상 생성 VP에 화면 밖 V.O.로 직접 포함(TTS 불필요) —
+  Visual:/Audio: 두 블록 명시 분리 구조([[project_narration_vp_visual_audio_split_standard_2026_11_19]] 기준 적용).
   엔딩 카드: IG_R11(11/23) 결과에서 성과가 나은 쪽(엔딩 A/B)으로 확정 예정 — 이 초안엔 A안을 임시 기본값으로 작성.
 ================================================================
 EP.HEADER
@@ -26,7 +32,7 @@ BGM   : 잔잔한 로파이, CUT4 중반 2~3초 정지(여운) 후 엔딩카드
 ━━━━━━━━━━━━━━━━━━━━━━━━
 [CUT 1] ─ YEORI+JIA | 훅 — 입구, 신발 벗고 입장 | 8
 ━━━━━━━━━━━━━━━━━━━━━━━━
-OSD(첫 3초 온스크린 텍스트): EN "Everyone wears the same outfit at a Korean jjimjilbang"
+OSD(첫 3초 온스크린 텍스트): EN "Everyone wears the same outfit at a Korean jjimjilbang" / JP "韓国のチムジルバンはみんな同じ服"
 SC: 입구에서 신발을 벗어 신발장에 넣고, 찜질복 차림의 서여리와 지아.
 SP: IN.JJ.ENT.LT_WM
 PL: YR_VD
@@ -34,6 +40,7 @@ CH: 서여리 + 지아
 DL: 없음
 NR: 한국 찜질방은 모두가 같은 옷을 입고 쉬는 곳이에요.
 EN: At a Korean jjimjilbang, everyone relaxes in the same outfit.
+JP: 韓国のチムジルバンは、みんな同じ服を着てくつろぐ場所です。
 SH: SH_WS
 CA: CA_ST
 MD: MD_CLM
@@ -76,7 +83,7 @@ Visual: [0-4s] Both women stand at the shoe lockers near the entrance, taking of
 
 Audio: a separate off-screen narrator, a calm, natural voice that does not belong to either woman on screen, says in Korean: "한국 찜질방은 모두가 같은 옷을 입고 쉬는 곳이에요." Neither woman's lips move.
 
-No on-screen subtitle text or captions — Korean subtitle and the English line are added in post.
+No on-screen subtitle text or captions — Korean + Japanese two-line subtitles and the English line are added in post.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -89,6 +96,7 @@ CH: 서여리 + 지아
 DL: 여리 "나 좀 나갈게…" / 지아 "아직 3분 남았어."
 NR: 없음
 EN: I'm stepping out… / Three more minutes.
+JP: ちょっと出るね… / まだ3分あるよ。
 SH: SH_MS
 CA: CA_ST
 MD: MD_TRD (더위에 지침)
@@ -133,7 +141,7 @@ Audio:
 - 4.0s-5.8s: the woman on the right, tired and reluctant, says in Korean (반말): "나 좀 나갈게…" while the woman on the left listens, mouth closed.
 - 5.8s-8.0s: the woman on the left, firm and playful, says in Korean (반말): "아직 3분 남았어." while the woman on the right stays silent, mouth closed, settling back down.
 
-No on-screen subtitle text or captions — Korean subtitle and the English line are added in post.
+No on-screen subtitle text or captions — Korean + Japanese two-line subtitles and the English line are added in post.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -146,6 +154,7 @@ CH: 서여리 + 지아
 DL: 없음
 NR: 식혜, 구운 계란, 누워서 쉬는 시간까지. 이게 찜질방 코스예요.
 EN: Sikhye, roasted eggs, lying down to rest. That's the whole experience.
+JP: シッケ、焼き卵、横になって休む時間まで。これがチムジルバンのコースです。
 SH: SH_MS
 CA: CA_ST
 MD: MD_CNT (만족)
@@ -186,7 +195,7 @@ Visual: [0-4s] Both women, towels twisted into sheep-ear shapes on their heads, 
 
 Audio: a separate off-screen narrator, a calm, content voice that does not belong to either woman on screen, says in Korean: "식혜, 구운 계란, 누워서 쉬는 시간까지. 이게 찜질방 코스예요." Neither woman's lips move.
 
-No on-screen subtitle text or captions — Korean subtitle and the English line are added in post.
+No on-screen subtitle text or captions — Korean + Japanese two-line subtitles and the English line are added in post.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -199,6 +208,7 @@ CH: 서여리 + 지아
 DL: 없음
 NR: 더위가 지나가면, 이상하게 또 생각나요.
 EN: Once the heat passes, you somehow want to come back.
+JP: 暑さが過ぎると、不思議とまた行きたくなるんです。
 SH: SH_MS
 CA: CA_ST
 MD: MD_WRM
@@ -238,13 +248,15 @@ Visual: [0-4s] Both women lie side by side on the warm floor, looking up, relaxe
 
 Audio: a separate off-screen narrator, a calm, warm voice that does not belong to either woman on screen, says in Korean: "더위가 지나가면, 이상하게 또 생각나요." Neither woman's lips move.
 
-No on-screen subtitle text or captions — Korean subtitle and the English line are added in post.
+No on-screen subtitle text or captions — Korean + Japanese two-line subtitles and the English line are added in post.
 ================================================================
 
 
 [엔딩 카드] (마지막 2~3초, 오버레이)
 ⚠️ IG_R11(11/23) 결과에서 성과가 나은 쪽(엔딩 A/B)으로 확정 예정 — 이 초안은 A안을 임시 기본값으로 적용.
-A안(임시): "Send this to the friend you'd take to a jjimjilbang"
+A안(임시)
+EN: "Send this to the friend you'd take to a jjimjilbang"
+JP: 一緒にチムジルバンに行きたい友達にシェアしてね
 
 [캡션]
 EN: Matching outfits, roasted eggs, sikhye, and a nap on a warm floor 🇰🇷 A jjimjilbang is a bathhouse, a lounge, and sometimes an overnight stop. Hours and overnight rules vary by place. Would you try it?
@@ -255,7 +267,7 @@ JP: おそろいの服、焼き卵、シッケ、あたたかい床でゴロゴ�
 #Jjimjilbang #KoreanSpa #KoreanCulture #KoreanDailyLife #AICreator #韓国 #チムジルバン
 
 [고정 댓글]
-이번 금요일: 서여리의 서울 하루 지도 / This Friday: Seoyeori's Seoul in one day
+이번 금요일: 서여리의 서울 하루 지도 / This Friday: Seoyeori's Seoul in one day / 今週の金曜日:ソヨリのソウル1日マップ
 
 [체크]
 - AI 라벨 부착 확인(게시 시)
@@ -268,3 +280,6 @@ JP: おそろいの服、焼き卵、シッケ、あたたかい床でゴロゴ�
 - CUT2 대사는 SEG 4+4(발화 컷 규칙 ⑬-2) — 생성 시 "발화 (한국어)" 블록이 VP 하단에 자동 추가될 수 있음(본 VP의
   Audio 블록과 중복돼도 무방)
 - 엔딩 카드는 IG_R11(11/23) 결과 확정 전까지 임시값 — 정식 생성 전 반드시 재확인
+- ⚠️ 일본어(JP)/영어(EN) 라인은 scriptParserV3.js가 파싱하는 필드가 아님(참고용 텍스트) — 자동 생성에는 반영되지
+  않으므로, 04_making 자막 단계에서 한국어 위/일본어 아래 2단 레이아웃을 수동으로 얹을 것. 일본어 문구는
+  게시 전 원어민 확인 필수(IG_R11과 동일 기준)
