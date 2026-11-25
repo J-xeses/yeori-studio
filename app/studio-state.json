@@ -1,9 +1,9 @@
 {
-  "activeTab": "monitor",
+  "activeTab": "script",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
-    "remainingChars": 88742
+    "remainingChars": 88671
   },
   "activeEpisodeId": "ep_1795346971939",
   "openTabIds": [

@@ -1,5 +1,5 @@
 {
-  "nextIdx": 9,
+  "nextIdx": 12,
   "runs": [
     {
       "at": "2026-11-04T04:46:44.793Z",
@@ -48,7 +48,19 @@
       "added": 0,
       "searches": 6,
       "errors": []
+    },
+    {
+      "at": "2026-11-25T06:57:41.271Z",
+      "handles": [
+        "nanheemang",
+        "elevenlabsio",
+        "pixverse_official"
+      ],
+      "found": 2,
+      "added": 2,
+      "searches": 6,
+      "errors": []
     }
   ],
-  "lastRun": "2026-11-18T06:00:44.256Z"
+  "lastRun": "2026-11-25T06:57:41.271Z"
 }
