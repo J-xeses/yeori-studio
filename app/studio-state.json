@@ -1,5 +1,5 @@
 {
-  "activeTab": "script",
+  "activeTab": "studio",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -14726,7 +14726,7 @@
         "finishMode": "cutter",
         "masterCode": "[IG_R12] :: [PL:IG_RL] :: [SP:IN.JJ.ENT_HR_LNG.LT_WM] :: [CH:YR_VD+HJ_VD] :: [SH:SH_WS+SH_MS] :: [F군:미설정]",
         "epHeaderRaw": "",
-        "scriptTailRaw": "[엔딩 카드] (마지막 2~3초, 오버레이)\n⚠️ IG_R11(11/23) 결과에서 성과가 나은 쪽(엔딩 A/B)으로 확정 예정 — 이 초안은 A안을 임시 기본값으로 적용.\nA안(임시)\nEN: \"Send this to the friend you'd take to a jjimjilbang\"\nJP: 一緒にチムジルバンに行きたい友達にシェアしてね\n\n[캡션]\nEN: Matching outfits, roasted eggs, sikhye, and a nap on a warm floor 🇰🇷 A jjimjilbang is a bathhouse, a lounge, and sometimes an overnight stop. Hours and overnight rules vary by place. Would you try it?\nKR: 찜질방은 같은 옷을 입고, 구운 계란과 식혜를 먹고, 따뜻한 바닥에서 쉬는 한국식 휴식 공간이에요. 운영 시간과 숙박 가능 여부는 매장마다 달라요.\nJP: おそろいの服、焼き卵、シッケ、あたたかい床でゴロゴロ。チムジルバンは韓国式の休憩スポットです。営業時間や宿泊の可否はお店によって違います。\n\n[해시태그]\n#Jjimjilbang #KoreanSpa #KoreanCulture #KoreanDailyLife #AICreator #韓国 #チムジルバン\n\n[고정 댓글]\n이번 금요일: 서여리의 서울 하루 지도 / This Friday: Seoyeori's Seoul in one day / 今週の金曜日:ソヨリのソウル1日マップ\n\n[체크]\n- AI 라벨 부착 확인(게시 시)\n- 탕·탈의 장면 전부 제외 — 찜질복 착용 구역(입구/한증막/라운지)만 묘사\n- 공공장소 규칙: 맨발 금지, 전 장면 양말 착용(집 장면 맨발 규칙과 반대 — PUBLIC_INDOOR_RE 가드 대상 확인)\n- 특정 업소 상호·간판 비노출\n- 지아 실제 얼굴 등장 — characters.json jia 레퍼런스 이미지(jia-face.jpg/jia-closeup.jpg) 생성 시 반드시 참조\n- 양머리 수건은 \"꼭 해야 하는 규칙\"처럼 단정적으로 쓰지 않고 놀이 요소로만 묘사(브리프 제작메모 반영)\n- 선정적 연출 금지\n- CUT2 대사는 SEG 4+4(발화 컷 규칙 ⑬-2) — 생성 시 \"발화 (한국어)\" 블록이 VP 하단에 자동 추가될 수 있음(본 VP의\n  Audio 블록과 중복돼도 무방)\n- 엔딩 카드는 IG_R11(11/23) 결과 확정 전까지 임시값 — 정식 생성 전 반드시 재확인\n- ⚠️ 일본어(JP)/영어(EN) 라인은 scriptParserV3.js가 파싱하는 필드가 아님(참고용 텍스트) — 자동 생성에는 반영되지\n  않으므로, 04_making 자막 단계에서 한국어 위/일본어 아래 2단 레이아웃을 수동으로 얹을 것. 일본어 문구는\n  게시 전 원어민 확인 필수(IG_R11과 동일 기준)"
+        "scriptTailRaw": "[엔딩 카드] (마지막 2~3초, 오버레이)\n⚠️ IG_R11(11/23) 결과에서 성과가 나은 쪽(엔딩 A/B)으로 확정 예정 — 이 초안은 A안을 임시 기본값으로 적용.\nA안(임시)\nEN: \"Send this to the friend you'd take to a jjimjilbang\"\nJP: 一緒にチムジルバンに行きたい友達にシェアしてね\n\n[캡션]\nEN: Matching outfits, roasted eggs, sikhye, and a nap on a warm floor 🇰🇷 A jjimjilbang is a bathhouse, a lounge, and sometimes an overnight stop. Hours and overnight rules vary by place. Would you try it?\nKR: 찜질방은 같은 옷을 입고, 구운 계란과 식혜를 먹고, 따뜻한 바닥에서 쉬는 한국식 휴식 공간이에요. 운영 시간과 숙박 가능 여부는 매장마다 달라요.\nJP: おそろいの服、焼き卵、シッケ、あたたかい床でゴロゴロ。チムジルバンは韓国式の休憩スポットです。営業時間や宿泊の可否はお店によって違います。\n\n[해시태그]\n#Jjimjilbang #KoreanSpa #KoreanCulture #KoreanDailyLife #AICreator #韓国 #チムジルバン\n\n[고정 댓글]\n이번 금요일: 서여리의 서울 하루 지도 / This Friday: Seoyeori's Seoul in one day / 今週の金曜日:ソヨリのソウル1日マップ\n\n[체크]\n- AI 라벨 부착 확인(게시 시)\n- ⚠️ 복장 시퀀스(11/25 교정): CUT1(신발장)은 전체가 외출복(환복 전) — 신발 벗을 때 찜질복으로 이미 등장하던\n  초안 오류 수정. 탈의실에서 갈아입는 장면은 그대로 비노출(아래 항목), CUT2부터 찜질복으로 등장(컷 사이\n  환복은 화면 밖에서 일어난 것으로 처리 — SF_E03 찜질방 컷의 \"탈의실 출구부터 시작\" 방식과 동일 원칙)\n- 탕·탈의 장면 전부 제외 — 찜질복 착용 구역(입구/한증막/라운지)만 묘사\n- 공공장소 규칙: 맨발 금지, 전 장면 양말 착용(집 장면 맨발 규칙과 반대 — PUBLIC_INDOOR_RE 가드 대상 확인)\n- 특정 업소 상호·간판 비노출\n- 지아 실제 얼굴 등장 — characters.json jia 레퍼런스 이미지(jia-face.jpg/jia-closeup.jpg) 생성 시 반드시 참조\n- 양머리 수건은 \"꼭 해야 하는 규칙\"처럼 단정적으로 쓰지 않고 놀이 요소로만 묘사(브리프 제작메모 반영)\n- 선정적 연출 금지\n- CUT2 대사는 SEG 4+4(발화 컷 규칙 ⑬-2) — 생성 시 \"발화 (한국어)\" 블록이 VP 하단에 자동 추가될 수 있음(본 VP의\n  Audio 블록과 중복돼도 무방)\n- 엔딩 카드는 IG_R11(11/23) 결과 확정 전까지 임시값 — 정식 생성 전 반드시 재확인\n- ⚠️ 일본어(JP)/영어(EN) 라인은 scriptParserV3.js가 파싱하는 필드가 아님(참고용 텍스트) — 자동 생성에는 반영되지\n  않으므로, 04_making 자막 단계에서 한국어 위/일본어 아래 2단 레이아웃을 수동으로 얹을 것. 일본어 문구는\n  게시 전 원어민 확인 필수(IG_R11과 동일 기준)"
       },
       "cuts": [
         {
@@ -14734,16 +14734,16 @@
           "no": 1,
           "cutTitle": "입구, 신발 벗고 입장",
           "lipsync": false,
-          "scene": "입구에서 신발을 벗어 신발장에 넣고, 찜질복 차림의 서여리와 지아.",
-          "action": "0~4초 신발장 앞에서 신발을 벗어 넣는 두 사람 → 4~8초 찜질복 차림으로 나란히 걸어 들어가며 나레이션",
+          "scene": "입구에서 각자 외출복 차림(환복 전)으로 신발을 벗어 신발장에 넣는 서여리와 지아. 찜질복은 아직 등장하지 않음 —",
+          "action": "0~4초 각자 외출복 차림으로 신발장 앞에 서는 두 사람 → 4~8초 신발을 벗어 신발장에 넣으며 나레이션",
           "character": "서여리",
           "dialogue": "",
           "narration": "한국 찜질방은 모두가 같은 옷을 입고 쉬는 곳이에요.",
           "subtitle": "한국 찜질방은 모두가 같은 옷을 입고 쉬는 곳이에요.",
           "subtitleEn": "At a Korean jjimjilbang, everyone relaxes in the same outfit.",
           "subtitleJa": "韓国のチムジルバンは、みんな同じ服を着てくつろぐ場所です。",
-          "imagePrompt": "WIDE SHOT — two young Korean women in their early 20s at the entrance of a Korean jjimjilbang (bathhouse lounge), warm orange ambient lighting, wooden shoe lockers along the wall,\nThe woman on the right: long wavy dark brown hair falling loosely, natural-finish makeup, skin looking soft and real rather than airbrushed, wearing a plain solid-color jjimjilbang uniform top and shorts, socks on her feet (no shoes), putting her sneakers into a shoe locker,\nThe woman on the left: oval face, large dark brown almond eyes with dramatic curled lashes and subtle winged black eyeliner, full lips in deep mauve-brown, short wavy black bob with wispy curtain bangs, wearing the same style plain jjimjilbang uniform, socks on her feet (no shoes), putting her sneakers into a shoe locker, DO NOT change clothing,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, K-model proportions, small face, long legs, slender figure,\nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no visible shop signage or logos, no clothing brand text, no other people in the background, only the two named women in frame, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine",
-          "videoPrompt": "Visual: [0-4s] Both women stand at the shoe lockers near the entrance, taking off their sneakers and placing them inside, feet in socks only (never barefoot in this public space). [4-8s] They walk forward together into the lounge area in their matching jjimjilbang uniforms, relaxed and at ease. Both stay silent on camera throughout, lips gently closed and relaxed, no mouth movement.\n\nAudio: a separate off-screen narrator, a calm, natural voice that does not belong to either woman on screen, says in Korean: \"한국 찜질방은 모두가 같은 옷을 입고 쉬는 곳이에요.\" Neither woman's lips move.\n\nNo on-screen subtitle text or captions — Korean + Japanese two-line subtitles and the English line are added in post.",
+          "imagePrompt": "WIDE SHOT — two young Korean women in their early 20s at the entrance of a Korean jjimjilbang (bathhouse lounge), warm orange ambient lighting, wooden shoe lockers along the wall, both still in their own everyday outdoor outfits — they have not changed into the jjimjilbang uniform yet (that happens later, off-screen, in the changing room),\nThe woman on the right: long wavy dark brown hair falling loosely, natural-finish makeup, skin looking soft and real rather than airbrushed, wearing a simple casual outdoor outfit (plain top and comfortable pants, her own everyday clothes, NOT a jjimjilbang uniform), slipping off her sneakers, socks visible on her feet,\nThe woman on the left: oval face, large dark brown almond eyes with dramatic curled lashes and subtle winged black eyeliner, full lips in deep mauve-brown, short wavy black bob with wispy curtain bangs, wearing her own simple casual outdoor outfit (different everyday clothes from the woman on the right, NOT a jjimjilbang uniform), slipping off her sneakers, socks visible on her feet,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, K-model proportions, small face, long legs, slender figure,\nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no visible shop signage or logos, no clothing brand text, no other people in the background, only the two named women in frame, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine",
+          "videoPrompt": "Visual: [0-4s] Both women, still in their own everyday outdoor outfits (not yet changed into jjimjilbang uniforms), stand at the shoe lockers near the entrance. [4-8s] They take off their sneakers and place them inside the lockers, feet now in socks only (never barefoot in this public space), about to head toward the changing room. Both stay silent on camera throughout, lips gently closed and relaxed, no mouth movement.\n\nAudio: a separate off-screen narrator, a calm, natural voice that does not belong to either woman on screen, says in Korean: \"한국 찜질방은 모두가 같은 옷을 입고 쉬는 곳이에요.\" Neither woman's lips move.\n\nNo on-screen subtitle text or captions — Korean + Japanese two-line subtitles and the English line are added in post.",
           "voiceSource": "video",
           "duration": 8,
           "shotType": "FULLBODY",
@@ -14757,7 +14757,7 @@
             "sh": "SH_WS",
             "ca": "CA_ST",
             "md": "MD_CLM",
-            "ac": "0~4초 신발장 앞에서 신발을 벗어 넣는 두 사람(양말 상태, 맨발 아님) → 4~8초 찜질복 차림으로 나란히 걸어 들어가며 나레이션",
+            "ac": "0~4초 각자 외출복 차림으로 신발장 앞에 서는 두 사람 → 4~8초 신발을 벗어 신발장에 넣으며 나레이션(양말 상태 노출,",
             "lookId": "",
             "du": 8,
             "audio": {
@@ -14768,10 +14768,10 @@
             },
             "kr": {
               "sp": "찜질방 입구, 신발장 앞, 따뜻한 주황빛 조명",
-              "ch": "서여리·지아 — 동일 디자인 찜질복, 양말 (맨발 아님 — 공공장소 규칙)",
+              "ch": "서여리·지아 — 각자 외출복 차림(환복 전, 찜질복 아님), 신발을 벗으면 양말 상태 (맨발 아님 — 공공장소 규칙)",
               "sh": "와이드샷",
               "ca": "고정",
-              "ac": "0~4초 신발장 앞에서 신발을 벗어 넣는 두 사람 → 4~8초 찜질복 차림으로 나란히 걸어 들어가며 나레이션",
+              "ac": "0~4초 각자 외출복 차림으로 신발장 앞에 서는 두 사람 → 4~8초 신발을 벗어 신발장에 넣으며 나레이션",
               "md": "편안함, 설렘"
             }
           }
@@ -14939,7 +14939,7 @@
     "finishMode": "cutter",
     "masterCode": "[IG_R12] :: [PL:IG_RL] :: [SP:IN.JJ.ENT_HR_LNG.LT_WM] :: [CH:YR_VD+HJ_VD] :: [SH:SH_WS+SH_MS] :: [F군:미설정]",
     "epHeaderRaw": "",
-    "scriptTailRaw": "[엔딩 카드] (마지막 2~3초, 오버레이)\n⚠️ IG_R11(11/23) 결과에서 성과가 나은 쪽(엔딩 A/B)으로 확정 예정 — 이 초안은 A안을 임시 기본값으로 적용.\nA안(임시)\nEN: \"Send this to the friend you'd take to a jjimjilbang\"\nJP: 一緒にチムジルバンに行きたい友達にシェアしてね\n\n[캡션]\nEN: Matching outfits, roasted eggs, sikhye, and a nap on a warm floor 🇰🇷 A jjimjilbang is a bathhouse, a lounge, and sometimes an overnight stop. Hours and overnight rules vary by place. Would you try it?\nKR: 찜질방은 같은 옷을 입고, 구운 계란과 식혜를 먹고, 따뜻한 바닥에서 쉬는 한국식 휴식 공간이에요. 운영 시간과 숙박 가능 여부는 매장마다 달라요.\nJP: おそろいの服、焼き卵、シッケ、あたたかい床でゴロゴロ。チムジルバンは韓国式の休憩スポットです。営業時間や宿泊の可否はお店によって違います。\n\n[해시태그]\n#Jjimjilbang #KoreanSpa #KoreanCulture #KoreanDailyLife #AICreator #韓国 #チムジルバン\n\n[고정 댓글]\n이번 금요일: 서여리의 서울 하루 지도 / This Friday: Seoyeori's Seoul in one day / 今週の金曜日:ソヨリのソウル1日マップ\n\n[체크]\n- AI 라벨 부착 확인(게시 시)\n- 탕·탈의 장면 전부 제외 — 찜질복 착용 구역(입구/한증막/라운지)만 묘사\n- 공공장소 규칙: 맨발 금지, 전 장면 양말 착용(집 장면 맨발 규칙과 반대 — PUBLIC_INDOOR_RE 가드 대상 확인)\n- 특정 업소 상호·간판 비노출\n- 지아 실제 얼굴 등장 — characters.json jia 레퍼런스 이미지(jia-face.jpg/jia-closeup.jpg) 생성 시 반드시 참조\n- 양머리 수건은 \"꼭 해야 하는 규칙\"처럼 단정적으로 쓰지 않고 놀이 요소로만 묘사(브리프 제작메모 반영)\n- 선정적 연출 금지\n- CUT2 대사는 SEG 4+4(발화 컷 규칙 ⑬-2) — 생성 시 \"발화 (한국어)\" 블록이 VP 하단에 자동 추가될 수 있음(본 VP의\n  Audio 블록과 중복돼도 무방)\n- 엔딩 카드는 IG_R11(11/23) 결과 확정 전까지 임시값 — 정식 생성 전 반드시 재확인\n- ⚠️ 일본어(JP)/영어(EN) 라인은 scriptParserV3.js가 파싱하는 필드가 아님(참고용 텍스트) — 자동 생성에는 반영되지\n  않으므로, 04_making 자막 단계에서 한국어 위/일본어 아래 2단 레이아웃을 수동으로 얹을 것. 일본어 문구는\n  게시 전 원어민 확인 필수(IG_R11과 동일 기준)"
+    "scriptTailRaw": "[엔딩 카드] (마지막 2~3초, 오버레이)\n⚠️ IG_R11(11/23) 결과에서 성과가 나은 쪽(엔딩 A/B)으로 확정 예정 — 이 초안은 A안을 임시 기본값으로 적용.\nA안(임시)\nEN: \"Send this to the friend you'd take to a jjimjilbang\"\nJP: 一緒にチムジルバンに行きたい友達にシェアしてね\n\n[캡션]\nEN: Matching outfits, roasted eggs, sikhye, and a nap on a warm floor 🇰🇷 A jjimjilbang is a bathhouse, a lounge, and sometimes an overnight stop. Hours and overnight rules vary by place. Would you try it?\nKR: 찜질방은 같은 옷을 입고, 구운 계란과 식혜를 먹고, 따뜻한 바닥에서 쉬는 한국식 휴식 공간이에요. 운영 시간과 숙박 가능 여부는 매장마다 달라요.\nJP: おそろいの服、焼き卵、シッケ、あたたかい床でゴロゴロ。チムジルバンは韓国式の休憩スポットです。営業時間や宿泊の可否はお店によって違います。\n\n[해시태그]\n#Jjimjilbang #KoreanSpa #KoreanCulture #KoreanDailyLife #AICreator #韓国 #チムジルバン\n\n[고정 댓글]\n이번 금요일: 서여리의 서울 하루 지도 / This Friday: Seoyeori's Seoul in one day / 今週の金曜日:ソヨリのソウル1日マップ\n\n[체크]\n- AI 라벨 부착 확인(게시 시)\n- ⚠️ 복장 시퀀스(11/25 교정): CUT1(신발장)은 전체가 외출복(환복 전) — 신발 벗을 때 찜질복으로 이미 등장하던\n  초안 오류 수정. 탈의실에서 갈아입는 장면은 그대로 비노출(아래 항목), CUT2부터 찜질복으로 등장(컷 사이\n  환복은 화면 밖에서 일어난 것으로 처리 — SF_E03 찜질방 컷의 \"탈의실 출구부터 시작\" 방식과 동일 원칙)\n- 탕·탈의 장면 전부 제외 — 찜질복 착용 구역(입구/한증막/라운지)만 묘사\n- 공공장소 규칙: 맨발 금지, 전 장면 양말 착용(집 장면 맨발 규칙과 반대 — PUBLIC_INDOOR_RE 가드 대상 확인)\n- 특정 업소 상호·간판 비노출\n- 지아 실제 얼굴 등장 — characters.json jia 레퍼런스 이미지(jia-face.jpg/jia-closeup.jpg) 생성 시 반드시 참조\n- 양머리 수건은 \"꼭 해야 하는 규칙\"처럼 단정적으로 쓰지 않고 놀이 요소로만 묘사(브리프 제작메모 반영)\n- 선정적 연출 금지\n- CUT2 대사는 SEG 4+4(발화 컷 규칙 ⑬-2) — 생성 시 \"발화 (한국어)\" 블록이 VP 하단에 자동 추가될 수 있음(본 VP의\n  Audio 블록과 중복돼도 무방)\n- 엔딩 카드는 IG_R11(11/23) 결과 확정 전까지 임시값 — 정식 생성 전 반드시 재확인\n- ⚠️ 일본어(JP)/영어(EN) 라인은 scriptParserV3.js가 파싱하는 필드가 아님(참고용 텍스트) — 자동 생성에는 반영되지\n  않으므로, 04_making 자막 단계에서 한국어 위/일본어 아래 2단 레이아웃을 수동으로 얹을 것. 일본어 문구는\n  게시 전 원어민 확인 필수(IG_R11과 동일 기준)"
   },
   "cuts": [
     {
@@ -14947,16 +14947,16 @@
       "no": 1,
       "cutTitle": "입구, 신발 벗고 입장",
       "lipsync": false,
-      "scene": "입구에서 신발을 벗어 신발장에 넣고, 찜질복 차림의 서여리와 지아.",
-      "action": "0~4초 신발장 앞에서 신발을 벗어 넣는 두 사람 → 4~8초 찜질복 차림으로 나란히 걸어 들어가며 나레이션",
+      "scene": "입구에서 각자 외출복 차림(환복 전)으로 신발을 벗어 신발장에 넣는 서여리와 지아. 찜질복은 아직 등장하지 않음 —",
+      "action": "0~4초 각자 외출복 차림으로 신발장 앞에 서는 두 사람 → 4~8초 신발을 벗어 신발장에 넣으며 나레이션",
       "character": "서여리",
       "dialogue": "",
       "narration": "한국 찜질방은 모두가 같은 옷을 입고 쉬는 곳이에요.",
       "subtitle": "한국 찜질방은 모두가 같은 옷을 입고 쉬는 곳이에요.",
       "subtitleEn": "At a Korean jjimjilbang, everyone relaxes in the same outfit.",
       "subtitleJa": "韓国のチムジルバンは、みんな同じ服を着てくつろぐ場所です。",
-      "imagePrompt": "WIDE SHOT — two young Korean women in their early 20s at the entrance of a Korean jjimjilbang (bathhouse lounge), warm orange ambient lighting, wooden shoe lockers along the wall,\nThe woman on the right: long wavy dark brown hair falling loosely, natural-finish makeup, skin looking soft and real rather than airbrushed, wearing a plain solid-color jjimjilbang uniform top and shorts, socks on her feet (no shoes), putting her sneakers into a shoe locker,\nThe woman on the left: oval face, large dark brown almond eyes with dramatic curled lashes and subtle winged black eyeliner, full lips in deep mauve-brown, short wavy black bob with wispy curtain bangs, wearing the same style plain jjimjilbang uniform, socks on her feet (no shoes), putting her sneakers into a shoe locker, DO NOT change clothing,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, K-model proportions, small face, long legs, slender figure,\nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no visible shop signage or logos, no clothing brand text, no other people in the background, only the two named women in frame, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine",
-      "videoPrompt": "Visual: [0-4s] Both women stand at the shoe lockers near the entrance, taking off their sneakers and placing them inside, feet in socks only (never barefoot in this public space). [4-8s] They walk forward together into the lounge area in their matching jjimjilbang uniforms, relaxed and at ease. Both stay silent on camera throughout, lips gently closed and relaxed, no mouth movement.\n\nAudio: a separate off-screen narrator, a calm, natural voice that does not belong to either woman on screen, says in Korean: \"한국 찜질방은 모두가 같은 옷을 입고 쉬는 곳이에요.\" Neither woman's lips move.\n\nNo on-screen subtitle text or captions — Korean + Japanese two-line subtitles and the English line are added in post.",
+      "imagePrompt": "WIDE SHOT — two young Korean women in their early 20s at the entrance of a Korean jjimjilbang (bathhouse lounge), warm orange ambient lighting, wooden shoe lockers along the wall, both still in their own everyday outdoor outfits — they have not changed into the jjimjilbang uniform yet (that happens later, off-screen, in the changing room),\nThe woman on the right: long wavy dark brown hair falling loosely, natural-finish makeup, skin looking soft and real rather than airbrushed, wearing a simple casual outdoor outfit (plain top and comfortable pants, her own everyday clothes, NOT a jjimjilbang uniform), slipping off her sneakers, socks visible on her feet,\nThe woman on the left: oval face, large dark brown almond eyes with dramatic curled lashes and subtle winged black eyeliner, full lips in deep mauve-brown, short wavy black bob with wispy curtain bangs, wearing her own simple casual outdoor outfit (different everyday clothes from the woman on the right, NOT a jjimjilbang uniform), slipping off her sneakers, socks visible on her feet,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, K-model proportions, small face, long legs, slender figure,\nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no visible shop signage or logos, no clothing brand text, no other people in the background, only the two named women in frame, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine",
+      "videoPrompt": "Visual: [0-4s] Both women, still in their own everyday outdoor outfits (not yet changed into jjimjilbang uniforms), stand at the shoe lockers near the entrance. [4-8s] They take off their sneakers and place them inside the lockers, feet now in socks only (never barefoot in this public space), about to head toward the changing room. Both stay silent on camera throughout, lips gently closed and relaxed, no mouth movement.\n\nAudio: a separate off-screen narrator, a calm, natural voice that does not belong to either woman on screen, says in Korean: \"한국 찜질방은 모두가 같은 옷을 입고 쉬는 곳이에요.\" Neither woman's lips move.\n\nNo on-screen subtitle text or captions — Korean + Japanese two-line subtitles and the English line are added in post.",
       "voiceSource": "video",
       "duration": 8,
       "shotType": "FULLBODY",
@@ -14970,7 +14970,7 @@
         "sh": "SH_WS",
         "ca": "CA_ST",
         "md": "MD_CLM",
-        "ac": "0~4초 신발장 앞에서 신발을 벗어 넣는 두 사람(양말 상태, 맨발 아님) → 4~8초 찜질복 차림으로 나란히 걸어 들어가며 나레이션",
+        "ac": "0~4초 각자 외출복 차림으로 신발장 앞에 서는 두 사람 → 4~8초 신발을 벗어 신발장에 넣으며 나레이션(양말 상태 노출,",
         "lookId": "",
         "du": 8,
         "audio": {
@@ -14981,10 +14981,10 @@
         },
         "kr": {
           "sp": "찜질방 입구, 신발장 앞, 따뜻한 주황빛 조명",
-          "ch": "서여리·지아 — 동일 디자인 찜질복, 양말 (맨발 아님 — 공공장소 규칙)",
+          "ch": "서여리·지아 — 각자 외출복 차림(환복 전, 찜질복 아님), 신발을 벗으면 양말 상태 (맨발 아님 — 공공장소 규칙)",
           "sh": "와이드샷",
           "ca": "고정",
-          "ac": "0~4초 신발장 앞에서 신발을 벗어 넣는 두 사람 → 4~8초 찜질복 차림으로 나란히 걸어 들어가며 나레이션",
+          "ac": "0~4초 각자 외출복 차림으로 신발장 앞에 서는 두 사람 → 4~8초 신발을 벗어 신발장에 넣으며 나레이션",
           "md": "편안함, 설렘"
         }
       }
@@ -15251,7 +15251,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-25T08:32:47.933Z",
+  "savedAt": "2026-11-25T11:03:06.799Z",
   "videoTabState": {
     "videoClips": {},
     "g4Approved": {},
