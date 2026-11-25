@@ -36,8 +36,8 @@ BGM   : 잔잔한 로파이, CUT4 중반 2~3초 정지(여운) 후 엔딩카드
 [CUT 1] ─ YEORI+JIA | 훅 — 입구, 신발 벗고 입장 | 8
 ━━━━━━━━━━━━━━━━━━━━━━━━
 OSD(첫 3초 온스크린 텍스트): EN "Everyone wears the same outfit at a Korean jjimjilbang" / JP "韓国のチムジルバンはみんな同じ服"
-SC: 입구에서 각자 외출복 차림(환복 전)으로 신발을 벗어 신발장에 넣는 서여리와 지아. 찜질복은 아직 등장하지 않음 —
-  탈의실에서 갈아입는 장면은 비노출, CUT2부터 찜질복으로 등장.
+SC: 입구 신발장 앞, 나무 벤치에 걸터앉아 각자 외출복 차림(환복 전)으로 운동화를 벗는 서여리와 지아(레퍼런스
+  이미지 cut_01_b 기준). 찜질복은 아직 등장하지 않음 — 탈의실에서 갈아입는 장면은 비노출, CUT2부터 찜질복으로 등장.
 SP: IN.JJ.ENT.LT_WM
 PL: YR_VD
 CH: 서여리 + 지아
@@ -48,8 +48,8 @@ JP: 韓国のチムジルバンは、みんな同じ服を着てくつろぐ場�
 SH: SH_WS
 CA: CA_ST
 MD: MD_CLM
-AC: 0~4초 각자 외출복 차림으로 신발장 앞에 서는 두 사람 → 4~8초 신발을 벗어 신발장에 넣으며 나레이션(양말 상태 노출,
-  맨발 아님 — 아직 외출복, 찜질복은 CUT2부터)
+AC: 0~4초 신발장 앞 나무 벤치에 걸터앉아 각자 외출복 차림으로 운동화를 벗는 두 사람 → 4~8초 벗은 운동화를
+  타일 바닥에 내려놓고 일어나 신발장 쪽으로 몸을 돌리며 나레이션(양말 상태 노출, 맨발 아님 — 아직 외출복, 찜질복은 CUT2부터)
 DU: 8
 CP: 한국 찜질방은 모두가 같은 옷을 입고 쉬는 곳이에요.
 CT: YEORI
@@ -67,7 +67,8 @@ SP(장소):     찜질방 입구, 신발장 앞, 따뜻한 주황빛 조명
 CH(캐릭터):   서여리·지아 — 각자 외출복 차림(환복 전, 찜질복 아님), 신발을 벗으면 양말 상태 (맨발 아님 — 공공장소 규칙)
 SH(샷):       와이드샷
 CA(카메라):   고정
-AC(동작):     0~4초 각자 외출복 차림으로 신발장 앞에 서는 두 사람 → 4~8초 신발을 벗어 신발장에 넣으며 나레이션
+AC(동작):     0~4초 신발장 앞 나무 벤치에 걸터앉아 운동화를 벗는 두 사람 → 4~8초 벗은 신발을 타일 바닥에
+              내려놓고 일어나 신발장 쪽으로 몸을 돌리며 나레이션
 MD(감정):     편안함, 설렘
 DL(대사):     없음
 NR(나레이션): 한국 찜질방은 모두가 같은 옷을 입고 쉬는 곳이에요.
@@ -75,16 +76,30 @@ NR(나레이션): 한국 찜질방은 모두가 같은 옷을 입고 쉬는 곳�
 ━━━━━━━━━━━━━━━━━━━━━━━━
 IP (이미지 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-WIDE SHOT — two young Korean women in their early 20s at the entrance of a Korean jjimjilbang (bathhouse lounge), warm orange ambient lighting, wooden shoe lockers along the wall, both still in their own everyday outdoor outfits — they have not changed into the jjimjilbang uniform yet (that happens later, off-screen, in the changing room),
-The woman on the right: long wavy dark brown hair falling loosely, natural-finish makeup, skin looking soft and real rather than airbrushed, wearing a simple casual outdoor outfit (plain top and comfortable pants, her own everyday clothes, NOT a jjimjilbang uniform), slipping off her sneakers, socks visible on her feet,
-The woman on the left: oval face, large dark brown almond eyes with dramatic curled lashes and subtle winged black eyeliner, full lips in deep mauve-brown, short wavy black bob with wispy curtain bangs, wearing her own simple casual outdoor outfit (different everyday clothes from the woman on the right, NOT a jjimjilbang uniform), slipping off her sneakers, socks visible on her feet,
+WIDE SHOT — two young Korean women in their early 20s sitting on a low wooden bench at the entrance shoe-locker
+  area of a Korean jjimjilbang (bathhouse lounge), warm honey-orange ambient lighting from a single round recessed
+  ceiling downlight, dark wood-paneled walls and a central wooden column dividing two banks of small wooden lockers
+  hung with colorful key fobs and padlocks, a tiled stone floor stepped down in front of the bench where loose
+  shoes and bags sit, both women still in their own everyday outdoor outfits — they have not changed into the
+  jjimjilbang uniform yet (that happens later, off-screen, in the changing room),
+The woman on the right: long wavy dark brown hair falling loosely, natural-finish makeup, skin looking soft and
+  real rather than airbrushed, wearing an oversized olive-brown zip-up jacket and matching loose relaxed trousers
+  (her own casual outdoor co-ord set, NOT a jjimjilbang uniform), sitting on the bench with one leg bent up,
+  white socks on her feet, pulling off a white sneaker, its matching white sneaker already resting on the tiled
+  floor below her, a black backpack propped against the lockers beside her,
+The woman on the left: oval face, large dark brown almond eyes with dramatic curled lashes and subtle winged
+  black eyeliner, full lips in deep mauve-brown, short wavy black bob with wispy curtain bangs, wearing an
+  oversized black/charcoal zip-up jacket and matching loose dark trousers (her own casual outdoor co-ord set,
+  different from the woman on the right, NOT a jjimjilbang uniform), crouched forward on the bench reaching down
+  toward her feet, one grayish-taupe suede sneaker already off and resting on the tiled floor with its lace loose,
+  sock visible on her other raised foot, a brown structured handbag sitting on the tiled floor beside her,
 1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, K-model proportions, small face, long legs, slender figure,
 photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no visible shop signage or logos, no clothing brand text, no other people in the background, only the two named women in frame, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-Visual: [0-4s] Both women, still in their own everyday outdoor outfits (not yet changed into jjimjilbang uniforms), stand at the shoe lockers near the entrance. [4-8s] They take off their sneakers and place them inside the lockers, feet now in socks only (never barefoot in this public space), about to head toward the changing room. Both stay silent on camera throughout, lips gently closed and relaxed, no mouth movement.
+Visual: [0-4s] Both women, still in their own everyday outdoor outfits (not yet changed into jjimjilbang uniforms), sit on the wooden bench at the shoe-locker entrance, bent forward working their sneakers off — the woman on the right (long wavy dark brown hair) pulling off her remaining white sneaker, the woman on the left (short black bob) tugging her grayish suede sneaker loose, each already down to a sock on one foot. [4-8s] Both finish removing their sneakers, set them down on the tiled floor beside the ones already off, and rise from the bench, feet now in socks only (never barefoot in this public space), turning toward the lockers behind them, about to head toward the changing room. Both stay silent on camera throughout, lips gently closed and relaxed, no mouth movement.
 
 Audio: a separate off-screen narrator, a calm, natural voice that does not belong to either woman on screen, says in Korean: "한국 찜질방은 모두가 같은 옷을 입고 쉬는 곳이에요." Neither woman's lips move.
 
@@ -290,6 +305,12 @@ JP: おそろいの服、焼き卵、シッケ、あたたかい床でゴロゴ�
   나옴 — 위치 라벨(right/left)만으론 식별이 불안정해서 CUT1처럼 헤어·메이크업 묘사를 CUT2 IP/VP에도
   다시 적어 넣어 보강(수정 완료). 재생성 시 결과 반드시 재확인할 것 — 여전히 바뀌면 right/left 반대로
   스왑해서 한 번 더 시도
+- ⚠️ CUT1 IP/VP 레퍼런스 이미지 고정(11/25): 텍스트만으론 영상 생성이 반복 실패해, 성준님이 직접 여러
+  번 재생성해 얻은 레퍼런스 이미지(`02. Scene/R12/cut_01_b__1d2e91e2.png_fa54de4a_2K.jpg`)를 그대로
+  관찰해 IP/VP를 다시 씀 — 신발장 앞 나무 벤치에 걸터앉아 운동화를 벗는 포즈(서서 넣는 동작 아님),
+  오른쪽(긴 웨이브 브라운 헤어)=올리브색 코디 세트+흰 운동화, 왼쪽(숏 단발)=검정 코디 세트+그레이
+  스웨이드 운동화, 가방(검정 백팩/갈색 핸드백) 위치까지 반영. 이 컷을 다시 생성할 땐 이 레퍼런스
+  이미지를 함께 입력해 포즈·구도를 고정할 것
 - CUT2 대사는 SEG 4+4(발화 컷 규칙 ⑬-2) — 생성 시 "발화 (한국어)" 블록이 VP 하단에 자동 추가될 수 있음(본 VP의
   Audio 블록과 중복돼도 무방)
 - 엔딩 카드는 IG_R11(11/23) 결과 확정 전까지 임시값 — 정식 생성 전 반드시 재확인
