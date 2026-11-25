@@ -1037,6 +1037,10 @@ export async function finalizeReel(p) {
         // (영상 탭 색상 피커, reelOverrides._style.en/.ja.color). 안 고르면 메인 색 그대로.
         color: cfg.color || style.color,
         outlineScale: 0.09,
+        // 2026-11-25 추가(성준님 제보 — "일본어 자막 폭의 제한이 너무 좌우 화면 끝까지
+        // 확대되어 있다") — 한글 메인 자막 기준 86%/80% 폭을 그대로 쓰면 가나/한자 전각
+        // 문자가 빽빽해 보여 화면 끝까지 닿는 것처럼 보인다. JA는 더 좁게, EN도 약간 좁게.
+        widthScale: key === 'ja' ? 0.78 : 0.9,
       }
       const workDirLang = path.join(tmp, `drawtext_${key}`)
       return buildSubtitleDrawtextFilter(segs, langStyle, workDirLang, vH, vW)

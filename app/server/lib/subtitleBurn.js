@@ -165,8 +165,14 @@ export function buildSubtitleDrawtextFilter(segments, style, workDir, videoHeigh
   // 하나뿐 — videoWidth(진짜 가로 픽셀)에 비율을 곱한 게 맞는 상한선이었다(실측: 컷6
   // "어떤 음료수보다, 할머니가 끓여주신 이 시원한"이 fontSize 39에서 736px로 720px
   // 프레임 자체보다 넓어서, 사람이 그대로 한 줄로 써도 줄바꿈이 필요한 게 맞았음).
+  // 2026-11-25 추가(성준님 제보 — "일본어 자막 폭의 제한이 너무 좌우 화면 끝까지 확대되어
+  // 있다"): 이 86%/80% 비율은 원래 한글 메인 자막 기준으로 잡힌 값인데, 한자/가나 같은 전각
+  // 문자는 같은 폭에서 한글보다 더 빽빽하게 들어차 보여서, 줄바꿈이 안 걸리는 짧은 문장도
+  // 체감상 화면 끝까지 닿는 것처럼 보인다. style.widthScale(기본 1=기존과 동일, EN/JA 보조
+  // 자막엔 reelFinalize.js buildLangFilter가 더 좁은 값을 줌)로 추가 여백을 둔다.
+  const widthScale = typeof style.widthScale === 'number' ? style.widthScale : 1
   const maxTextWidth = (typeof videoWidth === 'number' && videoWidth > 0)
-    ? videoWidth * ((videoHeight >= videoWidth) ? 0.86 : 0.80)
+    ? videoWidth * ((videoHeight >= videoWidth) ? 0.86 : 0.80) * widthScale
     : Infinity
   // 2026-11-17 발견(성준님 질문 계기 — "크기·위치 설정이 작동 안 되나?"): positionRatio(영상
   // 탭 "세로 위치" 슬라이더, reelOverrides._style.y)는 handwriting_overlay.py 쪽에서 "글자

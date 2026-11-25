@@ -1077,13 +1077,17 @@ export default function VideoTab() {
     // 같은 공식(기본 크기=메인 캡션의 60%, 기본 세로위치=메인보다 7%p/14%p 위, 세그 타이밍과
     // 무관하게 컷 전체 구간에 한 줄). 지금까지는 토글·크기·위치만 있고 실제 미리보기 화면엔
     // 전혀 안 그려졌다("자막이 화면에 안 뜬다" 지적) — 메인 캡션과 같은 캔버스에 겹쳐 그린다.
-    const drawLangLine = (langText, cfg, fontFamily, defaultY) => {
+    // 2026-11-25 추가(성준님 제보 — "일본어 자막 폭의 제한이 너무 좌우 화면 끝까지 확대되어
+    // 있다") — server/lib/subtitleBurn.js widthScale과 같은 비율: 한글 메인 자막 기준
+    // 86%/80% 폭을 EN/JA에 그대로 쓰면 가나/한자 전각 문자가 빽빽해 보여 화면 끝까지 닿는
+    // 것처럼 보인다. 미리보기도 실제 번인과 같은 좁은 폭을 쓰게 맞춤.
+    const drawLangLine = (langText, cfg, fontFamily, defaultY, widthScale = 1) => {
       const t = String(langText || '').trim()
       if (!cfg?.enabled || !t) return
       const langFSize = Math.max(8, Math.round((cfg.fontPx || Math.round(reelFontPx * 0.6)) * scale))
       ctx.font = `${langFSize}px "${fontFamily}",sans-serif`
       ctx.textAlign = 'center'
-      const langLines = wrapCanvasText(ctx, t, maxTextWidth)
+      const langLines = wrapCanvasText(ctx, t, maxTextWidth * widthScale)
       const langLineHeight = langFSize * lineGap
       const langCenterY = H * (cfg.y != null ? cfg.y : defaultY)
       const langTotalHeight = langLineHeight * langLines.length
@@ -1107,8 +1111,8 @@ export default function VideoTab() {
     // captionVisibleNow가 기본 true라 기존처럼 컷 전체에서 계속 보임(따라갈 기준이 없으므로).
     const mainYForLang = reelStyle.y || 0.66
     if (captionVisibleNow) {
-      drawLangLine(selCutForText?.subtitleEn, reelEnStyle, font, Math.max(0.05, mainYForLang - 0.07))
-      drawLangLine(selCutForText?.subtitleJa, reelJaStyle, 'Yu Gothic', Math.max(0.05, mainYForLang - 0.14))
+      drawLangLine(selCutForText?.subtitleEn, reelEnStyle, font, Math.max(0.05, mainYForLang - 0.07), 0.9)
+      drawLangLine(selCutForText?.subtitleJa, reelJaStyle, 'Yu Gothic', Math.max(0.05, mainYForLang - 0.14), 0.78)
     }
 
     // 엔딩 카드 미리보기(2026-11-16, 성준님 요청) — 실제 번인은 에피소드 전체 타임라인의

@@ -665,5 +665,81 @@
         "checkedAt": "2026-10-17T11:02:07.240Z"
       }
     }
+  },
+  "IG_R12": {
+    "1": {
+      "cut_01_clip_1.mp4": {
+        "verdict": "fail",
+        "ratio": 0,
+        "heard": "한국 찜질방은 모두가 같은 옷을 입고 쉬는 곳이에요.",
+        "expected": "",
+        "words": [
+          {
+            "text": "한국",
+            "start": 1.66,
+            "end": 1.94,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "찜질방은",
+            "start": 2.08,
+            "end": 2.74,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "모두가",
+            "start": 3.38,
+            "end": 3.76,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "같은",
+            "start": 3.84,
+            "end": 4.14,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "옷을",
+            "start": 4.26,
+            "end": 4.38,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "입고",
+            "start": 4.5,
+            "end": 4.74,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "쉬는",
+            "start": 4.84,
+            "end": 5.02,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "곳이에요.",
+            "start": 5.2,
+            "end": 5.6,
+            "logprob": 0,
+            "speaker": null
+          }
+        ],
+        "flags": [
+          {
+            "kind": "adlib",
+            "severity": "fail",
+            "message": "대사가 없는 컷인데 말소리가 들립니다: \"한국 찜질방은 모두가 같은 옷을 입고 쉬는 곳이에요.\""
+          }
+        ],
+        "checkedAt": "2026-11-25T12:44:33.137Z"
+      }
+    }
   }
 }

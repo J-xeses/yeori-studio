@@ -1,5 +1,5 @@
 {
-  "activeTab": "studio",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -15227,7 +15227,7 @@
   "creditTracker": {
     "main": {
       "flow": {
-        "remaining": 14,
+        "remaining": 2,
         "dailyTotal": 50,
         "costPerCut": 12
       },
@@ -15253,9 +15253,11 @@
   "projectName": "새 프로젝트",
   "savedAt": "2026-11-25T11:03:06.799Z",
   "videoTabState": {
-    "videoClips": {},
+    "videoClips": {
+      "cut-1": []
+    },
     "g4Approved": {},
-    "selectedCutId": null,
+    "selectedCutId": "cut-1",
     "subtitles": {}
   },
   "ttsTabState": {
