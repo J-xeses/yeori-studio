@@ -133,18 +133,19 @@ NR(나레이션): 없음
 IP (이미지 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
 MEDIUM SHOT — the same two young Korean women, same faces, same matching jjimjilbang uniforms, socks on, sitting inside a warm ochre-walled hot sauna room (한증막), warm orange ambient lighting, subtle sweat sheen on their skin,
-The woman on the right: fanning herself slightly, tired flushed expression, starting to rise. The woman on the left: reaching out to hold her arm, playful determined expression, pulling her back down, DO NOT change clothing,
+The woman on the right (long wavy dark brown hair falling loosely, natural-finish makeup — the same woman as in the previous cut): fanning herself slightly, tired flushed expression, starting to rise.
+The woman on the left (oval face, large dark brown almond eyes with dramatic curled lashes and subtle winged black eyeliner, short wavy black bob with wispy curtain bangs — the same woman as in the previous cut): reaching out to hold her arm, playful determined expression, pulling her back down, DO NOT change clothing,
 photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no visible signage or logos, no other people in the background, only the two named women in frame, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-Visual: [0-4s] The woman on the right, flushed and sweating in the hot sauna room, starts to rise as if to leave, tired expression, mouth closed. [4-8s] The woman on the left reaches out and holds her arm, pulling her back down with a playful, determined look.
+Visual: [0-4s] The woman on the right (long wavy dark brown hair, the same woman as in the previous cut), flushed and sweating in the hot sauna room, starts to rise as if to leave, tired expression, mouth closed. [4-8s] The woman on the left (short wavy black bob with wispy curtain bangs, the same woman as in the previous cut) reaches out and holds her arm, pulling her back down with a playful, determined look.
 
 Audio:
 - 0.0s-4.0s: both women stay silent, mouths closed, only faint ambient room sound.
-- 4.0s-5.8s: the woman on the right, tired and reluctant, says in Korean (반말): "나 좀 나갈게…" while the woman on the left listens, mouth closed.
-- 5.8s-8.0s: the woman on the left, firm and playful, says in Korean (반말): "아직 3분 남았어." while the woman on the right stays silent, mouth closed, settling back down.
+- 4.0s-5.8s: the woman on the right (long wavy dark brown hair), tired and reluctant, says in Korean (반말): "나 좀 나갈게…" while the woman on the left (short black bob) listens, mouth closed.
+- 5.8s-8.0s: the woman on the left (short black bob), firm and playful, says in Korean (반말): "아직 3분 남았어." while the woman on the right (long wavy dark brown hair) stays silent, mouth closed, settling back down.
 
 No on-screen subtitle text or captions — Korean + Japanese two-line subtitles and the English line are added in post.
 
@@ -285,6 +286,10 @@ JP: おそろいの服、焼き卵、シッケ、あたたかい床でゴロゴ�
 - 지아 실제 얼굴 등장 — characters.json jia 레퍼런스 이미지(jia-face.jpg/jia-closeup.jpg) 생성 시 반드시 참조
 - 양머리 수건은 "꼭 해야 하는 규칙"처럼 단정적으로 쓰지 않고 놀이 요소로만 묘사(브리프 제작메모 반영)
 - 선정적 연출 금지
+- ⚠️ CUT2 인물 바뀜 교정(11/25): 생성 결과에서 "오른쪽=여리(나가려 함)/왼쪽=지아(말림)" 역할이 뒤바뀌어
+  나옴 — 위치 라벨(right/left)만으론 식별이 불안정해서 CUT1처럼 헤어·메이크업 묘사를 CUT2 IP/VP에도
+  다시 적어 넣어 보강(수정 완료). 재생성 시 결과 반드시 재확인할 것 — 여전히 바뀌면 right/left 반대로
+  스왑해서 한 번 더 시도
 - CUT2 대사는 SEG 4+4(발화 컷 규칙 ⑬-2) — 생성 시 "발화 (한국어)" 블록이 VP 하단에 자동 추가될 수 있음(본 VP의
   Audio 블록과 중복돼도 무방)
 - 엔딩 카드는 IG_R11(11/23) 결과 확정 전까지 임시값 — 정식 생성 전 반드시 재확인
