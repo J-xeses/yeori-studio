@@ -5,7 +5,7 @@
     "connected": true,
     "remainingChars": 88671
   },
-  "activeEpisodeId": "ep_1795346971939",
+  "activeEpisodeId": "ep_1795599907795",
   "openTabIds": [
     "ep_1787406807164",
     "ep_1786261078428",
@@ -33,7 +33,8 @@
     "ep_1794927139043",
     "ep_1795230793669",
     "ep_1795345374697",
-    "ep_1795346971939"
+    "ep_1795346971939",
+    "ep_1795599907795"
   ],
   "episodes": {
     "ep_1786261078428": {
@@ -14495,227 +14496,638 @@
         }
       ],
       "scriptRaw": "",
-      "createdAt": "2026-11-22T11:29:31.939Z"
+      "createdAt": "2026-11-22T11:29:31.939Z",
+      "tabState": {
+        "videoTabState": {
+          "videoClips": {
+            "cut-1": [
+              {
+                "url": "blob:http://localhost:5173/cdee2723-75cc-47f4-8f03-e1d19e9119b7",
+                "name": "Woman_applying_skincare_at_mirror_68b7b296_1080p.mp4",
+                "duration": 7.93,
+                "trimStart": 0,
+                "trimEnd": 7.93,
+                "useFullDuration": false,
+                "ratio": "9:16",
+                "staging": false,
+                "keepAudio": true,
+                "createdAt": 1795420393332,
+                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R11\\04_making\\raw\\cut_01_clip_1.mp4"
+              }
+            ],
+            "cut-2": [
+              {
+                "url": "blob:http://localhost:5173/833737ce-3bf0-4dff-9ac1-c021e996858c",
+                "name": "Woman_applying_sheet_mask_relaxing_ec58387d_1080p.mp4",
+                "duration": 7.93,
+                "trimStart": 0,
+                "trimEnd": 7.93,
+                "useFullDuration": true,
+                "ratio": "9:16",
+                "staging": false,
+                "keepAudio": true,
+                "createdAt": 1795420398390,
+                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R11\\04_making\\raw\\cut_02_clip_1.mp4"
+              }
+            ],
+            "cut-3": [
+              {
+                "url": "blob:http://localhost:5173/9b23292a-9745-45d0-bd4d-f9d1dbd8b1c3",
+                "name": "Woman_answering_video_call_b39fa9de_1080p.mp4",
+                "duration": 7.93,
+                "trimStart": 0,
+                "trimEnd": 7.93,
+                "useFullDuration": true,
+                "ratio": "9:16",
+                "staging": false,
+                "keepAudio": true,
+                "createdAt": 1795420471110,
+                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R11\\04_making\\raw\\cut_03_clip_1.mp4"
+              }
+            ],
+            "cut-4": [
+              {
+                "url": "blob:http://localhost:5173/3a136544-4867-4565-b60b-84623f698a9c",
+                "name": "Woman_looking_at_bathroom_mirror_d6459a0a_1080p.mp4",
+                "duration": 7.93,
+                "trimStart": 0,
+                "trimEnd": 7.93,
+                "useFullDuration": true,
+                "ratio": "9:16",
+                "staging": false,
+                "keepAudio": true,
+                "createdAt": 1795420695419,
+                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R11\\04_making\\raw\\cut_04_clip_1.mp4"
+              }
+            ]
+          },
+          "g4Approved": {
+            "cut-4": true,
+            "cut-3": true,
+            "cut-2": true,
+            "cut-1": true
+          },
+          "selectedCutId": "cut-1",
+          "subtitles": {
+            "cut-3": [
+              {
+                "start": 1,
+                "end": 4.6,
+                "text": "너 오늘 선크림 안 발랐지?"
+              },
+              {
+                "start": 4.6,
+                "end": 8,
+                "text": "어떻게 알았어?"
+              }
+            ]
+          }
+        },
+        "ttsTabState": {
+          "audioUrls": {},
+          "audioTexts": {},
+          "g3Confirmed": {},
+          "focusCutId": null,
+          "voiceTabs": {
+            "cut-3": [
+              {
+                "id": "v1",
+                "label": "목소리 1",
+                "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+              }
+            ],
+            "cut-2": [
+              {
+                "id": "v1",
+                "label": "목소리 1",
+                "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+              }
+            ]
+          },
+          "tracks": {
+            "cut-3__v1": [
+              {
+                "id": "track_1795451481102_w6cc",
+                "type": "dialogue",
+                "text": "너, 오늘 선크림 안 발랐지~!!",
+                "speaker": null,
+                "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R11/03_audio/tts-previews/cut_03_track_1795451481102_w6cc.mp3?t=1795495748385",
+                "voiceId": "5n5gqmaQi9Ewevrz7bOS",
+                "settings": {
+                  "speed": 0.9,
+                  "stability": 23,
+                  "similarity": 73
+                }
+              }
+            ],
+            "cut-2__v1": [
+              {
+                "id": "track_1795501303671_hy1h",
+                "type": "narration",
+                "text": "마스크팩을 올리고 가만히 쉬는 것도 루틴이에요.",
+                "speaker": null,
+                "url": null,
+                "voiceId": "",
+                "settings": {
+                  "speed": 0.85,
+                  "stability": 55,
+                  "similarity": 75
+                }
+              }
+            ]
+          },
+          "mergedUrls": {
+            "cut-3__v1": "blob:http://localhost:5173/f8824ddc-df07-4241-8c18-26f6c7e90606"
+          }
+        },
+        "voiceInsertState": {
+          "tracks": {},
+          "segFix": {
+            "cut-3": {
+              "start": 0.5,
+              "end": 4,
+              "text": "너.. 오늘 선크림 안 발랐지~!!",
+              "speaker": "한지아",
+              "appliedAt": 1795508300095,
+              "appliedFactor": 1,
+              "appliedBackupPath": "/downloads/seoyeori/IG/IG_R/IG_R11/05_video/_backup/cut_03_1795508299825.mp4"
+            }
+          },
+          "activeCutId": "cut-3"
+        },
+        "studioTabState": {
+          "imageRatio": {}
+        },
+        "thumbnail": {
+          "text": "",
+          "fontSize": 48,
+          "color": "#ffffff",
+          "shadowColor": "#000000",
+          "bold": true,
+          "textY": 70,
+          "ratio": "9:16",
+          "bgImageUrl": "",
+          "posterLayers": []
+        },
+        "publishing": {
+          "youtube": {
+            "title": "일상공감 🌙 하루 5분 스킨케어, 이것만 있으면 충분해요",
+            "description": "일상공감 가득한 하루 끝 5분 스킨케어 루틴을 담았어요. 세럼부터 마스크팩까지, 작은 습관이 쌓이면 피부도 마음도 달라지더라고요. 나만의 감정표현처럼, 스킨케어도 그날의 나를 돌보는 방법이에요. 선크림 하나 깜빡했다고 친구한테 들켜버린 그 순간도😅 — 이런 일상의 감정표현이 모여 루틴이 되는 것 같아요. 내일 아침부터 같이 선크림으로 시작해봐요!",
+            "tags": "일상공감, 감정표현, 스킨케어루틴, 5분스킨케어, 선크림, 마스크팩, 데일리루틴, 피부관리, 한국스킨케어, 뷰티일상, 쇼츠, 스킨케어추천, 세럼, 나이트루틴, 뷰티루틴",
+            "titleEn": "My Lazy 5-Min Skincare Routine That Actually Works ✨",
+            "descriptionEn": "My friend caught me skipping sunscreen over video call — yeah, it shows 😅 This is my go-to 5-minute nighttime skincare routine: a few drops of serum, a sheet mask, and a promise to never forget SPF again. It's the kind of relatable everyday moment that reminds me how small habits make a real difference. Whether you're a skincare newbie or just someone who gets it on a deeply relatable level — this one's for you. Drop your must-have skincare product in the comments! ⬇️",
+            "tagsEn": "5 minute skincare, skincare routine, Korean skincare, sheet mask, sunscreen habit, lazy skincare, nighttime routine, serum routine, relatable skincare, daily skincare, skincare tips, beginner skincare, SPF everyday, beauty routine, skincare shorts",
+            "titleJa": "日常共感✨ たった5分のスキンケア、これだけでOKでした",
+            "descriptionJa": "日常共感のつまった、夜の5分スキンケアルーティンをお届けします🫧 美容液をなじませて、マスクパックを貼って、ゆっくり休む——それだけで肌も気持ちも変わるんです。でも日焼け止めだけ忘れたら、ビデオ通話で友達にすぐバレてしまって😅 そういう小さな感情表現が積み重なって、自分だけのルーティンになっていくんだなと思います。日焼け止めを毎朝の習慣にしているというK-ビューティー流、明日からわたしも一緒に始めます！",
+            "tagsJa": "スキンケアルーティン, 5分スキンケア, 日焼け止め, マスクパック, 美容液, 韓国スキンケア, デイリールーティン, ナイトケア, Kビューティー, 日常共感, 感情表現, スキンケア初心者, 毎日ルーティン, ビューティーショート, 肌管理"
+          },
+          "instagram": {
+            "title": "5분 스킨케어, 이것만 있으면 충분해요 🌙",
+            "description": "하루 끝에 나를 돌보는 5분 — 그게 저한테는 일상공감의 순간이에요 🫧 세럼 한 방울, 마스크팩 하나, 그리고 선크림 하나를 잊지 않는 것. 작은 감정표현이지만 내 피부한테 보내는 가장 솔직한 애정이더라고요 💙 여러분의 스킨케어 필수템은 뭐예요? 댓글로 알려주세요!",
+            "tags": "#일상공감 #감정표현 #스킨케어루틴 #5분스킨케어 #선크림 #마스크팩 #데일리루틴 #피부관리 #한국스킨케어 #뷰티일상 #세럼 #나이트루틴 #뷰티루틴 #스킨케어추천 #인스타뷰티",
+            "titleEn": "5-min skincare = self-care that actually fits your life 🫧",
+            "descriptionEn": "Serum ✔️ Sheet mask ✔️ Sunscreen… almost ✔️ 😅 We've all had that relatable moment of getting caught skipping SPF by a friend on FaceTime. This tiny 5-minute routine is my little act of self-love at the end of the day — the kind of small, everyday habit that just *gets* you. What's the one skincare step you never skip? Tell me below 👇",
+            "tagsEn": "#skincareroutine #5minuteskincare #koreanbeauty #sheetmask #sunscreeneverydag #selfcare #dailyroutine #relatableskincare #serumlovers #nighttimeroutine #beautyroutine #skincarelovers #spfeveryday #lazygirlskincare #beautyshorts",
+            "titleJa": "たった5分で肌が変わる🌙 夜のスキンケア習慣",
+            "descriptionJa": "美容液 → マスクパック → 日焼け止め（翌朝）この順番が、わたしの日常共感ルーティンです🫧 日焼け止めをうっかり忘れたら、ビデオ通話で友達に一瞬でバレてしまいました😂 肌で感じる毎日の感情表現——そんな小さな積み重ねが、自分を整える時間になっています。あなたの絶対外せないスキンケアアイテムは何ですか？ コメントで教えてください✨",
+            "tagsJa": "#スキンケアルーティン #5分スキンケア #日焼け止め #マスクパック #美容液 #韓国スキンケア #Kビューティー #デイリールーティン #ナイトケア #日常共感 #感情表現 #スキンケア好き #毎日ルーティン #美容垢 #ビューティー"
+          },
+          "tiktok": {
+            "title": "선크림 깜빡했다가 친구한테 딱 걸렸어요 😂 #5분스킨케어",
+            "description": "세럼 → 마스크팩 → 선크림 이 세 가지가 제 일상공감 루틴이에요 🫧 근데 선크림 하나 빠지면 티가 나더라고요😅 이게 진짜 감정표현 아닐까요, 피부로 느끼는 하루의 차이! 내일 아침 같이 선크림 바르고 시작해봐요 ☀️",
+            "tags": "#일상공감 #감정표현 #스킨케어 #5분스킨케어 #선크림 #마스크팩 #뷰티틱톡 #한국스킨케어 #데일리루틴 #피부관리 #틱톡뷰티 #뷰티루틴 #세럼 #스킨케어추천 #shorts",
+            "titleEn": "My friend KNEW I skipped sunscreen 😭 #skincarecheck",
+            "descriptionEn": "POV: You skip sunscreen once and your friend calls you out over FaceTime immediately 😂 This is my honest, super relatable 5-minute skincare routine — serum, sheet mask, and a lesson learned about SPF. Sometimes the smallest daily habits say more than words ever could. Starting tomorrow: sunscreen first, no excuses ☀️",
+            "tagsEn": "#skincarecheck #skincarerotine #5minuteskincare #koreanbeauty #sunscreen #sheetmask #relatableskincare #selfcare #beautytok #dailyroutine #serumtime #spfeveryday #lazygirlskincare #beautyroutine #skincarevibes",
+            "titleJa": "日焼け止め忘れたらビデオ通話でバレた話😭 #スキンケア",
+            "descriptionJa": "日焼け止めを1回サボっただけで友達にすぐ見抜かれた、あの日常共感すぎる瞬間😅 美容液・マスクパック・日焼け止め——このたった3ステップが、わたしの毎日の感情表現になってます🫧 K-ビューティー流「朝は日焼け止めから」、明日からわたしも本気でやります☀️ みんなのスキンケア必須アイテムも教えて！",
+            "tagsJa": "#スキンケアルーティン #5分スキンケア #日焼け止め #マスクパック #韓国スキンケア #Kビューティー #日常共感 #感情表現 #美容液 #デイリールーティン #スキンケア好き #ビューティーtok #肌管理 #ナイトルーティン #美容垢さんと繋がりたい"
+          }
+        }
+      }
+    },
+    "ep_1795599907795": {
+      "id": "ep_1795599907795",
+      "episode": {
+        "number": 1005,
+        "title": "3분만 더! 찜질방 생존기",
+        "location": "기타",
+        "mood": [
+          "힐링",
+          "K문화"
+        ],
+        "cutCount": 4,
+        "contentType": "IG_R",
+        "topicCode": "LIF",
+        "scnCode": "REL",
+        "instaNum": "IG_R12",
+        "character": "서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터",
+        "code": "IG_R12",
+        "finishMode": "cutter",
+        "masterCode": "[IG_R12] :: [PL:IG_RL] :: [SP:IN.JJ.ENT_HR_LNG.LT_WM] :: [CH:YR_VD+HJ_VD] :: [SH:SH_WS+SH_MS] :: [F군:미설정]",
+        "epHeaderRaw": "",
+        "scriptTailRaw": "[엔딩 카드] (마지막 2~3초, 오버레이)\n⚠️ IG_R11(11/23) 결과에서 성과가 나은 쪽(엔딩 A/B)으로 확정 예정 — 이 초안은 A안을 임시 기본값으로 적용.\nA안(임시)\nEN: \"Send this to the friend you'd take to a jjimjilbang\"\nJP: 一緒にチムジルバンに行きたい友達にシェアしてね\n\n[캡션]\nEN: Matching outfits, roasted eggs, sikhye, and a nap on a warm floor 🇰🇷 A jjimjilbang is a bathhouse, a lounge, and sometimes an overnight stop. Hours and overnight rules vary by place. Would you try it?\nKR: 찜질방은 같은 옷을 입고, 구운 계란과 식혜를 먹고, 따뜻한 바닥에서 쉬는 한국식 휴식 공간이에요. 운영 시간과 숙박 가능 여부는 매장마다 달라요.\nJP: おそろいの服、焼き卵、シッケ、あたたかい床でゴロゴロ。チムジルバンは韓国式の休憩スポットです。営業時間や宿泊の可否はお店によって違います。\n\n[해시태그]\n#Jjimjilbang #KoreanSpa #KoreanCulture #KoreanDailyLife #AICreator #韓国 #チムジルバン\n\n[고정 댓글]\n이번 금요일: 서여리의 서울 하루 지도 / This Friday: Seoyeori's Seoul in one day / 今週の金曜日:ソヨリのソウル1日マップ\n\n[체크]\n- AI 라벨 부착 확인(게시 시)\n- 탕·탈의 장면 전부 제외 — 찜질복 착용 구역(입구/한증막/라운지)만 묘사\n- 공공장소 규칙: 맨발 금지, 전 장면 양말 착용(집 장면 맨발 규칙과 반대 — PUBLIC_INDOOR_RE 가드 대상 확인)\n- 특정 업소 상호·간판 비노출\n- 지아 실제 얼굴 등장 — characters.json jia 레퍼런스 이미지(jia-face.jpg/jia-closeup.jpg) 생성 시 반드시 참조\n- 양머리 수건은 \"꼭 해야 하는 규칙\"처럼 단정적으로 쓰지 않고 놀이 요소로만 묘사(브리프 제작메모 반영)\n- 선정적 연출 금지\n- CUT2 대사는 SEG 4+4(발화 컷 규칙 ⑬-2) — 생성 시 \"발화 (한국어)\" 블록이 VP 하단에 자동 추가될 수 있음(본 VP의\n  Audio 블록과 중복돼도 무방)\n- 엔딩 카드는 IG_R11(11/23) 결과 확정 전까지 임시값 — 정식 생성 전 반드시 재확인\n- ⚠️ 일본어(JP)/영어(EN) 라인은 scriptParserV3.js가 파싱하는 필드가 아님(참고용 텍스트) — 자동 생성에는 반영되지\n  않으므로, 04_making 자막 단계에서 한국어 위/일본어 아래 2단 레이아웃을 수동으로 얹을 것. 일본어 문구는\n  게시 전 원어민 확인 필수(IG_R11과 동일 기준)"
+      },
+      "cuts": [
+        {
+          "id": "cut-1",
+          "no": 1,
+          "cutTitle": "입구, 신발 벗고 입장",
+          "lipsync": false,
+          "scene": "입구에서 신발을 벗어 신발장에 넣고, 찜질복 차림의 서여리와 지아.",
+          "action": "0~4초 신발장 앞에서 신발을 벗어 넣는 두 사람 → 4~8초 찜질복 차림으로 나란히 걸어 들어가며 나레이션",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "한국 찜질방은 모두가 같은 옷을 입고 쉬는 곳이에요.",
+          "subtitle": "한국 찜질방은 모두가 같은 옷을 입고 쉬는 곳이에요.",
+          "subtitleEn": "At a Korean jjimjilbang, everyone relaxes in the same outfit.",
+          "subtitleJa": "韓国のチムジルバンは、みんな同じ服を着てくつろぐ場所です。",
+          "imagePrompt": "WIDE SHOT — two young Korean women in their early 20s at the entrance of a Korean jjimjilbang (bathhouse lounge), warm orange ambient lighting, wooden shoe lockers along the wall,\nThe woman on the right: long wavy dark brown hair falling loosely, natural-finish makeup, skin looking soft and real rather than airbrushed, wearing a plain solid-color jjimjilbang uniform top and shorts, socks on her feet (no shoes), putting her sneakers into a shoe locker,\nThe woman on the left: oval face, large dark brown almond eyes with dramatic curled lashes and subtle winged black eyeliner, full lips in deep mauve-brown, short wavy black bob with wispy curtain bangs, wearing the same style plain jjimjilbang uniform, socks on her feet (no shoes), putting her sneakers into a shoe locker, DO NOT change clothing,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, K-model proportions, small face, long legs, slender figure,\nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no visible shop signage or logos, no clothing brand text, no other people in the background, only the two named women in frame, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine",
+          "videoPrompt": "Visual: [0-4s] Both women stand at the shoe lockers near the entrance, taking off their sneakers and placing them inside, feet in socks only (never barefoot in this public space). [4-8s] They walk forward together into the lounge area in their matching jjimjilbang uniforms, relaxed and at ease. Both stay silent on camera throughout, lips gently closed and relaxed, no mouth movement.\n\nAudio: a separate off-screen narrator, a calm, natural voice that does not belong to either woman on screen, says in Korean: \"한국 찜질방은 모두가 같은 옷을 입고 쉬는 곳이에요.\" Neither woman's lips move.\n\nNo on-screen subtitle text or captions — Korean + Japanese two-line subtitles and the English line are added in post.",
+          "voiceSource": "video",
+          "duration": 8,
+          "shotType": "FULLBODY",
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "beat": "훅",
+          "masterCode": {
+            "sp": "IN.JJ.ENT.LT_WM",
+            "pl": "YR_VD",
+            "ch": "서여리 + 지아",
+            "sh": "SH_WS",
+            "ca": "CA_ST",
+            "md": "MD_CLM",
+            "ac": "0~4초 신발장 앞에서 신발을 벗어 넣는 두 사람(양말 상태, 맨발 아님) → 4~8초 찜질복 차림으로 나란히 걸어 들어가며 나레이션",
+            "lookId": "",
+            "du": 8,
+            "audio": {
+              "bgm": "잔잔한 로파이 (0초부터)",
+              "voice": "여리 — 담담하고 친근한 톤 — ※나레이션, Flow 영상 생성에 화면 밖 V.O.로 직접 포함(⑬-4, TTS 불필요)",
+              "sfx": "신발장 문 여닫는 소리",
+              "ambience": "찜질방 입구의 잔잔한 소음"
+            },
+            "kr": {
+              "sp": "찜질방 입구, 신발장 앞, 따뜻한 주황빛 조명",
+              "ch": "서여리·지아 — 동일 디자인 찜질복, 양말 (맨발 아님 — 공공장소 규칙)",
+              "sh": "와이드샷",
+              "ca": "고정",
+              "ac": "0~4초 신발장 앞에서 신발을 벗어 넣는 두 사람 → 4~8초 찜질복 차림으로 나란히 걸어 들어가며 나레이션",
+              "md": "편안함, 설렘"
+            }
+          }
+        },
+        {
+          "id": "cut-2",
+          "no": 2,
+          "cutTitle": "뜨거운 방, 3분만 더",
+          "lipsync": false,
+          "scene": "뜨거운 방에서 땀을 흘리는 서여리가 슬쩍 나가려 함.",
+          "action": "0~4초 땀을 흘리며 슬쩍 일어나려는 여리 → 4~8초 지아가 팔을 잡으며 말려 앉힘, 둘의 대사",
+          "character": "서여리",
+          "dialogue": "여리 \"나 좀 나갈게…\" / 지아 \"아직 3분 남았어.\"",
+          "narration": "",
+          "subtitle": "나 좀 나갈게… / 아직 3분 남았어.",
+          "subtitleEn": "I'm stepping out… / Three more minutes.",
+          "subtitleJa": "ちょっと出るね… / まだ3分あるよ。",
+          "imagePrompt": "MEDIUM SHOT — the same two young Korean women, same faces, same matching jjimjilbang uniforms, socks on, sitting inside a warm ochre-walled hot sauna room (한증막), warm orange ambient lighting, subtle sweat sheen on their skin,\nThe woman on the right: fanning herself slightly, tired flushed expression, starting to rise. The woman on the left: reaching out to hold her arm, playful determined expression, pulling her back down, DO NOT change clothing,\nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no visible signage or logos, no other people in the background, only the two named women in frame, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine",
+          "videoPrompt": "Visual: [0-4s] The woman on the right, flushed and sweating in the hot sauna room, starts to rise as if to leave, tired expression, mouth closed. [4-8s] The woman on the left reaches out and holds her arm, pulling her back down with a playful, determined look.\n\nAudio:\n- 0.0s-4.0s: both women stay silent, mouths closed, only faint ambient room sound.\n- 4.0s-5.8s: the woman on the right, tired and reluctant, says in Korean (반말): \"나 좀 나갈게…\" while the woman on the left listens, mouth closed.\n- 5.8s-8.0s: the woman on the left, firm and playful, says in Korean (반말): \"아직 3분 남았어.\" while the woman on the right stays silent, mouth closed, settling back down.\n\nNo on-screen subtitle text or captions — Korean + Japanese two-line subtitles and the English line are added in post.",
+          "duration": 8,
+          "shotType": "FULLBODY",
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "beat": "긴장",
+          "masterCode": {
+            "sp": "IN.JJ.HR.LT_WM",
+            "pl": "YR_VD",
+            "ch": "서여리 + 지아",
+            "sh": "SH_MS",
+            "ca": "CA_ST",
+            "md": "MD_TRD (더위에 지침)",
+            "ac": "0~4초 뜨거운 황토방에서 땀을 흘리며 슬쩍 일어나려는 여리 → 4~8초 지아가 팔을 잡으며 말려 앉힘, 둘의 대사",
+            "lookId": "",
+            "du": 8,
+            "audio": {
+              "bgm": "로파이 (이어서)",
+              "voice": "여리 — 지친 투(반말) / 지아 — 단호하고 장난스러운 톤(반말)",
+              "sfx": "없음(한증막 특유의 조용함)",
+              "ambience": "뜨거운 황토방의 고요함, 희미한 숨소리"
+            },
+            "kr": {
+              "sp": "찜질방 뜨거운 황토방(한증막), 주황빛 조명",
+              "ch": "서여리·지아 — 동일 찜질복, 양말 (CUT1과 동일)",
+              "sh": "미디엄샷",
+              "ca": "고정",
+              "ac": "0~4초 땀을 흘리며 슬쩍 일어나려는 여리 → 4~8초 지아가 팔을 잡으며 말려 앉힘, 둘의 대사",
+              "md": "더위에 지침 → 장난스러운 실랑이"
+            }
+          }
+        },
+        {
+          "id": "cut-3",
+          "no": 3,
+          "cutTitle": "식혜·구운계란, 누워서 쉼",
+          "lipsync": false,
+          "scene": "양머리 수건, 식혜와 구운 계란을 먹고 바닥에 누워 쉬는 두 사람.",
+          "action": "0~4초 양머리 수건을 두른 두 사람이 식혜와 구운 계란을 먹음 → 4~8초 따뜻한 바닥에 나란히 누워 쉬며 나레이션",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "식혜, 구운 계란, 누워서 쉬는 시간까지. 이게 찜질방 코스예요.",
+          "subtitle": "식혜, 구운 계란, 누워서 쉬는 시간까지. 이게 찜질방 코스예요.",
+          "subtitleEn": "Sikhye, roasted eggs, lying down to rest. That's the whole experience.",
+          "subtitleJa": "シッケ、焼き卵、横になって休む時間まで。これがチムジルバンのコースです。",
+          "imagePrompt": "MEDIUM SHOT — the same two young Korean women, same faces, same matching jjimjilbang uniforms, both with a twisted sheep-ear towel wrap on their heads (playful jjimjilbang towel style),\nsitting on the heated floor of a lounge area, eating roasted eggs and sipping sikhye (sweet rice drink) from small cups, warm cozy orange ambient lighting, content relaxed expressions, DO NOT change clothing,\nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no visible signage, brand names or logos on cups/packaging, no other people in the background, only the two named women in frame, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine",
+          "videoPrompt": "Visual: [0-4s] Both women, towels twisted into sheep-ear shapes on their heads, sit together eating roasted eggs and sipping sikhye from small cups, relaxed and content. [4-8s] They lie down side by side on the warm heated floor, stretching out comfortably, smiling at the ceiling. Both stay silent on camera throughout, lips gently closed and relaxed, no mouth movement.\n\nAudio: a separate off-screen narrator, a calm, content voice that does not belong to either woman on screen, says in Korean: \"식혜, 구운 계란, 누워서 쉬는 시간까지. 이게 찜질방 코스예요.\" Neither woman's lips move.\n\nNo on-screen subtitle text or captions — Korean + Japanese two-line subtitles and the English line are added in post.",
+          "voiceSource": "video",
+          "duration": 8,
+          "shotType": "FULLBODY",
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "beat": "안정",
+          "masterCode": {
+            "sp": "IN.JJ.LNG.LT_WM",
+            "pl": "YR_VD",
+            "ch": "서여리 + 지아",
+            "sh": "SH_MS",
+            "ca": "CA_ST",
+            "md": "MD_CNT (만족)",
+            "ac": "0~4초 양머리 수건을 두른 두 사람이 식혜와 구운 계란을 먹음 → 4~8초 따뜻한 바닥에 나란히 누워 쉬며 나레이션",
+            "lookId": "",
+            "du": 8,
+            "audio": {
+              "bgm": "로파이 (이어서, 편안하게)",
+              "voice": "여리 — 만족스럽고 편안한 톤 — ※나레이션, Flow 영상 생성에 화면 밖 V.O.로 직접 포함(⑬-4, TTS 불필요)",
+              "sfx": "계란 까는 소리, 식혜 마시는 소리(가볍게)",
+              "ambience": "라운지의 편안한 소음(멀리 TV 소리 등)"
+            },
+            "kr": {
+              "sp": "찜질방 라운지(휴게 구역), 따뜻한 조명",
+              "ch": "서여리·지아 — 찜질복, 양머리 수건",
+              "sh": "미디엄샷",
+              "ca": "고정",
+              "ac": "0~4초 양머리 수건을 두른 두 사람이 식혜와 구운 계란을 먹음 → 4~8초 따뜻한 바닥에 나란히 누워 쉬며 나레이션",
+              "md": "만족, 편안함"
+            }
+          }
+        },
+        {
+          "id": "cut-4",
+          "no": 4,
+          "cutTitle": "나란히 누워 여운, 엔딩카드",
+          "lipsync": false,
+          "scene": "나란히 누워 천장을 보는 두 사람. 정적 2~3초(BGM 정지) 후 엔딩 카드.",
+          "action": "0~4초 나란히 누워 천장을 보며 편안하게 웃음 → 4~6초 정적 → 6~8초 여리가 카메라를 보며 나레이션",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "더위가 지나가면, 이상하게 또 생각나요.",
+          "subtitle": "더위가 지나가면, 이상하게 또 생각나요.",
+          "subtitleEn": "Once the heat passes, you somehow want to come back.",
+          "subtitleJa": "暑さが過ぎると、不思議とまた行きたくなるんです。",
+          "imagePrompt": "MEDIUM SHOT — the same two young Korean women, same faces, same matching jjimjilbang uniforms, lying side by side on the warm heated floor looking up, relaxed contented smiles, DO NOT change clothing,\nwarm cozy orange ambient lighting, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no visible signage or logos, no other people in the background, only the two named women in frame, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine",
+          "videoPrompt": "Visual: [0-4s] Both women lie side by side on the warm floor, looking up, relaxed contented smiles. [4-6s] They go still for a quiet beat, no sound but faint ambient room noise. [6-8s] The woman on the right turns her head slightly toward camera, warm soft expression, mouth closed, not speaking on camera. Both stay silent on camera throughout, lips gently closed and relaxed, no mouth movement.\n\nAudio: a separate off-screen narrator, a calm, warm voice that does not belong to either woman on screen, says in Korean: \"더위가 지나가면, 이상하게 또 생각나요.\" Neither woman's lips move.\n\nNo on-screen subtitle text or captions — Korean + Japanese two-line subtitles and the English line are added in post.",
+          "voiceSource": "video",
+          "duration": 8,
+          "shotType": "FULLBODY",
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "beat": "결말",
+          "masterCode": {
+            "sp": "IN.JJ.LNG.LT_WM",
+            "pl": "YR_VD",
+            "ch": "서여리 + 지아",
+            "sh": "SH_MS",
+            "ca": "CA_ST",
+            "md": "MD_WRM",
+            "ac": "0~4초 나란히 누워 천장을 보며 편안하게 웃는 두 사람 → 4~6초 정적 2초(BGM 정지) → 6~8초 여리가 카메라 쪽을 보며 나레이션",
+            "lookId": "",
+            "du": 8,
+            "audio": {
+              "bgm": "로파이 → 4~6초 지점 2초간 완전 정지(여운) → 6초부터 낮게 흐르다 엔딩카드에서 페이드아웃",
+              "voice": "여리 — 잔잔하고 다정한 톤 — ※나레이션, Flow 영상 생성에 화면 밖 V.O.로 직접 포함(⑬-4, TTS 불필요)",
+              "sfx": "없음",
+              "ambience": "조용한 라운지(정적 구간엔 거의 무음)"
+            },
+            "kr": {
+              "sp": "찜질방 라운지 (CUT3과 동일 공간)",
+              "ch": "서여리·지아 — 찜질복 (CUT3과 동일)",
+              "sh": "미디엄샷",
+              "ca": "고정",
+              "ac": "0~4초 나란히 누워 천장을 보며 편안하게 웃음 → 4~6초 정적 → 6~8초 여리가 카메라를 보며 나레이션",
+              "md": "따뜻함, 여운"
+            }
+          }
+        }
+      ],
+      "scriptRaw": "",
+      "createdAt": "2026-11-25T09:45:07.795Z"
     }
   },
   "episode": {
-    "number": 1004,
-    "title": "5분 스킨케어 필수는 이것!",
-    "location": "집 (방)",
+    "number": 1005,
+    "title": "3분만 더! 찜질방 생존기",
+    "location": "기타",
     "mood": [
-      "일상",
+      "힐링",
       "K문화"
     ],
     "cutCount": 4,
     "contentType": "IG_R",
-    "topicCode": "TRD",
+    "topicCode": "LIF",
     "scnCode": "REL",
-    "instaNum": "IG_R11",
+    "instaNum": "IG_R12",
     "character": "서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터",
-    "code": "IG_R11",
+    "code": "IG_R12",
     "finishMode": "cutter",
-    "masterCode": "[IG_R11] :: [PL:IG_RL] :: [SP:IN.HM.BR_LR.LT_EV] :: [CH:YR_VD] :: [SH:SH_MCU+SH_MS] :: [F군:미설정]",
-    "epHeaderRaw": ""
+    "masterCode": "[IG_R12] :: [PL:IG_RL] :: [SP:IN.JJ.ENT_HR_LNG.LT_WM] :: [CH:YR_VD+HJ_VD] :: [SH:SH_WS+SH_MS] :: [F군:미설정]",
+    "epHeaderRaw": "",
+    "scriptTailRaw": "[엔딩 카드] (마지막 2~3초, 오버레이)\n⚠️ IG_R11(11/23) 결과에서 성과가 나은 쪽(엔딩 A/B)으로 확정 예정 — 이 초안은 A안을 임시 기본값으로 적용.\nA안(임시)\nEN: \"Send this to the friend you'd take to a jjimjilbang\"\nJP: 一緒にチムジルバンに行きたい友達にシェアしてね\n\n[캡션]\nEN: Matching outfits, roasted eggs, sikhye, and a nap on a warm floor 🇰🇷 A jjimjilbang is a bathhouse, a lounge, and sometimes an overnight stop. Hours and overnight rules vary by place. Would you try it?\nKR: 찜질방은 같은 옷을 입고, 구운 계란과 식혜를 먹고, 따뜻한 바닥에서 쉬는 한국식 휴식 공간이에요. 운영 시간과 숙박 가능 여부는 매장마다 달라요.\nJP: おそろいの服、焼き卵、シッケ、あたたかい床でゴロゴロ。チムジルバンは韓国式の休憩スポットです。営業時間や宿泊の可否はお店によって違います。\n\n[해시태그]\n#Jjimjilbang #KoreanSpa #KoreanCulture #KoreanDailyLife #AICreator #韓国 #チムジルバン\n\n[고정 댓글]\n이번 금요일: 서여리의 서울 하루 지도 / This Friday: Seoyeori's Seoul in one day / 今週の金曜日:ソヨリのソウル1日マップ\n\n[체크]\n- AI 라벨 부착 확인(게시 시)\n- 탕·탈의 장면 전부 제외 — 찜질복 착용 구역(입구/한증막/라운지)만 묘사\n- 공공장소 규칙: 맨발 금지, 전 장면 양말 착용(집 장면 맨발 규칙과 반대 — PUBLIC_INDOOR_RE 가드 대상 확인)\n- 특정 업소 상호·간판 비노출\n- 지아 실제 얼굴 등장 — characters.json jia 레퍼런스 이미지(jia-face.jpg/jia-closeup.jpg) 생성 시 반드시 참조\n- 양머리 수건은 \"꼭 해야 하는 규칙\"처럼 단정적으로 쓰지 않고 놀이 요소로만 묘사(브리프 제작메모 반영)\n- 선정적 연출 금지\n- CUT2 대사는 SEG 4+4(발화 컷 규칙 ⑬-2) — 생성 시 \"발화 (한국어)\" 블록이 VP 하단에 자동 추가될 수 있음(본 VP의\n  Audio 블록과 중복돼도 무방)\n- 엔딩 카드는 IG_R11(11/23) 결과 확정 전까지 임시값 — 정식 생성 전 반드시 재확인\n- ⚠️ 일본어(JP)/영어(EN) 라인은 scriptParserV3.js가 파싱하는 필드가 아님(참고용 텍스트) — 자동 생성에는 반영되지\n  않으므로, 04_making 자막 단계에서 한국어 위/일본어 아래 2단 레이아웃을 수동으로 얹을 것. 일본어 문구는\n  게시 전 원어민 확인 필수(IG_R11과 동일 기준)"
   },
   "cuts": [
     {
       "id": "cut-1",
       "no": 1,
-      "cutTitle": "욕실 거울 앞, 세안 후 세럼 바르는 서여리",
+      "cutTitle": "입구, 신발 벗고 입장",
       "lipsync": false,
-      "scene": "욕실 거울 앞. 세안 후 수건으로 닦고 세럼을 바르는 서여리.",
-      "action": "0~4초 세안 후 수건으로 얼굴을 가볍게 닦음 → 4~8초 세럼을 손으로 가볍게 두드려 바르며 나레이션",
+      "scene": "입구에서 신발을 벗어 신발장에 넣고, 찜질복 차림의 서여리와 지아.",
+      "action": "0~4초 신발장 앞에서 신발을 벗어 넣는 두 사람 → 4~8초 찜질복 차림으로 나란히 걸어 들어가며 나레이션",
       "character": "서여리",
       "dialogue": "",
-      "narration": "하루 끝, 5분 스킨케어 시간이에요.",
-      "subtitle": "하루 끝, 5분 스킨케어 시간이에요.",
-      "subtitleEn": "End of the day: my 5-minute skincare time.",
-      "subtitleJa": "一日の終わりは5分のスキンケア。",
-      "imagePrompt": "MEDIUM CLOSE-UP — a young Korean woman in her early 20s, long wavy dark brown hair falling loosely, natural-finish makeup, skin looking soft and real rather than airbrushed, gentle healthy sheen, \nstanding in front of a bathroom mirror in the evening, wearing a casual lounge t-shirt, barefoot, patting serum onto her cheek with her fingertips after cleansing, a calm relaxed expression, \nwarm soft indoor evening lighting, mirror reflection visible, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no visible skincare product labels or brand logos, no legible text, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine, Barefoot or socks only, no shoes worn (indoor home setting).",
-      "videoPrompt": "Visual: [0-4s] She stands at the bathroom mirror in the evening, finishing a gentle face-wash, patting her face dry with a small towel. [4-8s] She pats serum onto her cheeks with her fingertips, a calm relaxed expression, looking at her own reflection. She stays silent on camera throughout, lips gently closed and relaxed, no mouth movement.\n\nAudio: a separate off-screen narrator, a calm, natural voice that does not belong to the woman on screen, says in Korean: \"하루 끝, 5분 스킨케어 시간이에요.\" Her lips never move.\n\nNo on-screen subtitle text or captions — Korean + Japanese two-line subtitles and the English line are added in post. Barefoot or socks only, no shoes worn (indoor home setting).",
-      "voiceSource": "video",
-      "duration": 8,
-      "shotType": "CLOSEUP",
-      "cutType": "YEORI",
-      "cutMark": "NORMAL",
-      "beat": "훅",
-      "masterCode": {
-        "sp": "IN.HM.BR.LT_EV",
-        "pl": "YR_VD",
-        "ch": "서여리",
-        "sh": "SH_MCU",
-        "ca": "CA_ST",
-        "md": "MD_CLM",
-        "ac": "0~4초 세안 후 수건으로 얼굴을 가볍게 닦음 → 4~8초 세럼을 손으로 가볍게 두드려 바르며 나레이션",
-        "lookId": "",
-        "du": 8,
-        "audio": {
-          "bgm": "잔잔한 로파이 (0초부터)",
-          "voice": "여리 — 나긋하고 편안한 톤 — ※나레이션, Flow 영상 생성에 화면 밖 V.O.로 직접 포함(⑬-4, TTS 불필요)",
-          "sfx": "물소리(가볍게, 세안 마무리 지점)",
-          "ambience": "조용한 저녁 욕실"
-        },
-        "kr": {
-          "sp": "서여리 집 욕실 세면대 거울 앞, 저녁 실내조명",
-          "ch": "서여리 — 라운지 홈웨어, 맨발, 머리 풀어 내림",
-          "sh": "미디엄 클로즈업",
-          "ca": "고정",
-          "ac": "0~4초 세안 후 수건으로 얼굴을 가볍게 닦음 → 4~8초 세럼을 손으로 가볍게 두드려 바르며 나레이션",
-          "md": "편안함, 차분함"
-        }
-      },
-      "captionBurnedIntoBase": false
-    },
-    {
-      "id": "cut-2",
-      "no": 2,
-      "cutTitle": "마스크팩, 소파에서 쉬는 서여리",
-      "lipsync": false,
-      "scene": "마스크팩을 올리고 소파에 앉아 쉼, 타이머.",
-      "action": "0~3초 마스크팩을 얼굴에 올리는 손 → 3~8초 소파에 편하게 앉아 폰 타이머를 맞추고 눈을 감으며 쉬는 모습, 나레이션",
-      "character": "서여리",
-      "dialogue": "",
-      "narration": "마스크팩을 올리고 가만히 쉬는 것도 루틴이에요.",
-      "subtitle": "마스크팩을 올리고 가만히 쉬는 것도 루틴이에요.",
-      "subtitleEn": "Mask on, then just rest. That's part of the routine.",
-      "subtitleJa": "シートマスクをのせて、ゆっくり休むのもルーティン。",
-      "imagePrompt": "MEDIUM SHOT — the same young Korean woman, same face, wearing a plain white sheet mask on her face, same lounge t-shirt, barefoot, \nsitting comfortably on a living room sofa in the evening, setting a timer on her phone, eyes gently closed, relaxed peaceful expression, \nwarm soft indoor evening lighting, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text on phone screen, no visible brand logos on the mask, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine, Barefoot or socks only, no shoes worn (indoor home setting).",
-      "videoPrompt": "Visual: [0-3s] Close on her hands smoothing a plain white sheet mask onto her face. [3-8s] She settles back comfortably on the sofa, sets a timer on her phone, then closes her eyes with a relaxed, peaceful expression. She stays silent on camera throughout, lips gently closed and relaxed, no mouth movement.\n\nAudio: a separate off-screen narrator, a calm, natural voice that does not belong to the woman on screen, says in Korean: \"마스크팩을 올리고 가만히 쉬는 것도 루틴이에요.\" Her lips never move.\n\nNo on-screen subtitle text or captions — Korean + Japanese two-line subtitles and the English line are added in post. Barefoot or socks only, no shoes worn (indoor home setting).",
+      "narration": "한국 찜질방은 모두가 같은 옷을 입고 쉬는 곳이에요.",
+      "subtitle": "한국 찜질방은 모두가 같은 옷을 입고 쉬는 곳이에요.",
+      "subtitleEn": "At a Korean jjimjilbang, everyone relaxes in the same outfit.",
+      "subtitleJa": "韓国のチムジルバンは、みんな同じ服を着てくつろぐ場所です。",
+      "imagePrompt": "WIDE SHOT — two young Korean women in their early 20s at the entrance of a Korean jjimjilbang (bathhouse lounge), warm orange ambient lighting, wooden shoe lockers along the wall,\nThe woman on the right: long wavy dark brown hair falling loosely, natural-finish makeup, skin looking soft and real rather than airbrushed, wearing a plain solid-color jjimjilbang uniform top and shorts, socks on her feet (no shoes), putting her sneakers into a shoe locker,\nThe woman on the left: oval face, large dark brown almond eyes with dramatic curled lashes and subtle winged black eyeliner, full lips in deep mauve-brown, short wavy black bob with wispy curtain bangs, wearing the same style plain jjimjilbang uniform, socks on her feet (no shoes), putting her sneakers into a shoe locker, DO NOT change clothing,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, K-model proportions, small face, long legs, slender figure,\nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no visible shop signage or logos, no clothing brand text, no other people in the background, only the two named women in frame, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine",
+      "videoPrompt": "Visual: [0-4s] Both women stand at the shoe lockers near the entrance, taking off their sneakers and placing them inside, feet in socks only (never barefoot in this public space). [4-8s] They walk forward together into the lounge area in their matching jjimjilbang uniforms, relaxed and at ease. Both stay silent on camera throughout, lips gently closed and relaxed, no mouth movement.\n\nAudio: a separate off-screen narrator, a calm, natural voice that does not belong to either woman on screen, says in Korean: \"한국 찜질방은 모두가 같은 옷을 입고 쉬는 곳이에요.\" Neither woman's lips move.\n\nNo on-screen subtitle text or captions — Korean + Japanese two-line subtitles and the English line are added in post.",
       "voiceSource": "video",
       "duration": 8,
       "shotType": "FULLBODY",
       "cutType": "YEORI",
       "cutMark": "NORMAL",
-      "beat": "",
+      "beat": "훅",
       "masterCode": {
-        "sp": "IN.HM.LR.LT_EV",
+        "sp": "IN.JJ.ENT.LT_WM",
         "pl": "YR_VD",
-        "ch": "서여리",
-        "sh": "SH_MS",
+        "ch": "서여리 + 지아",
+        "sh": "SH_WS",
         "ca": "CA_ST",
-        "md": "MD_RLX",
-        "ac": "0~3초 마스크팩을 얼굴에 올리는 손 → 3~8초 소파에 편하게 앉아 폰 타이머를 맞추고 눈을 감으며 쉬는 모습, 나레이션",
+        "md": "MD_CLM",
+        "ac": "0~4초 신발장 앞에서 신발을 벗어 넣는 두 사람(양말 상태, 맨발 아님) → 4~8초 찜질복 차림으로 나란히 걸어 들어가며 나레이션",
         "lookId": "",
         "du": 8,
         "audio": {
-          "bgm": "로파이 (이어서)",
-          "voice": "여리 — 느긋한 톤 — ※나레이션, Flow 영상 생성에 화면 밖 V.O.로 직접 포함(⑬-4, TTS 불필요)",
-          "sfx": "타이머 설정음(가볍게)",
-          "ambience": "조용한 저녁 거실"
+          "bgm": "잔잔한 로파이 (0초부터)",
+          "voice": "여리 — 담담하고 친근한 톤 — ※나레이션, Flow 영상 생성에 화면 밖 V.O.로 직접 포함(⑬-4, TTS 불필요)",
+          "sfx": "신발장 문 여닫는 소리",
+          "ambience": "찜질방 입구의 잔잔한 소음"
         },
         "kr": {
-          "sp": "서여리 집 거실 소파, 저녁 실내조명 (CUT1과 동일 집)",
-          "ch": "서여리 — 라운지 홈웨어, 맨발, 마스크팩 착용",
-          "sh": "미디엄샷",
+          "sp": "찜질방 입구, 신발장 앞, 따뜻한 주황빛 조명",
+          "ch": "서여리·지아 — 동일 디자인 찜질복, 양말 (맨발 아님 — 공공장소 규칙)",
+          "sh": "와이드샷",
           "ca": "고정",
-          "ac": "0~3초 마스크팩을 얼굴에 올리는 손 → 3~8초 소파에 편하게 앉아 폰 타이머를 맞추고 눈을 감으며 쉬는 모습, 나레이션",
-          "md": "편안함, 느긋함"
+          "ac": "0~4초 신발장 앞에서 신발을 벗어 넣는 두 사람 → 4~8초 찜질복 차림으로 나란히 걸어 들어가며 나레이션",
+          "md": "편안함, 설렘"
         }
-      },
-      "captionBurnedIntoBase": false
+      }
     },
     {
-      "id": "cut-3",
-      "no": 3,
-      "cutTitle": "영상통화, 선크림 들킴",
+      "id": "cut-2",
+      "no": 2,
+      "cutTitle": "뜨거운 방, 3분만 더",
       "lipsync": false,
-      "scene": "영상통화 알림(화면은 흐리게), 지아 목소리만 들림 — 선크림 안 발랐다고 알아맞히고 여리가 머쓱해함.",
-      "action": "0~4초 영상통화 알림이 뜨고 받는 서여리, 폰 화면은 흐리게 처리(지아 얼굴 비노출) → 4~8초 지아의 목소리(전화 너머)를 듣고 머쓱한 표정으로 대답",
+      "scene": "뜨거운 방에서 땀을 흘리는 서여리가 슬쩍 나가려 함.",
+      "action": "0~4초 땀을 흘리며 슬쩍 일어나려는 여리 → 4~8초 지아가 팔을 잡으며 말려 앉힘, 둘의 대사",
       "character": "서여리",
-      "dialogue": "(지아, 전화 너머) 너 오늘 선크림 안 발랐지? / (여리, 온카메라)...어떻게 알았어?",
+      "dialogue": "여리 \"나 좀 나갈게…\" / 지아 \"아직 3분 남았어.\"",
       "narration": "",
-      "subtitle": "너 오늘 선크림 안 발랐지? / 어떻게 알았어?",
-      "subtitleEn": "You skipped sunscreen today, didn't you? / How did you know?",
-      "subtitleJa": "今日、日焼け止め塗らなかったでしょ? / …なんでわかるの?",
-      "imagePrompt": "MEDIUM CLOSE-UP — the same young Korean woman, same face, same lounge t-shirt, \nsitting on the living room sofa in the evening, holding up her phone with a video call screen softly blurred and not legible (no other face visible), a surprised sheepish expression forming, \nwarm soft indoor evening lighting, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text on phone screen, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine, Barefoot or socks only, no shoes worn (indoor home setting).",
-      "videoPrompt": "Visual: [0-4s] She answers a video call on her phone, the call screen softly blurred and not legible (no other face visible), listening with a neutral curious expression, mouth closed, not speaking on camera. [4-8s] Her expression shifts into a sheepish, caught-out smile; she looks at the phone and speaks.\n\nAudio:\n- 0.0s-4.0s: a separate off-screen voice coming through the phone speaker (muffled, slightly tinny call quality, not belonging to the woman on screen), playful and confident, says in Korean: \"너 오늘 선크림 안 발랐지?\" The woman on screen stays silent, mouth closed, listening.\n- 4.0s-8.0s: she speaks directly on camera, lips synced to her words, sheepish and surprised (반말, close friend tone), in Korean: \"…어떻게 알았어?\"\n\nNo on-screen subtitle text or captions — Korean + Japanese two-line subtitles and the English line are added in post. Barefoot or socks only, no shoes worn (indoor home setting).",
-      "voiceSource": "video",
+      "subtitle": "나 좀 나갈게… / 아직 3분 남았어.",
+      "subtitleEn": "I'm stepping out… / Three more minutes.",
+      "subtitleJa": "ちょっと出るね… / まだ3分あるよ。",
+      "imagePrompt": "MEDIUM SHOT — the same two young Korean women, same faces, same matching jjimjilbang uniforms, socks on, sitting inside a warm ochre-walled hot sauna room (한증막), warm orange ambient lighting, subtle sweat sheen on their skin,\nThe woman on the right: fanning herself slightly, tired flushed expression, starting to rise. The woman on the left: reaching out to hold her arm, playful determined expression, pulling her back down, DO NOT change clothing,\nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no visible signage or logos, no other people in the background, only the two named women in frame, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine",
+      "videoPrompt": "Visual: [0-4s] The woman on the right, flushed and sweating in the hot sauna room, starts to rise as if to leave, tired expression, mouth closed. [4-8s] The woman on the left reaches out and holds her arm, pulling her back down with a playful, determined look.\n\nAudio:\n- 0.0s-4.0s: both women stay silent, mouths closed, only faint ambient room sound.\n- 4.0s-5.8s: the woman on the right, tired and reluctant, says in Korean (반말): \"나 좀 나갈게…\" while the woman on the left listens, mouth closed.\n- 5.8s-8.0s: the woman on the left, firm and playful, says in Korean (반말): \"아직 3분 남았어.\" while the woman on the right stays silent, mouth closed, settling back down.\n\nNo on-screen subtitle text or captions — Korean + Japanese two-line subtitles and the English line are added in post.",
       "duration": 8,
-      "shotType": "CLOSEUP",
+      "shotType": "FULLBODY",
       "cutType": "YEORI",
       "cutMark": "NORMAL",
       "beat": "긴장",
       "masterCode": {
-        "sp": "IN.HM.LR.LT_EV",
+        "sp": "IN.JJ.HR.LT_WM",
         "pl": "YR_VD",
-        "ch": "서여리 (지아는 화면 비등장, 음성만 — 전화 너머)",
-        "sh": "SH_MCU",
+        "ch": "서여리 + 지아",
+        "sh": "SH_MS",
         "ca": "CA_ST",
-        "md": "MD_EMB",
-        "ac": "0~4초 영상통화 알림이 뜨고 받는 서여리, 폰 화면은 흐리게(지아 얼굴 비노출) → 4~8초 지아의 목소리(전화 너머)를 듣고 머쓱한 표정으로 대답",
+        "md": "MD_TRD (더위에 지침)",
+        "ac": "0~4초 뜨거운 황토방에서 땀을 흘리며 슬쩍 일어나려는 여리 → 4~8초 지아가 팔을 잡으며 말려 앉힘, 둘의 대사",
         "lookId": "",
         "du": 8,
         "audio": {
-          "bgm": "로파이 (이어서, 살짝 낮춤)",
-          "voice": "지아 — 확신에 찬 장난스러운 톤(전화 너머, 화면 비등장이라 립싱크 없음) / 여리 — 머쓱하고 당황한 톤(온카메라, 립싱크)",
-          "sfx": "영상통화 수신음",
-          "ambience": "조용한 저녁 거실 + 폰 스피커 음질감"
+          "bgm": "로파이 (이어서)",
+          "voice": "여리 — 지친 투(반말) / 지아 — 단호하고 장난스러운 톤(반말)",
+          "sfx": "없음(한증막 특유의 조용함)",
+          "ambience": "뜨거운 황토방의 고요함, 희미한 숨소리"
         },
         "kr": {
-          "sp": "거실 소파 (CUT1·2와 동일 집)",
-          "ch": "서여리 — 라운지 홈웨어, 맨발 (지아는 화면에 등장하지 않음, 통화 음성만)",
-          "sh": "미디엄 클로즈업",
+          "sp": "찜질방 뜨거운 황토방(한증막), 주황빛 조명",
+          "ch": "서여리·지아 — 동일 찜질복, 양말 (CUT1과 동일)",
+          "sh": "미디엄샷",
           "ca": "고정",
-          "ac": "0~4초 영상통화 알림이 뜨고 받는 서여리, 폰 화면은 흐리게 처리(지아 얼굴 비노출) → 4~8초 지아의 목소리(전화 너머)를 듣고 머쓱한 표정으로 대답",
-          "md": "놀람 → 머쓱함"
+          "ac": "0~4초 땀을 흘리며 슬쩍 일어나려는 여리 → 4~8초 지아가 팔을 잡으며 말려 앉힘, 둘의 대사",
+          "md": "더위에 지침 → 장난스러운 실랑이"
         }
-      },
-      "overrides": {
-        "dialogue": {
-          "value": "(지아, 전화 너머) 너 오늘 선크림 안 발랐지? / (여리, 온카메라)...어떻게 알았어?",
-          "at": "2026-11-23T09:50:56.026Z",
-          "reason": "스튜디오 화면에서 직접 수정"
+      }
+    },
+    {
+      "id": "cut-3",
+      "no": 3,
+      "cutTitle": "식혜·구운계란, 누워서 쉼",
+      "lipsync": false,
+      "scene": "양머리 수건, 식혜와 구운 계란을 먹고 바닥에 누워 쉬는 두 사람.",
+      "action": "0~4초 양머리 수건을 두른 두 사람이 식혜와 구운 계란을 먹음 → 4~8초 따뜻한 바닥에 나란히 누워 쉬며 나레이션",
+      "character": "서여리",
+      "dialogue": "",
+      "narration": "식혜, 구운 계란, 누워서 쉬는 시간까지. 이게 찜질방 코스예요.",
+      "subtitle": "식혜, 구운 계란, 누워서 쉬는 시간까지. 이게 찜질방 코스예요.",
+      "subtitleEn": "Sikhye, roasted eggs, lying down to rest. That's the whole experience.",
+      "subtitleJa": "シッケ、焼き卵、横になって休む時間まで。これがチムジルバンのコースです。",
+      "imagePrompt": "MEDIUM SHOT — the same two young Korean women, same faces, same matching jjimjilbang uniforms, both with a twisted sheep-ear towel wrap on their heads (playful jjimjilbang towel style),\nsitting on the heated floor of a lounge area, eating roasted eggs and sipping sikhye (sweet rice drink) from small cups, warm cozy orange ambient lighting, content relaxed expressions, DO NOT change clothing,\nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no visible signage, brand names or logos on cups/packaging, no other people in the background, only the two named women in frame, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine",
+      "videoPrompt": "Visual: [0-4s] Both women, towels twisted into sheep-ear shapes on their heads, sit together eating roasted eggs and sipping sikhye from small cups, relaxed and content. [4-8s] They lie down side by side on the warm heated floor, stretching out comfortably, smiling at the ceiling. Both stay silent on camera throughout, lips gently closed and relaxed, no mouth movement.\n\nAudio: a separate off-screen narrator, a calm, content voice that does not belong to either woman on screen, says in Korean: \"식혜, 구운 계란, 누워서 쉬는 시간까지. 이게 찜질방 코스예요.\" Neither woman's lips move.\n\nNo on-screen subtitle text or captions — Korean + Japanese two-line subtitles and the English line are added in post.",
+      "voiceSource": "video",
+      "duration": 8,
+      "shotType": "FULLBODY",
+      "cutType": "YEORI",
+      "cutMark": "NORMAL",
+      "beat": "안정",
+      "masterCode": {
+        "sp": "IN.JJ.LNG.LT_WM",
+        "pl": "YR_VD",
+        "ch": "서여리 + 지아",
+        "sh": "SH_MS",
+        "ca": "CA_ST",
+        "md": "MD_CNT (만족)",
+        "ac": "0~4초 양머리 수건을 두른 두 사람이 식혜와 구운 계란을 먹음 → 4~8초 따뜻한 바닥에 나란히 누워 쉬며 나레이션",
+        "lookId": "",
+        "du": 8,
+        "audio": {
+          "bgm": "로파이 (이어서, 편안하게)",
+          "voice": "여리 — 만족스럽고 편안한 톤 — ※나레이션, Flow 영상 생성에 화면 밖 V.O.로 직접 포함(⑬-4, TTS 불필요)",
+          "sfx": "계란 까는 소리, 식혜 마시는 소리(가볍게)",
+          "ambience": "라운지의 편안한 소음(멀리 TV 소리 등)"
+        },
+        "kr": {
+          "sp": "찜질방 라운지(휴게 구역), 따뜻한 조명",
+          "ch": "서여리·지아 — 찜질복, 양머리 수건",
+          "sh": "미디엄샷",
+          "ca": "고정",
+          "ac": "0~4초 양머리 수건을 두른 두 사람이 식혜와 구운 계란을 먹음 → 4~8초 따뜻한 바닥에 나란히 누워 쉬며 나레이션",
+          "md": "만족, 편안함"
         }
-      },
-      "captionBurnedIntoBase": false
+      }
     },
     {
       "id": "cut-4",
       "no": 4,
-      "cutTitle": "거울 앞 다짐, 여운, 엔딩카드",
+      "cutTitle": "나란히 누워 여운, 엔딩카드",
       "lipsync": false,
-      "scene": "거울 속에서 웃는 서여리. 정적 2~3초(BGM 정지) 후 엔딩 카드.",
-      "action": "0~4초 거울 속 자신을 보며 피식 웃음 → 4~6초 정적, 거울을 보며 가만히 → 6~8초 카메라를 보며 나레이션",
+      "scene": "나란히 누워 천장을 보는 두 사람. 정적 2~3초(BGM 정지) 후 엔딩 카드.",
+      "action": "0~4초 나란히 누워 천장을 보며 편안하게 웃음 → 4~6초 정적 → 6~8초 여리가 카메라를 보며 나레이션",
       "character": "서여리",
       "dialogue": "",
-      "narration": "한국에선 선크림이 매일 아침 습관이래요. 내일부터 저도요.",
-      "subtitle": "한국에선 선크림이 매일 아침 습관이래요. 내일부터 저도요.",
-      "subtitleEn": "In Korea, sunscreen is a daily habit. Starting tomorrow, me too.",
-      "subtitleJa": "韓国では日焼け止めは毎朝の習慣。明日から私も。",
-      "imagePrompt": "MEDIUM CLOSE-UP — the same young Korean woman, same face, same lounge t-shirt, \nstanding in front of the bathroom mirror in the evening, looking at her own reflection with a soft amused smile, \nwarm soft indoor evening lighting, mirror reflection visible, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine, Barefoot or socks only, no shoes worn (indoor home setting).",
-      "videoPrompt": "Visual: [0-4s] She looks at her own reflection in the bathroom mirror with a soft, amused smile. [4-6s] She pauses, still looking at the mirror, a quiet beat of stillness — no sound but faint ambient room noise. [6-8s] She turns her gaze gently toward camera, warm soft expression, mouth closed, not speaking on camera. She stays silent on camera throughout, lips gently closed and relaxed, no mouth movement.\n\nAudio: a separate off-screen narrator, a calm, sincere voice that does not belong to the woman on screen, says in Korean: \"한국에선 선크림이 매일 아침 습관이래요. 내일부터 저도요.\" Her lips never move.\n\nNo on-screen subtitle text or captions — Korean + Japanese two-line subtitles and the English line are added in post. Barefoot or socks only, no shoes worn (indoor home setting).",
+      "narration": "더위가 지나가면, 이상하게 또 생각나요.",
+      "subtitle": "더위가 지나가면, 이상하게 또 생각나요.",
+      "subtitleEn": "Once the heat passes, you somehow want to come back.",
+      "subtitleJa": "暑さが過ぎると、不思議とまた行きたくなるんです。",
+      "imagePrompt": "MEDIUM SHOT — the same two young Korean women, same faces, same matching jjimjilbang uniforms, lying side by side on the warm heated floor looking up, relaxed contented smiles, DO NOT change clothing,\nwarm cozy orange ambient lighting, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no visible signage or logos, no other people in the background, only the two named women in frame, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine",
+      "videoPrompt": "Visual: [0-4s] Both women lie side by side on the warm floor, looking up, relaxed contented smiles. [4-6s] They go still for a quiet beat, no sound but faint ambient room noise. [6-8s] The woman on the right turns her head slightly toward camera, warm soft expression, mouth closed, not speaking on camera. Both stay silent on camera throughout, lips gently closed and relaxed, no mouth movement.\n\nAudio: a separate off-screen narrator, a calm, warm voice that does not belong to either woman on screen, says in Korean: \"더위가 지나가면, 이상하게 또 생각나요.\" Neither woman's lips move.\n\nNo on-screen subtitle text or captions — Korean + Japanese two-line subtitles and the English line are added in post.",
       "voiceSource": "video",
       "duration": 8,
-      "shotType": "CLOSEUP",
+      "shotType": "FULLBODY",
       "cutType": "YEORI",
       "cutMark": "NORMAL",
       "beat": "결말",
       "masterCode": {
-        "sp": "IN.HM.BR.LT_EV",
+        "sp": "IN.JJ.LNG.LT_WM",
         "pl": "YR_VD",
-        "ch": "서여리",
-        "sh": "SH_MCU",
+        "ch": "서여리 + 지아",
+        "sh": "SH_MS",
         "ca": "CA_ST",
         "md": "MD_WRM",
-        "ac": "0~4초 거울 속 자신을 보며 피식 웃는 서여리 → 4~6초 정적 2초(BGM 정지, 거울 보며 가만히) → 6~8초 카메라 쪽을 보며 나레이션",
+        "ac": "0~4초 나란히 누워 천장을 보며 편안하게 웃는 두 사람 → 4~6초 정적 2초(BGM 정지) → 6~8초 여리가 카메라 쪽을 보며 나레이션",
         "lookId": "",
         "du": 8,
         "audio": {
           "bgm": "로파이 → 4~6초 지점 2초간 완전 정지(여운) → 6초부터 낮게 흐르다 엔딩카드에서 페이드아웃",
-          "voice": "여리 — 다짐하듯 담담한 톤 — ※나레이션, Flow 영상 생성에 화면 밖 V.O.로 직접 포함(⑬-4, TTS 불필요)",
+          "voice": "여리 — 잔잔하고 다정한 톤 — ※나레이션, Flow 영상 생성에 화면 밖 V.O.로 직접 포함(⑬-4, TTS 불필요)",
           "sfx": "없음",
-          "ambience": "조용한 저녁 욕실(정적 구간엔 거의 무음)"
+          "ambience": "조용한 라운지(정적 구간엔 거의 무음)"
         },
         "kr": {
-          "sp": "서여리 집 욕실 거울 앞 (CUT1과 동일 공간)",
-          "ch": "서여리 — 라운지 홈웨어, 맨발",
-          "sh": "미디엄 클로즈업",
+          "sp": "찜질방 라운지 (CUT3과 동일 공간)",
+          "ch": "서여리·지아 — 찜질복 (CUT3과 동일)",
+          "sh": "미디엄샷",
           "ca": "고정",
-          "ac": "0~4초 거울 속 자신을 보며 피식 웃음 → 4~6초 정적, 거울을 보며 가만히 → 6~8초 카메라를 보며 나레이션",
-          "md": "따뜻함, 다짐"
+          "ac": "0~4초 나란히 누워 천장을 보며 편안하게 웃음 → 4~6초 정적 → 6~8초 여리가 카메라를 보며 나레이션",
+          "md": "따뜻함, 여운"
         }
-      },
-      "captionBurnedIntoBase": false
+      }
     }
   ],
   "scriptRaw": "",
@@ -14780,43 +15192,25 @@
     "shadowColor": "#000000",
     "bold": true,
     "textY": 70,
-    "ratio": "9:16",
+    "ratio": "16:9",
     "bgImageUrl": "",
     "posterLayers": []
   },
   "publishing": {
     "youtube": {
-      "title": "일상공감 🌙 하루 5분 스킨케어, 이것만 있으면 충분해요",
-      "description": "일상공감 가득한 하루 끝 5분 스킨케어 루틴을 담았어요. 세럼부터 마스크팩까지, 작은 습관이 쌓이면 피부도 마음도 달라지더라고요. 나만의 감정표현처럼, 스킨케어도 그날의 나를 돌보는 방법이에요. 선크림 하나 깜빡했다고 친구한테 들켜버린 그 순간도😅 — 이런 일상의 감정표현이 모여 루틴이 되는 것 같아요. 내일 아침부터 같이 선크림으로 시작해봐요!",
-      "tags": "일상공감, 감정표현, 스킨케어루틴, 5분스킨케어, 선크림, 마스크팩, 데일리루틴, 피부관리, 한국스킨케어, 뷰티일상, 쇼츠, 스킨케어추천, 세럼, 나이트루틴, 뷰티루틴",
-      "titleEn": "My Lazy 5-Min Skincare Routine That Actually Works ✨",
-      "descriptionEn": "My friend caught me skipping sunscreen over video call — yeah, it shows 😅 This is my go-to 5-minute nighttime skincare routine: a few drops of serum, a sheet mask, and a promise to never forget SPF again. It's the kind of relatable everyday moment that reminds me how small habits make a real difference. Whether you're a skincare newbie or just someone who gets it on a deeply relatable level — this one's for you. Drop your must-have skincare product in the comments! ⬇️",
-      "tagsEn": "5 minute skincare, skincare routine, Korean skincare, sheet mask, sunscreen habit, lazy skincare, nighttime routine, serum routine, relatable skincare, daily skincare, skincare tips, beginner skincare, SPF everyday, beauty routine, skincare shorts",
-      "titleJa": "日常共感✨ たった5分のスキンケア、これだけでOKでした",
-      "descriptionJa": "日常共感のつまった、夜の5分スキンケアルーティンをお届けします🫧 美容液をなじませて、マスクパックを貼って、ゆっくり休む——それだけで肌も気持ちも変わるんです。でも日焼け止めだけ忘れたら、ビデオ通話で友達にすぐバレてしまって😅 そういう小さな感情表現が積み重なって、自分だけのルーティンになっていくんだなと思います。日焼け止めを毎朝の習慣にしているというK-ビューティー流、明日からわたしも一緒に始めます！",
-      "tagsJa": "スキンケアルーティン, 5分スキンケア, 日焼け止め, マスクパック, 美容液, 韓国スキンケア, デイリールーティン, ナイトケア, Kビューティー, 日常共感, 感情表現, スキンケア初心者, 毎日ルーティン, ビューティーショート, 肌管理"
+      "title": "",
+      "description": "",
+      "tags": ""
     },
     "instagram": {
-      "title": "5분 스킨케어, 이것만 있으면 충분해요 🌙",
-      "description": "하루 끝에 나를 돌보는 5분 — 그게 저한테는 일상공감의 순간이에요 🫧 세럼 한 방울, 마스크팩 하나, 그리고 선크림 하나를 잊지 않는 것. 작은 감정표현이지만 내 피부한테 보내는 가장 솔직한 애정이더라고요 💙 여러분의 스킨케어 필수템은 뭐예요? 댓글로 알려주세요!",
-      "tags": "#일상공감 #감정표현 #스킨케어루틴 #5분스킨케어 #선크림 #마스크팩 #데일리루틴 #피부관리 #한국스킨케어 #뷰티일상 #세럼 #나이트루틴 #뷰티루틴 #스킨케어추천 #인스타뷰티",
-      "titleEn": "5-min skincare = self-care that actually fits your life 🫧",
-      "descriptionEn": "Serum ✔️ Sheet mask ✔️ Sunscreen… almost ✔️ 😅 We've all had that relatable moment of getting caught skipping SPF by a friend on FaceTime. This tiny 5-minute routine is my little act of self-love at the end of the day — the kind of small, everyday habit that just *gets* you. What's the one skincare step you never skip? Tell me below 👇",
-      "tagsEn": "#skincareroutine #5minuteskincare #koreanbeauty #sheetmask #sunscreeneverydag #selfcare #dailyroutine #relatableskincare #serumlovers #nighttimeroutine #beautyroutine #skincarelovers #spfeveryday #lazygirlskincare #beautyshorts",
-      "titleJa": "たった5分で肌が変わる🌙 夜のスキンケア習慣",
-      "descriptionJa": "美容液 → マスクパック → 日焼け止め（翌朝）この順番が、わたしの日常共感ルーティンです🫧 日焼け止めをうっかり忘れたら、ビデオ通話で友達に一瞬でバレてしまいました😂 肌で感じる毎日の感情表現——そんな小さな積み重ねが、自分を整える時間になっています。あなたの絶対外せないスキンケアアイテムは何ですか？ コメントで教えてください✨",
-      "tagsJa": "#スキンケアルーティン #5分スキンケア #日焼け止め #マスクパック #美容液 #韓国スキンケア #Kビューティー #デイリールーティン #ナイトケア #日常共感 #感情表現 #スキンケア好き #毎日ルーティン #美容垢 #ビューティー"
+      "title": "",
+      "description": "",
+      "tags": ""
     },
     "tiktok": {
-      "title": "선크림 깜빡했다가 친구한테 딱 걸렸어요 😂 #5분스킨케어",
-      "description": "세럼 → 마스크팩 → 선크림 이 세 가지가 제 일상공감 루틴이에요 🫧 근데 선크림 하나 빠지면 티가 나더라고요😅 이게 진짜 감정표현 아닐까요, 피부로 느끼는 하루의 차이! 내일 아침 같이 선크림 바르고 시작해봐요 ☀️",
-      "tags": "#일상공감 #감정표현 #스킨케어 #5분스킨케어 #선크림 #마스크팩 #뷰티틱톡 #한국스킨케어 #데일리루틴 #피부관리 #틱톡뷰티 #뷰티루틴 #세럼 #스킨케어추천 #shorts",
-      "titleEn": "My friend KNEW I skipped sunscreen 😭 #skincarecheck",
-      "descriptionEn": "POV: You skip sunscreen once and your friend calls you out over FaceTime immediately 😂 This is my honest, super relatable 5-minute skincare routine — serum, sheet mask, and a lesson learned about SPF. Sometimes the smallest daily habits say more than words ever could. Starting tomorrow: sunscreen first, no excuses ☀️",
-      "tagsEn": "#skincarecheck #skincarerotine #5minuteskincare #koreanbeauty #sunscreen #sheetmask #relatableskincare #selfcare #beautytok #dailyroutine #serumtime #spfeveryday #lazygirlskincare #beautyroutine #skincarevibes",
-      "titleJa": "日焼け止め忘れたらビデオ通話でバレた話😭 #スキンケア",
-      "descriptionJa": "日焼け止めを1回サボっただけで友達にすぐ見抜かれた、あの日常共感すぎる瞬間😅 美容液・マスクパック・日焼け止め——このたった3ステップが、わたしの毎日の感情表現になってます🫧 K-ビューティー流「朝は日焼け止めから」、明日からわたしも本気でやります☀️ みんなのスキンケア必須アイテムも教えて！",
-      "tagsJa": "#スキンケアルーティン #5分スキンケア #日焼け止め #マスクパック #韓国スキンケア #Kビューティー #日常共感 #感情表現 #美容液 #デイリールーティン #スキンケア好き #ビューティーtok #肌管理 #ナイトルーティン #美容垢さんと繋がりたい"
+      "title": "",
+      "description": "",
+      "tags": ""
     }
   },
   "channelKeywords": [
@@ -14857,163 +15251,22 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-25T06:18:35.231Z",
+  "savedAt": "2026-11-25T08:32:47.933Z",
   "videoTabState": {
-    "videoClips": {
-      "cut-1": [
-        {
-          "url": "blob:http://localhost:5173/cdee2723-75cc-47f4-8f03-e1d19e9119b7",
-          "name": "Woman_applying_skincare_at_mirror_68b7b296_1080p.mp4",
-          "duration": 7.93,
-          "trimStart": 0,
-          "trimEnd": 7.93,
-          "useFullDuration": false,
-          "ratio": "9:16",
-          "staging": false,
-          "keepAudio": true,
-          "createdAt": 1795420393332,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R11\\04_making\\raw\\cut_01_clip_1.mp4"
-        }
-      ],
-      "cut-2": [
-        {
-          "url": "blob:http://localhost:5173/833737ce-3bf0-4dff-9ac1-c021e996858c",
-          "name": "Woman_applying_sheet_mask_relaxing_ec58387d_1080p.mp4",
-          "duration": 7.93,
-          "trimStart": 0,
-          "trimEnd": 7.93,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "staging": false,
-          "keepAudio": true,
-          "createdAt": 1795420398390,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R11\\04_making\\raw\\cut_02_clip_1.mp4"
-        }
-      ],
-      "cut-3": [
-        {
-          "url": "blob:http://localhost:5173/9b23292a-9745-45d0-bd4d-f9d1dbd8b1c3",
-          "name": "Woman_answering_video_call_b39fa9de_1080p.mp4",
-          "duration": 7.93,
-          "trimStart": 0,
-          "trimEnd": 7.93,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "staging": false,
-          "keepAudio": true,
-          "createdAt": 1795420471110,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R11\\04_making\\raw\\cut_03_clip_1.mp4"
-        }
-      ],
-      "cut-4": [
-        {
-          "url": "blob:http://localhost:5173/3a136544-4867-4565-b60b-84623f698a9c",
-          "name": "Woman_looking_at_bathroom_mirror_d6459a0a_1080p.mp4",
-          "duration": 7.93,
-          "trimStart": 0,
-          "trimEnd": 7.93,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "staging": false,
-          "keepAudio": true,
-          "createdAt": 1795420695419,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R11\\04_making\\raw\\cut_04_clip_1.mp4"
-        }
-      ]
-    },
-    "g4Approved": {
-      "cut-4": true,
-      "cut-3": true,
-      "cut-2": true,
-      "cut-1": true
-    },
-    "selectedCutId": "cut-1",
-    "subtitles": {
-      "cut-3": [
-        {
-          "start": 1,
-          "end": 4.6,
-          "text": "너 오늘 선크림 안 발랐지?"
-        },
-        {
-          "start": 4.6,
-          "end": 8,
-          "text": "어떻게 알았어?"
-        }
-      ]
-    }
+    "videoClips": {},
+    "g4Approved": {},
+    "selectedCutId": null,
+    "subtitles": {}
   },
   "ttsTabState": {
     "audioUrls": {},
     "audioTexts": {},
     "g3Confirmed": {},
-    "focusCutId": null,
-    "voiceTabs": {
-      "cut-3": [
-        {
-          "id": "v1",
-          "label": "목소리 1",
-          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
-        }
-      ],
-      "cut-2": [
-        {
-          "id": "v1",
-          "label": "목소리 1",
-          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
-        }
-      ]
-    },
-    "tracks": {
-      "cut-3__v1": [
-        {
-          "id": "track_1795451481102_w6cc",
-          "type": "dialogue",
-          "text": "너, 오늘 선크림 안 발랐지~!!",
-          "speaker": null,
-          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R11/03_audio/tts-previews/cut_03_track_1795451481102_w6cc.mp3?t=1795495748385",
-          "voiceId": "5n5gqmaQi9Ewevrz7bOS",
-          "settings": {
-            "speed": 0.9,
-            "stability": 23,
-            "similarity": 73
-          }
-        }
-      ],
-      "cut-2__v1": [
-        {
-          "id": "track_1795501303671_hy1h",
-          "type": "narration",
-          "text": "마스크팩을 올리고 가만히 쉬는 것도 루틴이에요.",
-          "speaker": null,
-          "url": null,
-          "voiceId": "",
-          "settings": {
-            "speed": 0.85,
-            "stability": 55,
-            "similarity": 75
-          }
-        }
-      ]
-    },
-    "mergedUrls": {
-      "cut-3__v1": "blob:http://localhost:5173/f8824ddc-df07-4241-8c18-26f6c7e90606"
-    }
+    "focusCutId": null
   },
   "voiceInsertState": {
     "tracks": {},
-    "segFix": {
-      "cut-3": {
-        "start": 0.5,
-        "end": 4,
-        "text": "너.. 오늘 선크림 안 발랐지~!!",
-        "speaker": "한지아",
-        "appliedAt": 1795508300095,
-        "appliedFactor": 1,
-        "appliedBackupPath": "/downloads/seoyeori/IG/IG_R/IG_R11/05_video/_backup/cut_03_1795508299825.mp4"
-      }
-    },
-    "activeCutId": "cut-3"
+    "segFix": {}
   },
   "studioTabState": {
     "imageRatio": {}
