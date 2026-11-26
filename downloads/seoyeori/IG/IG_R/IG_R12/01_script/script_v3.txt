@@ -80,17 +80,17 @@ WIDE SHOT — two young Korean women in their early 20s sitting on a low wooden 
   area of a Korean jjimjilbang (bathhouse lounge), warm honey-orange ambient lighting from a single round recessed
   ceiling downlight, dark wood-paneled walls and a central wooden column dividing two banks of small wooden lockers
   hung with colorful key fobs and padlocks, a tiled stone floor stepped down in front of the bench where loose
-  shoes and bags sit, both women still in their own everyday outdoor outfits — they have not changed into the
-  jjimjilbang uniform yet (that happens later, off-screen, in the changing room),
+  shoes and bags sit, both women wearing their own everyday outdoor outfits, the jjimjilbang uniform change
+  happening later, off-screen, in the changing room,
 The woman on the right: long wavy dark brown hair falling loosely, natural-finish makeup, skin looking soft and
   real rather than airbrushed, wearing an oversized olive-brown zip-up jacket and matching loose relaxed trousers
-  (her own casual outdoor co-ord set, NOT a jjimjilbang uniform), sitting on the bench with one leg bent up,
+  (her own casual outdoor co-ord set), sitting on the bench with one leg bent up,
   white socks on her feet, pulling off a white sneaker, its matching white sneaker already resting on the tiled
   floor below her, a black backpack propped against the lockers beside her,
 The woman on the left: oval face, large dark brown almond eyes with dramatic curled lashes and subtle winged
   black eyeliner, full lips in deep mauve-brown, short wavy black bob with wispy curtain bangs, wearing an
   oversized black/charcoal zip-up jacket and matching loose dark trousers (her own casual outdoor co-ord set,
-  different from the woman on the right, NOT a jjimjilbang uniform), crouched forward on the bench reaching down
+  different from the woman on the right), crouched forward on the bench reaching down
   toward her feet, one grayish-taupe suede sneaker already off and resting on the tiled floor with its lace loose,
   sock visible on her other raised foot, a brown structured handbag sitting on the tiled floor beside her,
 1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, K-model proportions, small face, long legs, slender figure,
@@ -99,11 +99,11 @@ photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no visible sh
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-Visual: [0-4s] Both women, still in their own everyday outdoor outfits (not yet changed into jjimjilbang uniforms), sit on the wooden bench at the shoe-locker entrance, bent forward working their sneakers off — the woman on the right (long wavy dark brown hair) pulling off her remaining white sneaker, the woman on the left (short black bob) tugging her grayish suede sneaker loose, each already down to a sock on one foot. [4-8s] Both finish removing their sneakers, set them down on the tiled floor beside the ones already off, and rise from the bench, feet now in socks only (never barefoot in this public space), turning toward the lockers behind them, about to head toward the changing room. Both stay silent on camera throughout, lips gently closed and relaxed, no mouth movement.
+Visual: Both women, wearing their own everyday outdoor outfits, sit on the wooden bench at the shoe-locker entrance, bent forward working their sneakers off — the woman on the right (long wavy dark brown hair) pulling off her remaining white sneaker, the woman on the left (short black bob) tugging her grayish suede sneaker loose, each already down to a sock on one foot. They finish removing their sneakers, set them down on the tiled floor beside the ones already off, and rise from the bench in their socks, turning toward the lockers behind them. Both women's lips stay gently closed and relaxed throughout.
 
-Audio: a separate off-screen narrator, a calm, natural voice that does not belong to either woman on screen, says in Korean: "한국 찜질방은 모두가 같은 옷을 입고 쉬는 곳이에요." Neither woman's lips move.
+Audio: [0-4s] only faint ambient sound of the jjimjilbang entrance. [4-8s] a third person, a separate off-screen narrator, a calm warm studio-recorded female voice that is different from both women on screen, says one sentence in Korean: "한국 찜질방은 모두가 같은 옷을 입고 쉬는 곳이에요." Both women's lips never move.
 
-No on-screen subtitle text or captions — Korean + Japanese two-line subtitles and the English line are added in post.
+No on-screen subtitle text or captions.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -205,18 +205,18 @@ NR(나레이션): 식혜, 구운 계란, 누워서 쉬는 시간까지. 이게 �
 ━━━━━━━━━━━━━━━━━━━━━━━━
 IP (이미지 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-MEDIUM SHOT — the same two young Korean women, same faces, same matching jjimjilbang uniforms, both with a twisted sheep-ear towel wrap on their heads (playful jjimjilbang towel style),
-sitting on the heated floor of a lounge area, eating roasted eggs and sipping sikhye (sweet rice drink) from small cups, warm cozy orange ambient lighting, content relaxed expressions, DO NOT change clothing,
+MEDIUM SHOT — the same two young Korean women, same faces, same matching jjimjilbang uniforms as the previous cut, both with a twisted sheep-ear towel wrap on their heads (playful jjimjilbang towel style),
+sitting on the heated floor of a lounge area, eating roasted eggs and sipping sikhye (sweet rice drink) from small cups, warm cozy orange ambient lighting, content relaxed expressions,
 photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no visible signage, brand names or logos on cups/packaging, no other people in the background, only the two named women in frame, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-Visual: [0-4s] Both women, towels twisted into sheep-ear shapes on their heads, sit together eating roasted eggs and sipping sikhye from small cups, relaxed and content. [4-8s] They lie down side by side on the warm heated floor, stretching out comfortably, smiling at the ceiling. Both stay silent on camera throughout, lips gently closed and relaxed, no mouth movement.
+Visual: Both women, towels twisted into sheep-ear shapes on their heads, sit together eating roasted eggs and sipping sikhye from small cups, relaxed and content; they then lie down side by side on the warm heated floor, stretching out comfortably, smiling at the ceiling. Both women's lips stay gently closed and relaxed throughout.
 
-Audio: a separate off-screen narrator, a calm, content voice that does not belong to either woman on screen, says in Korean: "식혜, 구운 계란, 누워서 쉬는 시간까지. 이게 찜질방 코스예요." Neither woman's lips move.
+Audio: [0-4s] only faint room ambience, a light eggshell crack and a soft sip. [4-8s] a third person, a separate off-screen narrator, a calm warm studio-recorded female voice that is different from both women on screen, says one sentence in Korean: "식혜, 구운 계란, 누워서 쉬는 시간까지. 이게 찜질방 코스예요." Both women's lips never move.
 
-No on-screen subtitle text or captions — Korean + Japanese two-line subtitles and the English line are added in post.
+No on-screen subtitle text or captions.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -259,17 +259,17 @@ NR(나레이션): 더위가 지나가면, 이상하게 또 생각나요.
 ━━━━━━━━━━━━━━━━━━━━━━━━
 IP (이미지 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-MEDIUM SHOT — the same two young Korean women, same faces, same matching jjimjilbang uniforms, lying side by side on the warm heated floor looking up, relaxed contented smiles, DO NOT change clothing,
+MEDIUM SHOT — the same two young Korean women, same faces, same matching jjimjilbang uniforms as the previous cut, lying side by side on the warm heated floor looking up, relaxed contented smiles,
 warm cozy orange ambient lighting, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no visible signage or logos, no other people in the background, only the two named women in frame, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
-VP (영상 프롬프트)
+VP (영상 프롬프트) — ✅ 성준님 실측 검증 템플릿(11/26, 아래 [체크] 참조)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-Visual: [0-4s] Both women lie side by side on the warm floor, looking up, relaxed contented smiles. [4-6s] They go still for a quiet beat, no sound but faint ambient room noise. [6-8s] The woman on the right turns her head slightly toward camera, warm soft expression, mouth closed, not speaking on camera. Both stay silent on camera throughout, lips gently closed and relaxed, no mouth movement.
+Visual: Two women lie side by side on the warm floor, looking up at the ceiling with relaxed, contented smiles. They lie still and quiet, gazing upward; the woman on the right slowly turns her head slightly toward the woman on the left with a soft warm smile. Both women's lips stay gently closed and relaxed throughout.
 
-Audio: a separate off-screen narrator, a calm, warm voice that does not belong to either woman on screen, says in Korean: "더위가 지나가면, 이상하게 또 생각나요." Neither woman's lips move.
+Audio: [0-4s] only faint room ambience. [4-8s] a third person, a separate off-screen narrator, a calm warm studio-recorded female voice that is different from both women on screen, says one sentence in Korean: "더위가 지나가면, 이상하게 또 생각나요." Both women's lips never move.
 
-No on-screen subtitle text or captions — Korean + Japanese two-line subtitles and the English line are added in post.
+No on-screen subtitle text or captions.
 ================================================================
 
 
@@ -317,3 +317,14 @@ JP: おそろいの服、焼き卵、シッケ、あたたかい床でゴロゴ�
 - ⚠️ 일본어(JP)/영어(EN) 라인은 scriptParserV3.js가 파싱하는 필드가 아님(참고용 텍스트) — 자동 생성에는 반영되지
   않으므로, 04_making 자막 단계에서 한국어 위/일본어 아래 2단 레이아웃을 수동으로 얹을 것. 일본어 문구는
   게시 전 원어민 확인 필수(IG_R11과 동일 기준)
+- ✅ 나레이션 전용 VP 템플릿 갱신(11/26, 성준님 별도 테스트 성공 사례 반영 — CUT4가 원형): CUT1/CUT3/CUT4
+  (대사 없는 나레이션 전용 컷)에 적용, CUT2처럼 두 사람이 번갈아 말하는 대사 컷엔 적용하지 않음(시간 구간
+  분리가 따로 필요해 템플릿이 다름). 바뀐 점 — ① Visual엔 초단위 구간([0-4s] 등) 표기 없이 장면을 하나의
+  흐름으로 서술, 구간 표기는 Audio에만(무음 구간→나레이터 등장 구간) ② 나레이터 음색 묘사를 에피소드 전체에서
+  고정(이 에피소드는 "a calm warm studio-recorded female voice"로 통일 — 컷마다 다른 형용사를 쓰면 음색이
+  바뀐 것처럼 보임) ③ VP 마지막 줄은 "No on-screen subtitle text or captions." 한 줄만(자막 번역 설명을
+  덧붙이지 않음 — EN/JP 자막 정책 자체는 바뀐 게 아니라 위 체크 항목과 헤더에 그대로 있음, 단지 실제 생성
+  프롬프트에 캡션 설명을 넣지 않는 것) ④ 부정문 최소화·표현 간소화(예: "NOT a jjimjilbang uniform"/"have not
+  changed yet" 대신 "wearing their own outdoor outfits"처럼 있는 그대로 긍정 서술, "never barefoot" 대신
+  "in their socks"). 다음 에피소드부터 나레이션 컷 작성 시 이 템플릿을 기본으로 삼을 것
+  ([[project_narration_vp_visual_audio_split_standard_2026_11_19]] 갱신 예정)
