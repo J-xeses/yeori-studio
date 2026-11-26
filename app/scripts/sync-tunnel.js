@@ -13,6 +13,18 @@ import path from 'node:path'
 
 const APP_ROOT = 'C:\\yeori-studio\\app'
 
+// 2026-11-26 추가(성준님 지적 -- "터널 연결이 지금 필수조건이 아닌데 자꾸 돌아가고 있다,
+// 필요에 따라 제어돼야 한다"): ensure-yeori-tasks.ps1이 이 플래그 파일을 보고 스케줄
+// 작업 자체를 건너뛰지만, 누군가 이 스크립트를 직접 실행하는 경로(예: 콘솔에서
+// `node scripts/sync-tunnel.js`)까지 막으려면 여기서도 같은 플래그를 봐야 한다 --
+// 이중 방어. 켜려면 이 파일을 지우고 다시 실행(또는 스케줄 작업 재시작)하면 됨.
+const PAUSE_FLAG = path.join(APP_ROOT, '.tunnel-paused')
+if (fs.existsSync(PAUSE_FLAG)) {
+  console.log('[tunnel] .tunnel-paused 발견 -- 의도적으로 일시정지된 상태입니다. 터널을 시작하지 않고 종료합니다.')
+  console.log('[tunnel] 재개하려면 이 파일을 지우고 다시 실행하세요: ' + PAUSE_FLAG)
+  process.exit(0)
+}
+
 // .env.local 에서 VERCEL_TOKEN 등을 읽어들인다 (setx 환경변수 전파가 스케줄 작업까지
 // 확실히 안 되는 경우가 있어서 -- .env.local 이 단일 신뢰 소스). 이미 env 에 있으면 유지.
 try {

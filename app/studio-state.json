@@ -1,5 +1,5 @@
 {
-  "activeTab": "script",
+  "activeTab": "publishing",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -14781,7 +14781,8 @@
               3,
               8
             ]
-          ]
+          ],
+          "captionBurnedIntoBase": false
         },
         {
           "id": "cut-2",
@@ -14827,7 +14828,8 @@
               "ac": "0~4초 땀을 흘리며 슬쩍 일어나려는 여리 → 4~8초 지아가 팔을 잡으며 말려 앉힘, 둘의 대사",
               "md": "더위에 지침 → 장난스러운 실랑이"
             }
-          }
+          },
+          "captionBurnedIntoBase": false
         },
         {
           "id": "cut-3",
@@ -14880,7 +14882,8 @@
               1.5,
               8
             ]
-          ]
+          ],
+          "captionBurnedIntoBase": false
         },
         {
           "id": "cut-4",
@@ -14933,7 +14936,8 @@
               0,
               5
             ]
-          ]
+          ],
+          "captionBurnedIntoBase": false
         }
       ],
       "scriptRaw": "",
@@ -15013,7 +15017,8 @@
           3,
           8
         ]
-      ]
+      ],
+      "captionBurnedIntoBase": false
     },
     {
       "id": "cut-2",
@@ -15059,7 +15064,8 @@
           "ac": "0~4초 땀을 흘리며 슬쩍 일어나려는 여리 → 4~8초 지아가 팔을 잡으며 말려 앉힘, 둘의 대사",
           "md": "더위에 지침 → 장난스러운 실랑이"
         }
-      }
+      },
+      "captionBurnedIntoBase": false
     },
     {
       "id": "cut-3",
@@ -15112,7 +15118,8 @@
           1.5,
           8
         ]
-      ]
+      ],
+      "captionBurnedIntoBase": false
     },
     {
       "id": "cut-4",
@@ -15165,7 +15172,8 @@
           0,
           5
         ]
-      ]
+      ],
+      "captionBurnedIntoBase": false
     }
   ],
   "scriptRaw": "",
@@ -15230,25 +15238,43 @@
     "shadowColor": "#000000",
     "bold": true,
     "textY": 70,
-    "ratio": "16:9",
+    "ratio": "9:16",
     "bgImageUrl": "",
     "posterLayers": []
   },
   "publishing": {
     "youtube": {
-      "title": "",
-      "description": "",
-      "tags": ""
+      "title": "일상공감 🔥 찜질방에서 3분만 더 버텨본 사람 손!",
+      "description": "찜질방에서 느끼는 그 감정표현, 다들 공감하시죠? '아직 3분 남았어'라는 말 한마디에 나가지도 못하고 버텨본 그 순간 😂 뜨거운 방을 겨우 나와 식혜 한 모금, 구운 계란 한 개… 이 소소한 일상공감이 왜 이렇게 행복한지. 더위가 지나고 나면, 그 감정표현이 그리워서 또 가고 싶어지는 찜질방의 매력 ✨\n\n#찜질방 #한국문화 #일상공감 #감정표현 #찜질방브이로그",
+      "tags": "찜질방, 일상공감, 감정표현, 한국문화, 찜질방브이로그, 식혜, 구운계란, 힐링, 쇼츠, 한국일상",
+      "titleEn": "Everyday Struggles 🔥 Surviving a Korean Jjimjilbang (Sauna)",
+      "descriptionEn": "Ever been in a sauna so hot you wanted to leave — but your friend said 'just 3 more minutes'? That everyday struggle hits differently in a Korean jjimjilbang 😂 From sweating it out in the hot room to cracking open a sweet sikhye rice drink and a roasted egg, every moment is a quiet but real emotional experience. It's the kind of place where you don't need words — just lying side by side is enough. Those everyday feelings you share with someone in a jjimjilbang? They're the ones that linger long after the heat fades ✨\n\n#Jjimjilbang #KoreanCulture #KoreaVlog",
+      "tagsEn": "jjimjilbang, Korean sauna, Korean culture, Korea vlog, everyday struggles, emotional moments, sikhye, roasted egg, healing, shorts",
+      "titleJa": "あるある共感 🔥 韓国のチムジルバン、3分だけ我慢してみた",
+      "descriptionJa": "「あと3分だけ」って言われたら、なぜか出られなくなるんですよね 😂 韓国のチムジルバンでしか味わえないこの日常のあるある、みなさんも感じたことありませんか？熱い部屋をやっと出て、シッケをひと口飲んだときのあの気持ち——これこそが言葉にならない感情表現だと思うんです。焼き卵をかじりながら、並んでゴロゴロする時間。暑さが過ぎたあと、なぜかまた行きたくなるのはきっとあの空気感のせい ✨ 日常のあるあるって、こういう小さな瞬間に詰まってますよね🧡\n\n#チムジルバン #韓国文化 #韓国旅行",
+      "tagsJa": "チムジルバン, 韓国文化, 韓国旅行, 日常あるある, 感情表現, シッケ, 焼き卵, ヒーリング, Shorts, 韓国日常"
     },
     "instagram": {
-      "title": "",
-      "description": "",
-      "tags": ""
+      "title": "3분만 더… 결국 못 나옴 🔥찜질방 생존기",
+      "description": "뜨거운 방 안에서 나누는 '아직 3분 남았어' 한마디, 이게 그냥 웃기면서도 왜 이렇게 일상공감이 되냐고요 😭 식혜 한 캔, 구운 계란 하나, 그리고 아무 말 없이 나란히 누워있는 그 시간. 말 안 해도 느껴지는 그 감정표현이 찜질방의 진짜 매력 아닐까요? 더위가 지나고 나면 꼭 또 생각나는 그 공간 🧡",
+      "tags": "#찜질방 #일상공감 #감정표현 #한국문화 #찜질방코스 #식혜 #구운계란 #힐링스타그램 #일상스타그램 #쇼츠",
+      "titleEn": "'Just 3 more minutes' 🔥 The Korean Sauna Experience",
+      "descriptionEn": "You know that moment when you desperately want to leave the hot room but someone says 'just 3 more minutes'? That everyday struggle is so real 😭 A cold sikhye, a warm roasted egg, and lying down in silence next to someone you like — these little emotional moments are what make a jjimjilbang visit unforgettable. No big words needed. Sometimes those quiet, shared feelings say everything 🧡",
+      "tagsEn": "#jjimjilbang #KoreanCulture #EverydayStruggles #EmotionalMoments #KoreaVlog #Sikhye #Healing #KoreanLife #Shorts #Relatable",
+      "titleJa": "あと3分だけ…無理でした🔥チムジルバン体験記",
+      "descriptionJa": "熱い部屋で「まだ3分ある」って言われたとき、みんな経験あるんじゃないですか？この日常あるあるが、なんとも共感できて笑えます😂 やっと出てシッケをゴクゴク飲んだときの感情表現は、もう言葉じゃ追いつかない。焼き卵と一緒にゴロゴロ休む時間、一緒にいる人との何気ない空気感…。チムジルバンの思い出って、じわじわと大事になっていくんです🧡",
+      "tagsJa": "#チムジルバン #韓国文化 #日常あるある #感情表現 #韓国旅行 #シッケ #焼き卵 #ヒーリング #韓国日常 #Shorts"
     },
     "tiktok": {
-      "title": "",
-      "description": "",
-      "tags": ""
+      "title": "3분만 더 버텨 🔥 찜질방 생존 브이로그",
+      "description": "이 영상 보면서 일상공감 폭발한 사람 댓글로 🙋 뜨거운 방에서 겨우 나와 식혜 마시는 그 순간의 감정표현은 말로 못 해요. 찜질방은 그냥 사우나가 아니라 추억 충전소임 ✨",
+      "tags": "#찜질방 #일상공감 #감정표현 #한국브이로그 #찜질방vlog #식혜 #힐링 #쇼츠 #틱톡코리아 #공감영상",
+      "titleEn": "3 more minutes… I lied 🔥 Korean Sauna Vlog",
+      "descriptionEn": "POV: you're dying in a Korean jjimjilbang but your friend won't let you leave 😂 These everyday struggles hit different when sikhye and roasted eggs are waiting on the other side. Drop a 🙋 if this is SO you.",
+      "tagsEn": "#jjimjilbang #KoreanSauna #EverydayStruggles #EmotionalMoments #KoreaVlog #Relatable #KoreanCulture #Shorts #HealingVibes #TikTokKorea",
+      "titleJa": "3分だけって言ったのに🔥チムジルバン生存記",
+      "descriptionJa": "「あと3分」に騙された人🙋 熱い部屋を出たあとのシッケ、これが最高すぎて日常あるあるどころか感情表現が追いつかない😭 チムジルバン、韓国旅行で絶対行ってみて✨",
+      "tagsJa": "#チムジルバン #韓国旅行 #日常あるある #感情表現 #韓国文化 #シッケ #Shorts #韓国vlog #ヒーリング #共感動画"
     }
   },
   "channelKeywords": [
@@ -15289,7 +15315,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-26T04:37:31.628Z",
+  "savedAt": "2026-11-26T08:16:17.964Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
@@ -15353,7 +15379,12 @@
         }
       ]
     },
-    "g4Approved": {},
+    "g4Approved": {
+      "cut-1": true,
+      "cut-2": true,
+      "cut-3": true,
+      "cut-4": true
+    },
     "selectedCutId": "cut-4",
     "subtitles": {}
   },
@@ -15365,7 +15396,12 @@
   },
   "voiceInsertState": {
     "tracks": {},
-    "segFix": {}
+    "segFix": {
+      "cut-1": {
+        "start": 0,
+        "end": 2
+      }
+    }
   },
   "studioTabState": {
     "imageRatio": {}

@@ -16,6 +16,14 @@
 
 $ErrorActionPreference = 'Continue'
 $APP  = 'C:\yeori-studio\app'
+# 2026-11-26 추가(성준님 지적 -- "터널 연결이 지금 필수조건이 아닌데 자꾸 돌아가고 있다,
+# 필요에 따라 제어돼야 한다"): 이 스크립트는 원래 "끄는 걸 잊어도 self-heal된다"는 게
+# 의도된 설계라, Disable-ScheduledTask로 꺼도 Get-RegisterReason이 'disabled'를 돌려줘서
+# 다음 실행 때 그냥 다시 등록(=다시 켜짐)해버린다 -- 끄려는 의도 자체를 무시하는 구조였다.
+# 이 플래그 파일이 있으면 아래 YeoriMcpTunnel 관련 두 블록(등록/재시작) 모두 건너뛴다 --
+# 꺼두고 싶을 때: 이 경로에 빈 파일을 만들고 실행 중인 프로세스를 끄면 됨. 다시 켤 때:
+# 파일을 지우고 ensure-yeori-tasks.ps1을 한 번 실행(또는 PC 재부팅/재로그온)하면 됨.
+$tunnelPauseFlag = Join-Path $APP '.tunnel-paused'
 $NODE = 'C:\Program Files\nodejs\node.exe'
 if (-not (Test-Path $NODE)) { $NODE = (Get-Command node -ErrorAction SilentlyContinue).Source }
 $NPM  = 'C:\Program Files\nodejs\npm.cmd'
@@ -80,11 +88,15 @@ Ensure-Task 'YeoriStudio' `
     'yeori-studio proxy(:3001)+vite(:5173). MCP bridge origin. Auto-start on logon, auto-restart.' `
     'npm' 'run studio'
 
-Ensure-Task 'YeoriMcpTunnel' `
-    (New-ScheduledTaskAction -Execute $NODE -Argument 'scripts\sync-tunnel.js' -WorkingDirectory $APP) `
-    $atLogon (New-SvcSettings) `
-    'yeori-studio Cloudflare tunnel + Edge Config sync. Auto-start on logon, auto-restart.' `
-    'node' 'sync-tunnel.js'
+if (Test-Path $tunnelPauseFlag) {
+    Write-Output "        [ensure-yeori-tasks] .tunnel-paused 발견 -- YeoriMcpTunnel 등록/점검 건너뜀(의도적 일시정지)."
+} else {
+    Ensure-Task 'YeoriMcpTunnel' `
+        (New-ScheduledTaskAction -Execute $NODE -Argument 'scripts\sync-tunnel.js' -WorkingDirectory $APP) `
+        $atLogon (New-SvcSettings) `
+        'yeori-studio Cloudflare tunnel + Edge Config sync. Auto-start on logon, auto-restart.' `
+        'node' 'sync-tunnel.js'
+}
 
 Ensure-Task 'YeoriTaskQueueWorker' `
     (New-ScheduledTaskAction -Execute $NODE -Argument 'scripts\task-queue-worker.js' -WorkingDirectory $APP) `
@@ -118,9 +130,17 @@ if ($port3001 -and $port5173) {
     catch { Write-Output "        [ensure-yeori-tasks] YeoriStudio start failed: $($_.Exception.Message)" }
 }
 
-$tunnelUp = @(Get-CimInstance Win32_Process -Filter "Name='node.exe'" -ErrorAction SilentlyContinue |
-    Where-Object { $_.CommandLine -like '*sync-tunnel.js*' }).Count -gt 0
-if ($tunnelUp) {
+$tunnelProcs = @(Get-CimInstance Win32_Process -Filter "Name='node.exe'" -ErrorAction SilentlyContinue |
+    Where-Object { $_.CommandLine -like '*sync-tunnel.js*' })
+if (Test-Path $tunnelPauseFlag) {
+    if ($tunnelProcs.Count -gt 0) {
+        Write-Output "        [ensure-yeori-tasks] .tunnel-paused 발견 -- 떠있는 sync-tunnel.js($($tunnelProcs.Count)개) 종료."
+        $tunnelProcs | ForEach-Object { try { Stop-Process -Id $_.ProcessId -Force -ErrorAction Stop } catch {} }
+        try { Stop-ScheduledTask -TaskName 'YeoriMcpTunnel' -ErrorAction Stop } catch {}
+    } else {
+        Write-Output "        [ensure-yeori-tasks] .tunnel-paused 발견 -- YeoriMcpTunnel 시작 건너뜀(의도적 일시정지)."
+    }
+} elseif ($tunnelProcs.Count -gt 0) {
     Write-Output "        [ensure-yeori-tasks] tunnel already running -- YeoriMcpTunnel start skipped."
 } else {
     try { Start-ScheduledTask -TaskName 'YeoriMcpTunnel' -ErrorAction Stop; Write-Output "        [ensure-yeori-tasks] YeoriMcpTunnel started." }

@@ -1,8 +1,28 @@
 ﻿// Vite 媛쒕컻 ?쒕쾭媛 /api/* ?붿껌???몃? API濡??꾨줉?쒗빀?덈떎 (vite.config.js)
 // 蹂꾨룄 ?쒕쾭 ?놁씠 ?곷? 寃쎈줈留??ъ슜?섎㈃ ?⑸땲??
 
+// 2026-11-26 추가(성준님 제보 — "편집메타 'on' 실행이 '실행 중...'에서 완료되지 않고 계속
+// 돈다"): 이 탭의 자동실행(runACC)은 ①단계로 이 claudeMessages를 제일 먼저 기다리는데,
+// fetch엔 원래 타임아웃이 없어서 — 이 세션 중 server/proxy.js를 몇 차례 강제 재시작한 것처럼
+// 요청이 떠 있는 도중 서버가 죽으면(또는 네트워크가 끊기면) 응답도 에러도 영원히 안 와서
+// await가 무한히 멈춘다(버튼은 accRunning===true로 고정, catch도 안 타서 에러 메시지도
+// 안 뜸). AbortController로 상한 시간을 둬서, 서버가 끊긴 경우에도 일정 시간 뒤엔 반드시
+// 에러로 떨어지게 한다 — 버튼이 영원히 "실행 중..."으로 멈추는 일 자체를 막는 안전장치.
+function fetchWithTimeout(url, opts = {}, ms = 45000) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), ms)
+  return fetch(url, { ...opts, signal: controller.signal })
+    .catch((err) => {
+      if (err.name === 'AbortError') {
+        throw new Error(`${Math.round(ms / 1000)}초 안에 응답이 없어 요청을 중단함(서버 재시작·네트워크 끊김 가능성)`)
+      }
+      throw err
+    })
+    .finally(() => clearTimeout(timer))
+}
+
 export const claudeMessages = (apiKey, body) =>
-  fetch('http://localhost:3001/api/claude/v1/messages', {
+  fetchWithTimeout('http://localhost:3001/api/claude/v1/messages', {
     method: 'POST',
     headers: {
       'x-api-key': apiKey,
@@ -10,7 +30,7 @@ export const claudeMessages = (apiKey, body) =>
       'content-type': 'application/json',
     },
     body: JSON.stringify(body),
-  })
+  }, 45000)
 
 // GET /v1/user ??{ subscription: { character_count, character_limit, ... } }
 export const elUser = (apiKey) =>

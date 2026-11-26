@@ -37,10 +37,14 @@ function toSRTTime(sec) {
 // 'library'(보유 곡만) 고정 — 조립 흐름에서 예기치 않게 유료 BGM 생성 호출이 섞이면 안 된다.
 async function finalizeReelSilently(epNum) {
   try {
+    // 2026-11-26 — 아래 post()와 같은 이유로 상한 시간(10분, 영상 조립이라 넉넉히)을 둔다.
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 600000)
     const res = await fetch('http://localhost:3001/api/reel-finalize', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ epNum, bgmMode: 'library' }),
-    })
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timer))
     const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = ''
     let result = { ok: false, error: '응답 없음' }
     for (;;) {
@@ -436,12 +440,31 @@ export default function EditMetaTab() {
     const epNum = state.episode?.number
     if (!epNum) { setAccStatus('❌ 에피소드 번호가 없습니다'); return }
 
+    // 2026-11-26 삭제(진짜 원인 발견 — 크롬 콘솔 실측: "ReferenceError: setCutterResult is not
+    // defined"가 runACC 맨 앞, try/catch 블록 "바깥"에서 매번 던져지고 있었다): 이 줄은
+    // 2026-11-16 CapCut 정밀편집 단계 폐지 때 cutterResult useState 선언은 지워지면서 이 호출만
+    // 남은 죽은 참조 — try 블록 밖이라 catch에 안 잡히고, setAccRunning(true) 직후 바로
+    // 함수가 깨져서 setAccRunning(false)를 영원히 못 만났다. "서버 재시작 중 요청이 끊겨서
+    // 멈춘다"는 어제의 1차 진단은 틀렸고(그 가설로 추가한 타임아웃 자체는 나쁠 거 없어 남겨둠),
+    // 매번 100% 재현되는 진짜 원인은 이 한 줄이었다 — 통째로 제거.
     setAccRunning(true)
-    setCutterResult(null)
 
-    const post = (url, body) =>
-      fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    // 2026-11-26 수정(성준님 제보 — "'on' 실행이 '실행 중...'에서 안 끝난다"): fetch엔 원래
+    // 타임아웃이 없어서, 이 요청이 떠 있는 동안 server/proxy.js가 재시작되거나 네트워크가
+    // 끊기면 응답도 에러도 영원히 안 와 accRunning===true로 버튼이 영구히 멈췄다. 상한
+    // 시간(3분 — making-assemble처럼 ffmpeg 작업이 섞인 단계도 있어 여유를 둠)을 둬서, 끊긴
+    // 경우에도 반드시 에러로 떨어져 catch가 accRunning을 풀게 한다.
+    const post = (url, body) => {
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), 180000)
+      return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: controller.signal })
+        .catch((err) => {
+          if (err.name === 'AbortError') throw new Error(`${url} — 3분 안에 응답 없음(서버 재시작·네트워크 끊김 가능성)`)
+          throw err
+        })
+        .finally(() => clearTimeout(timer))
         .then(r => r.json())
+    }
 
     try {
       // ① 편집 메타 자동 생성 (AI 주의사항 포함)
