@@ -477,14 +477,22 @@ export default function EditMetaTab() {
       setMeta(computed)
       await post('http://localhost:3001/api/save-edit-meta', computed)
 
-      // ③ SRT 생성 — cutter 흐름은 CapCut 자막에 쓰므로 필수, assemble 흐름은
-      //    영상에 안 태우므로 음성 없으면 건너뛴다.
+      // ③ SRT 생성 — 예전엔 cutter 흐름이 CapCut 자막으로 이 SRT를 가져다 썼어서 필수였지만,
+      // 2026-11-16 CapCut 정밀편집 단계 자체가 폐지되면서(위 ⑤ 근처 설명 참고) SRT의 유일한
+      // 소비처가 사라졌다 — reelFinalize.js(실제 최종본 조립)는 SRT를 전혀 안 읽는다(확인함,
+      // VideoTab.jsx "다운로드 패키지"의 선택적 zip 첨부용으로만 쓰임). 그런데 이 실패 시
+      // 중단 로직만 남아있어서, cutter 모드 에피소드가 03_audio(TTS 나레이션용)가 없으면
+      // —IG_R12처럼 나레이션이 Flow 영상에 내장된 경우 애초에 그 폴더 자체가 없음(
+      // [[project_voiceover_video_embedded_2026_11_15]])— SRT 생성이 실패해서 ④ 최종 영상
+      // 조립까지 아예 못 가고 자동실행이 멈춰버렸다(2026-11-26, 성준님 제보: "SRT 생성 단계를
+      // 패스하고 최종조립으로 완결되어야 하는 상황 아닌가?" — 맞는 지적). SRT는 실패해도
+      // 계속 진행하도록 두 모드 다 동일하게 교정(생성 자체는 유지 — 성공하면 여전히 쓸모 있음).
       setAccStatus('③ SRT 생성 중...')
       const srtRes = await post('http://localhost:3001/api/generate-srt', { epNum })
-      if (!srtRes.success && finishMode === 'cutter') {
-        setAccStatus(`❌ SRT 생성 실패: ${srtRes.error}`)
-        setAccRunning(false); return
-      }
+      // 최종 상태 메시지에 붙여서 넘어가는 메모(아래 ④ 단계들이 상태 문구를 새로 덮어쓰므로,
+      // 여기서 당장 띄우는 대신 결과 메시지에 이어붙여야 사라지지 않는다).
+      const srtWarning = !srtRes.success ? ` ⚠️ SRT 생성 실패(무시하고 진행): ${srtRes.error}` : ''
+      if (srtWarning) setAccStatus(`③ SRT 생성 실패 — 계속 진행합니다...`)
 
       if (finishMode === 'assemble') {
         // ── 빠른 조립: 컷을 그대로 이어붙여 완성 (인스타·틱톡) ──
@@ -497,7 +505,7 @@ export default function EditMetaTab() {
         setAccStatus('⑤ 발행 파이프라인으로 전달 중...')
         const promo = await post('http://localhost:3001/api/promote-making-to-raw', { epNum })
         const skipNote = asm.skippedCuts?.length ? ` · 누락 컷 ${asm.skippedCuts.join(', ')}(아직 미제작)` : ''
-        setAccStatus(`✅ 완료! 컷 ${asm.includedCuts?.length ?? '?'}개(총 ${Math.round(asm.duration || 0)}초) 이어붙여 완성.${skipNote}${promo.success ? ' 발행 탭에서 바로 패키징 가능.' : ''}`)
+        setAccStatus(`✅ 완료! 컷 ${asm.includedCuts?.length ?? '?'}개(총 ${Math.round(asm.duration || 0)}초) 이어붙여 완성.${skipNote}${promo.success ? ' 발행 탭에서 바로 패키징 가능.' : ''}${srtWarning}`)
         // 파일이 있어서 조립에 포함됐다고 무조건 G5를 찍으면, 사람이 G4에서 한 번도 확인
         // 안 한 컷(예: BROLL "제작됨·검토 대기" 상태)까지 "제작완료"로 잘못 보였다
         // (2026-09-14, 사용자 지적: "메이킹 탭 G 배지를 봐라" — G4 없이 G5+제작완료만 찍혀있던
@@ -550,8 +558,8 @@ export default function EditMetaTab() {
         }
         const fin = await finalizeReelSilently(epNum)
         setAccStatus(fin.ok
-          ? `✅ 완료! 최종 영상 조립 생성됨(CapCut 없이).${unapproved.length ? ` ⚠️ G4 미승인 컷 포함(제작완료 표시 안 함): ${unapproved.join(', ')}` : ''}`
-          : `❌ 최종 영상 조립 실패: ${fin.error} — 메이킹 탭에서 "🎬 최종 영상 조립"으로 다시 시도하세요`)
+          ? `✅ 완료! 최종 영상 조립 생성됨(CapCut 없이).${unapproved.length ? ` ⚠️ G4 미승인 컷 포함(제작완료 표시 안 함): ${unapproved.join(', ')}` : ''}${srtWarning}`
+          : `❌ 최종 영상 조립 실패: ${fin.error} — 메이킹 탭에서 "🎬 최종 영상 조립"으로 다시 시도하세요${srtWarning}`)
       }
       setAccRunning(false)
     } catch (err) {
