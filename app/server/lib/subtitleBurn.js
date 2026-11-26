@@ -96,6 +96,12 @@ function measureLine(line, fSize) {
   for (const ch of line) w += estimateCharWidth(ch, fSize)
   return w
 }
+// 2026-11-26 수정(VideoTab.jsx wrapCanvasText와 같은 버그, 같은 제보) — 일본어 문장은
+// 보통 띄어쓰기가 없어서 para.split(' ')가 문장 전체를 공백 없는 "단어" 하나로 반환한다.
+// line이 아직 빈 문자열인 첫 단어 처리 때 `&& line` 조건이 거짓이 되어, 문장 전체가
+// maxWidth를 넘어도 글자 단위 줄바꿈 분기를 타지 않고 한 줄로 그대로 나갔다 — widthScale로
+// 폭을 좁혀도 줄바꿈 자체가 작동하지 않았던 근본 원인. line이 비어 있어도 단어 하나가 그
+// 자체로 maxWidth를 넘으면 글자 단위 줄바꿈으로 빠지도록 분기를 재구성(클라이언트와 동일 수정).
 function wrapForDrawtext(text, maxWidth, fSize) {
   const lines = []
   for (const para of String(text ?? '').split('\n')) {
@@ -103,9 +109,13 @@ function wrapForDrawtext(text, maxWidth, fSize) {
     let line = ''
     for (const word of words) {
       const test = line ? `${line} ${word}` : word
-      if (measureLine(test, fSize) > maxWidth && line) {
+      if (measureLine(test, fSize) > maxWidth) {
+        if (line) {
+          lines.push(line)
+          line = ''
+        }
         if (measureLine(word, fSize) > maxWidth) {
-          let charLine = line
+          let charLine = ''
           for (const ch of word) {
             const t2 = charLine + ch
             if (measureLine(t2, fSize) > maxWidth && charLine) {
@@ -117,7 +127,6 @@ function wrapForDrawtext(text, maxWidth, fSize) {
           }
           line = charLine
         } else {
-          lines.push(line)
           line = word
         }
       } else {

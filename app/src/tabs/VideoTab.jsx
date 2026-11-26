@@ -325,6 +325,14 @@ function ReelCaptionTimingBar({ segs, duration, onCommit }) {
 
 // 2026-11-16 복구(자막 스타일 "기본 텍스트"가 다시 기본값이 되어서 — 이 캔버스가 다시 실제
 // 결과와 같은 미리보기가 됨). 아침에 "모든 포맷이 손글씨 하나만 쓴다"고 오판해서 지웠었다.
+// 2026-11-26 수정(성준님 제보 — "일본어 자막 표시 가로 폭 설정을 개선(widthScale)했는데도
+// 미리보기에선 여전히 화면 가로폭을 넘어간다"): 일본어 문장은 보통 띄어쓰기가 없어서(예:
+// "韓国のチムジルバンは、みんな同じ服を着てくつろぐ場所です。") para.split(' ')가 문장 전체를
+// 공백 없는 "단어" 하나로 반환했다. 그 상태로 첫 단어를 처리할 때 line이 아직 빈 문자열이라
+// `&& line` 조건이 거짓이 되어, 전체 문장이 maxWidth를 넘는데도 글자 단위 줄바꿈 분기를 아예
+// 타지 않고 한 줄로 그대로 통과했다 — widthScale로 폭을 좁혀도 애초에 줄바꿈 자체가 작동하지
+// 않았던 것. `line`이 비어 있어도(=단어 하나가 그 자체로 maxWidth를 넘는 경우) 글자 단위
+// 줄바꿈으로 빠지도록 분기를 재구성.
 function wrapCanvasText(ctx, text, maxWidth) {
   const lines = []
   for (const para of String(text ?? '').split('\n')) {
@@ -332,9 +340,13 @@ function wrapCanvasText(ctx, text, maxWidth) {
     let line = ''
     for (const word of words) {
       const test = line ? line + ' ' + word : word
-      if (ctx.measureText(test).width > maxWidth && line) {
+      if (ctx.measureText(test).width > maxWidth) {
+        if (line) {
+          lines.push(line)
+          line = ''
+        }
         if (ctx.measureText(word).width > maxWidth) {
-          let charLine = line
+          let charLine = ''
           for (const ch of word) {
             const t2 = charLine + ch
             if (ctx.measureText(t2).width > maxWidth && charLine) {
@@ -346,7 +358,6 @@ function wrapCanvasText(ctx, text, maxWidth) {
           }
           line = charLine
         } else {
-          lines.push(line)
           line = word
         }
       } else {
@@ -1133,7 +1144,15 @@ export default function VideoTab() {
     // 이미 쓰는 것과 같은 방식.
     const scDur = reelStartCardStyle.durationSec || 3
     if (isFirstCut && previewT <= scDur) {
-      const scParts = [reelStartCardStyle.textEn, reelStartCardStyle.textJa].filter(t => typeof t === 'string' && t.trim())
+      // 2026-11-26 수정 — 엔딩 카드와 같은 버그: EN/JP 중 한 칸만 고치면 나머지 칸이 사라졌다.
+      const scHasFieldOverride = (typeof reelStartCardStyle.textEn === 'string' && reelStartCardStyle.textEn.trim())
+        || (typeof reelStartCardStyle.textJa === 'string' && reelStartCardStyle.textJa.trim())
+      const scParts = scHasFieldOverride
+        ? [
+            (typeof reelStartCardStyle.textEn === 'string' && reelStartCardStyle.textEn.trim()) ? reelStartCardStyle.textEn : (startCardDefault.en || ''),
+            (typeof reelStartCardStyle.textJa === 'string' && reelStartCardStyle.textJa.trim()) ? reelStartCardStyle.textJa : (startCardDefault.ja || ''),
+          ].filter(t => typeof t === 'string' && t.trim())
+        : []
       const scRaw = scParts.join('\n') || [startCardDefault.en, startCardDefault.ja].filter(Boolean).join('\n')
       if (scRaw.trim()) {
         const scFSize = Math.max(10, Math.round((reelStartCardStyle.fontPx || reelFontPx) * scale))
@@ -1167,8 +1186,19 @@ export default function VideoTab() {
       // 2026-11-24 — textKr/textEn/textJa/textBottom 4칸으로 분리. 하나라도 입력돼 있으면 그걸
       // 우선 쓰고(순서 KR→EN→JP→하단 고정, 빈 칸은 건너뜀), 전부 비었으면 레거시 text(한 칸
       // 저장분, 하위호환) → 그것도 없으면 대본 원본 기본값 순으로 폴백.
-      const ecParts = [reelEndCardStyle.textKr, reelEndCardStyle.textEn, reelEndCardStyle.textJa, reelEndCardStyle.textBottom]
-        .filter(t => typeof t === 'string' && t.trim())
+      // 2026-11-26 수정(성준님 제보 — "엔딩카드에 영어만 표시되는 오류"): 위 "하나라도 입력돼
+      // 있으면 그걸 우선 쓴다"가 실제로는 "입력 안 한 나머지 칸은 통째로 사라진다"였다 — 예를
+      // 들어 EN 칸만 고치면 KR/JP/하단은 reelEndCardStyle에 값이 없어(undefined) ecParts에서
+      // 아예 빠졌다. 입력창 자체는 안 고친 칸도 대본 원본이 기본값으로 떠 있어 사람 눈엔 "다
+      // 들어있다"로 보였는데, 실제 합성은 그 폴백을 안 거쳤다. 칸 중 하나라도 손을 댔으면,
+      // 손 안 댄 칸은 "비움"이 아니라 "대본 원본 유지"로 칸마다 따로 폴백시킨다.
+      const ecFieldKeys = [['textKr', 'kr'], ['textEn', 'en'], ['textJa', 'ja'], ['textBottom', 'bottom']]
+      const ecHasFieldOverride = ecFieldKeys.some(([key]) => typeof reelEndCardStyle[key] === 'string' && reelEndCardStyle[key].trim())
+      const ecParts = ecHasFieldOverride
+        ? ecFieldKeys
+            .map(([key, dKey]) => (typeof reelEndCardStyle[key] === 'string' && reelEndCardStyle[key].trim()) ? reelEndCardStyle[key] : (endCardDefault[dKey] || ''))
+            .filter(t => typeof t === 'string' && t.trim())
+        : []
       const ecRaw = ecParts.length ? ecParts.join('\n')
         : (reelEndCardStyle.text || '').trim() ? reelEndCardStyle.text
         : [endCardDefault.kr, endCardDefault.en, endCardDefault.ja, endCardDefault.bottom].filter(Boolean).join('\n')

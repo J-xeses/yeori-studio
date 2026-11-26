@@ -720,6 +720,13 @@ export async function finalizeReel(p) {
     // 않으므로(아래 getRunFlags 참고) 03_audio에 같은 번호 mp3가 남아있어도(예: 이전 시도 흔적)
     // 믹스 대상이 아니다 — 컷 자체 오디오가 정답이라 dropOwnAudio도 절대 안 걸리게 한다.
     d.needsNarration = hasVoiceNarration(cut) && cut.voiceSource !== 'video'
+    // 2026-11-26 추가(성준님 제보 — "나레이션 시작 시간 설정이 원래 작동이 안 되고 있었나?"):
+    // 영상 탭 "나레이션 시작(초)" 입력칸(cut.narrationStart)은 지금까지 컷 단독 미리듣기
+    // (/api/run-ffmpeg, audioStart)에만 전달됐고, 진짜 최종본 조립(여기, ③ 나레이션 믹스
+    // 단계)은 그 값을 전혀 안 보고 항상 +0.3초로 고정돼 있었다 — 즉 이 UI 컨트롤은 미리듣기만
+    // 바꾸고 실제 결과물엔 반영되지 않는 "눈속임 컨트롤"이었던 게 맞다. d에 실어 날라 아래
+    // 믹스 단계에서 실제로 쓰게 한다.
+    d.narrationStart = typeof cut.narrationStart === 'number' ? cut.narrationStart : null
     if (d.needsNarration) {
       const pad2 = String(cut.no).padStart(2, '0')
       const hasDl = !!String(cut.dialogue || '').trim()
@@ -889,14 +896,26 @@ export async function finalizeReel(p) {
   // 우선 쓰고(각 칸 자체도 줄바꿈 여러 줄 가능), 전부 비어 레거시 text만 있으면 그걸로
   // 폴백(기존 저장본과 하위호환), 둘 다 없으면 대본 원본에서 뽑는다.
   const ecOv = capStyle.endCard || {}
-  const ecParts = [ecOv.textKr, ecOv.textEn, ecOv.textJa, ecOv.textBottom]
-    .filter((t) => typeof t === 'string' && t.trim())
+  const ecScriptDefault = extractEndCard(loadEpisodeScriptRaw(code))
+  // 2026-11-26 수정(성준님 제보 — "엔딩카드에 영어만 표시되는 오류"): 기존엔 KR/EN/JP/하단 네 칸
+  // 중 하나라도 영상 탭에서 손댄 값이 있으면 그 칸들만 쓰고, 손 안 댄 칸은 undefined라 그대로
+  // 사라졌다(예: EN만 고치면 KR/JP/하단 전부 빠짐). 영상 탭 입력창은 손 안 댄 칸도 대본 원본을
+  // 기본값으로 보여줘서(VideoTab.jsx ?? 폴백) 눈엔 "다 들어있다"로 보이는데, 실제 번인은 그
+  // 폴백을 안 거쳤다 — 한 칸이라도 손댔으면, 나머지 칸은 "비움"이 아니라 칸마다 "대본 원본
+  // 유지"로 개별 폴백시킨다.
+  const ecFieldKeys = [['textKr', 'kr'], ['textEn', 'en'], ['textJa', 'ja'], ['textBottom', 'bottom']]
+  const ecHasFieldOverride = ecFieldKeys.some(([key]) => typeof ecOv[key] === 'string' && ecOv[key].trim())
+  const ecParts = ecHasFieldOverride
+    ? ecFieldKeys
+        .map(([key, dKey]) => (typeof ecOv[key] === 'string' && ecOv[key].trim()) ? ecOv[key] : (ecScriptDefault[dKey] || ''))
+        .filter((t) => typeof t === 'string' && t.trim())
+    : []
   const endCardLines = ecParts.length
     ? ecParts.flatMap((t) => t.split('\n').map((l) => l.trim()).filter(Boolean))
     : (typeof ecOv.text === 'string' && ecOv.text.trim())
       ? ecOv.text.split('\n').map((l) => l.trim()).filter(Boolean)
-      : Object.values(extractEndCard(loadEpisodeScriptRaw(code))).filter(Boolean)
-  if (endCardLines.length) log(`엔딩 카드 발견 — "${endCardLines.join(' / ')}"${ecParts.length || (ecOv.text || '').trim() ? '(영상 탭 입력값)' : '(대본 원본)'}`)
+      : Object.values(ecScriptDefault).filter(Boolean)
+  if (endCardLines.length) log(`엔딩 카드 발견 — "${endCardLines.join(' / ')}"${ecHasFieldOverride || (ecOv.text || '').trim() ? '(영상 탭 입력값)' : '(대본 원본)'}`)
   // 영어/일본어 자막 병기(2026-11-23, capStyle.en/.ja = {enabled,fontPx,y}, 영상 탭에서 설정) —
   // CP(캡션) 유무와 무관하게 subtitleEn/subtitleJa가 있는 컷이면 켤 수 있어야 해서, 이 블록
   // 자체를 여는 조건에도 반영한다(안 그러면 CP도 엔딩카드도 없는 컷은 블록을 통째로 건너뛰어
@@ -910,11 +929,20 @@ export async function finalizeReel(p) {
   // 우선 → 없으면 대본 원본)으로 구현하되, 위치만 타임라인 맨 앞(0~SC_DUR)으로 뒤집는다.
   // KR은 없음 — 대본 OSD 줄 자체가 EN/JP 전용 포맷이고, 성준님 요청도 "영어, 일본어"만 명시.
   const scOv = capStyle.startCard || {}
-  const scParts = [scOv.textEn, scOv.textJa].filter((t) => typeof t === 'string' && t.trim())
+  const scScriptDefault = extractStartCard(loadEpisodeScriptRaw(code))
+  // 2026-11-26 수정 — 엔딩 카드와 같은 버그(바로 위 ecParts 참고): EN/JP 중 한 칸만 영상 탭에서
+  // 손대면 나머지 칸이 undefined라 통째로 사라졌다. 칸마다 개별 폴백으로 교정.
+  const scHasFieldOverride = typeof scOv.textEn === 'string' && scOv.textEn.trim() || typeof scOv.textJa === 'string' && scOv.textJa.trim()
+  const scParts = scHasFieldOverride
+    ? [
+        (typeof scOv.textEn === 'string' && scOv.textEn.trim()) ? scOv.textEn : (scScriptDefault.en || ''),
+        (typeof scOv.textJa === 'string' && scOv.textJa.trim()) ? scOv.textJa : (scScriptDefault.ja || ''),
+      ].filter((t) => typeof t === 'string' && t.trim())
+    : []
   const startCardLines = scParts.length
     ? scParts.flatMap((t) => t.split('\n').map((l) => l.trim()).filter(Boolean))
-    : Object.values(extractStartCard(loadEpisodeScriptRaw(code))).filter(Boolean)
-  if (startCardLines.length) log(`시작 카드(OSD) 발견 — "${startCardLines.join(' / ')}"${scParts.length ? '(영상 탭 입력값)' : '(대본 원본)'}`)
+    : Object.values(scScriptDefault).filter(Boolean)
+  if (startCardLines.length) log(`시작 카드(OSD) 발견 — "${startCardLines.join(' / ')}"${scHasFieldOverride ? '(영상 탭 입력값)' : '(대본 원본)'}`)
   if (captionStyle === 'text' && (capCount > 0 || endCardLines.length || startCardLines.length || hasEnJa)) {
     const allSegs = []
     // 2026-11-24 추가(성준님 지적 — "영어/일본어 자막이 한글 자막 타이밍을 따르지 않고 컷
@@ -1110,7 +1138,8 @@ export async function finalizeReel(p) {
   for (const d of decisions) {
     if (!d.needsNarration) continue
     if (!d.nrFile) { log(`⚠ 컷 ${d.no}: 나레이션 음성 없음(${path.basename(d.nrFileExpected)}) — G3 필요`); continue }
-    const ms = Math.round((d.startSec + 0.3) * 1000)
+    const narrOffset = d.narrationStart != null ? d.narrationStart : 0.3
+    const ms = Math.round((d.startSec + narrOffset) * 1000)
     sfxInputs.push('-i', d.nrFile)
     sfxFilters.push(`[${idx}:a]adelay=${ms}|${ms},volume=1.0[n${idx}]`)
     sfxLabels.push(`[n${idx}]`)

@@ -1,5 +1,5 @@
 {
-  "activeTab": "video",
+  "activeTab": "script",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -14774,7 +14774,14 @@
               "ac": "0~4초 신발장 앞 나무 벤치에 걸터앉아 운동화를 벗는 두 사람 → 4~8초 벗은 신발을 타일 바닥에",
               "md": "편안함, 설렘"
             }
-          }
+          },
+          "narrationStart": 3,
+          "captionSegTiming": [
+            [
+              3,
+              8
+            ]
+          ]
         },
         {
           "id": "cut-2",
@@ -14867,7 +14874,13 @@
               "ac": "0~4초 양머리 수건을 두른 두 사람이 식혜와 구운 계란을 먹음 → 4~8초 따뜻한 바닥에 나란히 누워 쉬며 나레이션",
               "md": "만족, 편안함"
             }
-          }
+          },
+          "captionSegTiming": [
+            [
+              1.5,
+              8
+            ]
+          ]
         },
         {
           "id": "cut-4",
@@ -14914,7 +14927,13 @@
               "ac": "0~4초 나란히 누워 천장을 보며 편안하게 웃음 → 4~6초 정적 → 6~8초 여리가 카메라를 보며 나레이션",
               "md": "따뜻함, 여운"
             }
-          }
+          },
+          "captionSegTiming": [
+            [
+              0,
+              5
+            ]
+          ]
         }
       ],
       "scriptRaw": "",
@@ -14987,7 +15006,14 @@
           "ac": "0~4초 신발장 앞 나무 벤치에 걸터앉아 운동화를 벗는 두 사람 → 4~8초 벗은 신발을 타일 바닥에",
           "md": "편안함, 설렘"
         }
-      }
+      },
+      "narrationStart": 3,
+      "captionSegTiming": [
+        [
+          3,
+          8
+        ]
+      ]
     },
     {
       "id": "cut-2",
@@ -15080,7 +15106,13 @@
           "ac": "0~4초 양머리 수건을 두른 두 사람이 식혜와 구운 계란을 먹음 → 4~8초 따뜻한 바닥에 나란히 누워 쉬며 나레이션",
           "md": "만족, 편안함"
         }
-      }
+      },
+      "captionSegTiming": [
+        [
+          1.5,
+          8
+        ]
+      ]
     },
     {
       "id": "cut-4",
@@ -15127,7 +15159,13 @@
           "ac": "0~4초 나란히 누워 천장을 보며 편안하게 웃음 → 4~6초 정적 → 6~8초 여리가 카메라를 보며 나레이션",
           "md": "따뜻함, 여운"
         }
-      }
+      },
+      "captionSegTiming": [
+        [
+          0,
+          5
+        ]
+      ]
     }
   ],
   "scriptRaw": "",
@@ -15254,10 +15292,69 @@
   "savedAt": "2026-11-26T04:37:31.628Z",
   "videoTabState": {
     "videoClips": {
-      "cut-1": []
+      "cut-1": [
+        {
+          "url": "blob:http://localhost:5173/2c3a352e-c5ae-49ea-b8f3-69de99bfbae3",
+          "name": "Two_women_removing_sneakers_2f63542a_1080p.mp4",
+          "duration": 7.93,
+          "trimStart": 0,
+          "trimEnd": 7.93,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1795674167311,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R12\\04_making\\raw\\cut_01_clip_1.mp4"
+        }
+      ],
+      "cut-2": [
+        {
+          "url": "blob:http://localhost:5173/a301565c-3c6d-4794-8977-5ff07d830fbc",
+          "name": "Woman_stops_friend_leaving_sauna_bd1283ea_1080p.mp4",
+          "duration": 7.93,
+          "trimStart": 0,
+          "trimEnd": 7.93,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1795674147407,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R12\\04_making\\raw\\cut_02_clip_1.mp4"
+        }
+      ],
+      "cut-3": [
+        {
+          "url": "blob:http://localhost:5173/cfc1bbbf-1fd6-436b-9b4a-edcbadffa7c7",
+          "name": "Women_relaxing_at_sauna_9142d6c4_1080p.mp4",
+          "duration": 7.93,
+          "trimStart": 0,
+          "trimEnd": 7.93,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1795674132663,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R12\\04_making\\raw\\cut_03_clip_1.mp4"
+        }
+      ],
+      "cut-4": [
+        {
+          "url": "blob:http://localhost:5173/83d8528c-4c8f-4ba2-a5a0-26be451b8dd9",
+          "name": "Two_women_lying_on_floor_2b468049_720p.mp4",
+          "duration": 7.93,
+          "trimStart": 0,
+          "trimEnd": 7.93,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1795674111773,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R12\\04_making\\raw\\cut_04_clip_1.mp4"
+        }
+      ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-1",
+    "selectedCutId": "cut-4",
     "subtitles": {}
   },
   "ttsTabState": {
