@@ -9,4 +9,4 @@ PixVerse|https://app.pixverse.ai/creation/video
 Notion Hub|https://www.notion.so/38560cf6afd981c7ab52f99a245a5fa5
 Notion STATUS|https://www.notion.so/3d660cf6afd981b28eeac2ab6ffb5f2e
 Studio|http://localhost:5173
-Field Gate|C:\yeori-genline\index.html
+Higgsfield|https://open.higgsfield.ai/explore
